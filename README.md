@@ -1,35 +1,14 @@
 # Shell Arc - プロジェクト管理プラットフォーム - 技術ドキュメント
 
 ## 目次
-1. [環境構築](#環境構築)
-2. [API設定](#api設定)
-3. [データサービスの初期設定](#データサービスの初期設定)
-4. [プロジェクト設定](#プロジェクト設定)
+1. [API設定](#api設定)
+2. [データサービスの初期設定](#データサービスの初期設定)
+3. [プロジェクト設定](#プロジェクト設定)
+4. [環境構築](#環境構築)
 5. [ソースコード解説](#ソースコード解説)
 6. [カスタマイズガイド](#カスタマイズガイド)
-
----
-
-## 環境構築
-
-### 必要なツール
-- Conda
-- PIP
-- Python 3.11.14
-
-### セットアップ手順
-```bash
-# 1. Python 3.11の仮想環境を作成
-conda create -n 任意の環境名 python=3.11.14
-
-# 2. 仮想環境を有効化
-conda activate 先指定した環境名
-
-# 3. 依存ライブラリをインストール（conda installは使用しないこと）
-pip install streamlit firebase-admin gspread oauth2client boto3 PyYAML platformdirs
-```
-
-> ⚠️ **重要**: システム安定性のため、必ずpip installを使用してください。conda installは使用しないでください。
+> ⚠️ システムの設定方法と利用方法は、本ドキュメントの第1〜3節で記載されています。\
+> 第4−6節は、環境構築およびソースコードの詳しい解説ですので、システム本体をカスタム・改造したい場合のみご参照ください。
 
 ---
 
@@ -45,7 +24,12 @@ pip install streamlit firebase-admin gspread oauth2client boto3 PyYAML platformd
 ### secrets.tomlファイルの場所
 `プロジェクトルート/.streamlit/secrets.toml`
 
-> 🔒 **セキュリティ注意**: APIキー情報は極めてセンシティブです。必ず`secrets.toml`に記述し、それ以外のどこにも平文で記述しないでください。
+> 🔒 **セキュリティ注意**: APIキー情報は極めてセンシティブです。必ず`secrets.toml`に記述し、それ以外のどこにも平文で記述しないでください。\
+> また、`secrets.toml`の内容は、Streamlit Community Cloudでデプロイする際、Streamlit Community CloudのUI上で記述するものです\
+> Githubへのコミットを含め、あらゆるプラットフォームでの公開をお避けください
+
+> ⚠️ **重要**: プロジェクトをGitHubにコミットする際、必ず`.gitignore`ファイルを作り、その中に`.streamlit/secrets.toml`を記述した上で、コミットしてください。\
+> これは、GitHubに「`secrets.toml`は秘密だから公開しないでください」という指示を意味します。
 
 ### .streamlitフォルダの表示方法
 - **MacOS**: `Command` + `Shift` + `.`
@@ -122,6 +106,11 @@ collection_name = "your-collection-name"
 id = "admin-password"
 checker_id = "reviewer-password"
 ```
+
+---
+
+### secrets.tomlの使い方
+Streamlit Community Cloudでデプロイする際、UIで「高度」タプを開いて、当該箇所に上記にように記述したsecrets.tomlの内容をコピー&ヘイストしてください。
 
 ---
 
@@ -243,6 +232,42 @@ spreadsheet_format:
 1. `project_setting.yaml`をsubmittingポータルにアップロード
 2. スプレッドシートキーを入力（上記「Google Sheets」セクション参照）
 3. データベースとスプレッドシートが自動生成されます
+
+---
+
+## 環境構築
+
+### 必要なツール
+- Conda
+- PIP
+- Python 3.11.14
+
+### セットアップ手順
+
+**Conda をインストールしていない場合、[公式サイト](https://docs.conda.io/projects/conda/en/latest/user-guide/getting-started.html)からインストールしてから、お進みください。**
+
+```bash
+# 1. Python 3.11の仮想環境を作成
+conda create -n 任意の環境名 python=3.11.14
+
+# 2. 仮想環境を有効化
+conda activate 先指定した環境名
+
+# 3. 依存ライブラリをインストール（conda installは使用しないこと）
+pip install streamlit firebase-admin gspread oauth2client boto3 PyYAML platformdirs
+```
+
+> ⚠️ **重要**: システム安定性のため、必ずpip installを使用してください。conda installは使用しないでください。
+
+### ローカルで実行・デバッグする方法
+```bash
+# Conda 仮想環境を有効化
+conda activate 先指定した環境名
+# プロジェクトルートディレクトリに移動
+cd プロジェクトルートディレクトリ
+# Streamlit アプリケーションの起動
+streamlit run 実行したいファイル.py
+```
 
 ---
 
@@ -586,22 +611,9 @@ loadGS.load_spreadsheet(
 
 ---
 
-## 付録
-
-### デバッグ用コマンド
-```bash
-# Streamlitアプリケーションの起動
-streamlit run submission.py
-
-# プロジェクト設定画面の起動
-streamlit run project_setting.py
-```
-
----
-
 ### 推奨開発環境
 
-- **IDE**: Visual Studio Code, PyCharm
+- **IDE**: Visual Studio Code
 - **Python**: 3.11.14
 - **OS**: MacOS, Windows, Linux
 
@@ -621,13 +633,13 @@ streamlit run project_setting.py
 
 | バージョン | 日付 | 変更内容 |
 |-----------|------|----------|
-| 1.0 | 2025-12-05 | 初版作成 |
+| 1.0 | 2025-11-30 | 初版作成 |
 
 ---
 
-## ライセンスとサポート
+## ライセンス
 
-本ドキュメントおよびソフトウェアの使用に関する問い合わせは、プロジェクト管理者までご連絡ください。
+本システムは、Apache License 2.0ライセンスに基づいて配布されています。
 
 ---
 
