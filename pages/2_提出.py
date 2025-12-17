@@ -10,6 +10,7 @@ if project_root not in sys.path:
 
 from backend.request_r2 import Cloudflare_R2_service as R2
 from backend.common_initialisation import CommonInitialisation as Common
+from backend.file_operation import FileOperation as FileOp
 
 def main():
     st.set_page_config(
@@ -18,6 +19,7 @@ def main():
     )
 
     common = Common()
+    fileop = FileOp()
     
     #access firebase database
     ref_setting = common.ref_setting #project setting data referncer
@@ -46,7 +48,7 @@ def main():
         "提出する部分を選択してください",
         [proj_setting_data[f"component{j}"]["display"] for j in range(1, component_number+1)]
     )
-    working_data = common.work_info(submitting_component)
+    working_data = fileop.work_info(proj_setting_data, submitting_component)
     working_index = working_data["working_index"]
     working_component = working_data["working_component"]
     required_format = working_data["required_format"]
@@ -73,43 +75,19 @@ def main():
 
                 #renaming
                 current_take = int(work_data["current_take"]) + 1
-                naming_reference = []
-                for i in range(0, proj_setting_data[f"component{working_index}"]["naming_section"]):
-                    process_subdata = proj_setting_data[f"component{working_index}"]
-                    naming_rule = process_subdata[f"name_component_{i+1}"]
-                    if naming_rule.startswith("-"):
-                        if naming_rule == "-cut":
-                            naming_reference.append(f"cut{submitting_cut:02}")
-                        elif naming_rule == "-take":
-                            naming_reference.append(f"take{current_take:02}")
-                    else:
-                        naming_reference.append(naming_rule)
-                renamed = "_".join(naming_reference)
+                renamed = fileop.renamed(proj_setting_data, working_index, submitting_cut, current_take)
 
                 #update database
                 if work_data["temporary"]["naming"] != None:
-                    current_reject_count = int(work_data["current_reject_count"]) 
                     temporary = {"naming": renamed, "cut": submitting_cut, "take": current_take, "creator": str(submitting_person), "reviewer": None, "comments": None}
-                    rejected = work_data["temporary"]
-                    rejected_index = f"non_active_{rejected['take']:02}"
-                    structure = {
-                        "current_take" : current_take,
-                        "current_reject_count" : current_reject_count + 1,
-                        "temporary" : temporary,
-                        rejected_index : rejected
-                    }
+                    structure = fileop.update_database(current_take=current_take, work_data=work_data, temporary=temporary, non_active=work_data["temporary"])
                 else:
-                    current_reject_count = int(work_data["current_reject_count"])
                     temporary = {"naming": renamed, "cut": submitting_cut, "take": current_take, "creator": str(submitting_person), "reviewer": None, "comments": None}
-                    structure = {
-                        "current_take" : current_take,
-                        "current_reject_count" : current_reject_count + 1,
-                        "temporary" : temporary
-                    }
+                    structure = fileop.update_database(current_take=current_take, work_data=work_data, temporary=temporary)
                 ref_work_obj.update(structure)
 
                 #upload to  R2 storage
-                r2 = R2()
+                r2 = R2(common.s3_client)
                 r2.upload_file(submission, f"{proj_setting_data['collection_name']}/cut{submitting_cut:02}/{working_component}/{renamed}.{required_format[0]}")
 
                 #update spreadsheet

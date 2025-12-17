@@ -1,14 +1,24 @@
-import streamlit as st
+import os 
 
 from .access_database import AccessDB as DB
 from .request_r2 import Cloudflare_R2_service as R2
+from .access_r2 import Cloudflare_R2_service_Access as R2Access
 from .access_spread_sheet import AccessSpreadSheet as GS
 from .load_spread_sheet import LoadSpreadSheet as LoadGS
 
 class CommonInitialisation():
     def __init__(self):
         #access firebase database
-        collection_name = st.secrets["init"]["collection_name"]
+        try:
+            import streamlit as st
+            collection_name = st.secrets["init"]["collection_name"]
+        except:
+            from dotenv import load_dotenv
+            load_dotenv(verbose=True)
+            dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
+            load_dotenv(dotenv_path)
+            collection_name = os.environ.get("init_collection_name")
+            
         db_instance = DB()
         db = db_instance.database
 
@@ -19,6 +29,10 @@ class CommonInitialisation():
         self._proj_setting_data = self.proj_setting_data_snapshot #property use duplicate
 
         self._ref_collection = db.collection(collection_name).document("main_proj") #project main data referncer
+
+        #access R2 storage
+        r2access = R2Access()
+        self._s3_client = r2access.s3_client
 
         #access spreadsheet
         spreadsheet_key = self.proj_setting_data_snapshot["spreadsheet_key"]
@@ -52,22 +66,13 @@ class CommonInitialisation():
         return self._ref_collection
     
     @property
+    def s3_client(self):
+        return self._s3_client
+    
+    @property
     def spreadsheet(self):
         return self._spreadsheet
     
     @property
     def loadGS(self):
         return self._loadGS
-    
-    def work_info(self, processing_component):
-        working_index = self.component_list.index(processing_component) + 1
-        working_component = self.component_list_eng[working_index-1]
-        required_format = [self.proj_setting_data[f"component{working_index}"]["format"][0]]
-        mime_format = [self.proj_setting_data[f"component{working_index}"]["format"][1]]
-        rtn = {
-             "working_index" : working_index,
-             "working_component" : working_component,
-             "required_format" : required_format,
-             "mime_format" : mime_format
-        }
-        return rtn

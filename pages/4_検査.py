@@ -13,6 +13,7 @@ if project_root not in sys.path:
 
 from backend.request_r2 import Cloudflare_R2_service as R2
 from backend.common_initialisation import CommonInitialisation as Common
+from backend.file_operation import FileOperation as FileOp
 
 def main():
     st.set_page_config(
@@ -21,6 +22,7 @@ def main():
     )
 
     common = Common()
+    fileop = FileOp()
 
     #access firebase database
     ref_setting_obj = common.ref_setting_obj  #project setting data object   
@@ -48,7 +50,7 @@ def main():
         "検査する部分を選択してください",
         [proj_setting_data[f"component{j}"]["display"] for j in range(1, component_number+1)]
     )
-    working_data = common.work_info(reviewing_component)
+    working_data = fileop.work_info(proj_setting_data, reviewing_component)
     working_index = working_data["working_index"]
     working_component = working_data["working_component"]
     required_format = working_data["required_format"]
@@ -77,7 +79,7 @@ def main():
         #download from R2 storage
         if not is_reviewing:
             is_reviewing = True
-            r2 = R2()
+            r2 = R2(common.s3_client)
             try:
                 with st.spinner("ダウンロード中"):
                     r2.download_file(
@@ -130,24 +132,12 @@ def main():
             
         if is_confirm and is_approved and is_overwrite:
             if is_need_overwrite:
-                current_reject_count = int(work_data["current_reject_count"]) + 1
-                rejected = work_data["active"]
-                active = work_data["temporary"]
-                rejected_index = f"non_active_{rejected['take']:02}"
-                structure = {
-                    "active" : active,
-                    "temporary" : {"naming": None, "cut": None, "take": None, "creator": None, "reviewer": None, "comments": None},
-                    "current_reject_count" : current_reject_count + 1,
-                    rejected_index : rejected
-                }
+                structure = fileop.update_database(work_data=work_data, active=work_data["temporary"], temporary="clr", non_active=work_data["active"])
                 ref_work_obj.update(structure)
             else:
-                active = work_data["temporary"]
-                structure = {
-                    "active" : active,
-                    "temporary" : {"naming": None, "cut": None, "take": None, "creator": None, "reviewer": None, "comments": None}
-                }
+                structure = fileop.update_database(work_data=work_data, active=work_data["temporary"], temporary="clr")
                 ref_work_obj.update(structure)
+                
                 current_progress = float(proj_setting_data[f"component{working_index}"]["progress"])
                 current_progress += (1 / cut_num)
                 loadGS.load_progress(spreadsheet, working_index, False, cut_num)

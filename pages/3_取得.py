@@ -13,6 +13,7 @@ if project_root not in sys.path:
 
 from backend.request_r2 import Cloudflare_R2_service as R2
 from backend.common_initialisation import CommonInitialisation as Common
+from backend.file_operation import FileOperation as FileOp
 
 def main():
     st.set_page_config(
@@ -21,6 +22,7 @@ def main():
     )
     
     common = Common()
+    fileop = FileOp()
 
     #access firebase database
     ref_setting = common.ref_setting #project setting data referncer
@@ -46,7 +48,7 @@ def main():
         "取得する部分を選択してください",
         [proj_setting_data[f"component{j}"]["display"] for j in range(1, component_number+1)]
     )
-    working_data = common.work_info(reviewing_component)
+    working_data = fileop.work_info(proj_setting_data, reviewing_component)
     working_index = working_data["working_index"]
     working_component = working_data["working_component"]
     required_format = working_data["required_format"]
@@ -104,7 +106,7 @@ def main():
         renamed = reviewing_dir["naming"]
 
         #download from R2 storage
-        r2 = R2()
+        r2 = R2(common.s3_client)
         try:
             with st.spinner("ダウンロード中"):
                 r2.download_file(

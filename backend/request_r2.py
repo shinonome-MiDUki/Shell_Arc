@@ -3,22 +3,11 @@ import time
 import os
 
 import boto3
-import streamlit as st
 
 class Cloudflare_R2_service:
-    def __init__(self):
-        R2_ACCESS_KEY_ID = st.secrets["CloudflareR2"]["access_key_id"]
-        R2_SECRET_ACCESS_KEY = st.secrets["CloudflareR2"]["secret_access_key"]
-        R2_ENDPOINT_URL = st.secrets["CloudflareR2"]["jurisdiction_specific_endpoints"]
+    def __init__(self, s3_client):
+        self.s3_client = s3_client
         self.R2_BUCKET = "null-portal"
-
-        self.s3_client = boto3.client(
-            "s3",
-            endpoint_url=R2_ENDPOINT_URL,
-            aws_access_key_id=R2_ACCESS_KEY_ID,
-            aws_secret_access_key=R2_SECRET_ACCESS_KEY,
-            region_name="auto"
-        )
 
     def upload_file(self, uploaded_file, file_path):
         if uploaded_file is not None:
@@ -34,7 +23,6 @@ class Cloudflare_R2_service:
                 )
             except Exception as e:
                 print(e)
-                st.write("s3 client config error")
             finally:
                 os.unlink(tmp_file_path)
 
@@ -46,7 +34,9 @@ class Cloudflare_R2_service:
                 f"{download_destination}/{file_naming}"
             )
             time.sleep(2)
-            st.image(f"{download_destination}/{file_naming}")
+            try:
+                import streamlit as st
+                st.image(f"{download_destination}/{file_naming}")
+            except: pass
         except Exception as e:
             print(e)
-        
