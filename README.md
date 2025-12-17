@@ -20,20 +20,44 @@
 - **Firebase Python API** - データベース
 - **oauth2client Python API** - GCP認証
 - **gspread** - スプレッドシート操作
+- **discord.py API** - Discordボット操作
 
-### secrets.tomlファイルの場所
-`プロジェクトルート/.streamlit/secrets.toml`
+### API　記載ファイルの場所
+**以下に従って、APIキー情報記載用ファイルを作成してください。Streamlit Community Cloud以外のサービスでアプリケーションをデプロイする場合、`secrets.toml`への記述は不要です**:\
+**secrets.toml** : `プロジェクトルート/.streamlit/secrets.toml`\
+**.env** : `プロジェクトルート/.env` 
 
-> 🔒 **セキュリティ注意**: APIキー情報は極めてセンシティブです。必ず`secrets.toml`に記述し、それ以外のどこにも平文で記述しないでください。\
+> 🔒 **セキュリティ注意**: APIキー情報は極めてセンシティブです。必ず`secrets.toml`および/または`.env`に記述し、それ以外のどこにも平文で記述しないでください。\
 > また、`secrets.toml`の内容は、Streamlit Community Cloudでデプロイする際、Streamlit Community CloudのUI上で記述するものです\
 > Githubへのコミットを含め、あらゆるプラットフォームでの公開をお避けください
 
-> ⚠️ **重要**: プロジェクトをGitHubにコミットする際、必ず`.gitignore`ファイルを作り、その中に`.streamlit/secrets.toml`を記述した上で、コミットしてください。\
-> これは、GitHubに「`secrets.toml`は秘密だから公開しないでください」という指示を意味します。
+> ⚠️ **重要**: プロジェクトをGitHubにコミットする際、必ず`.gitignore`ファイルを作成し、その中に`.streamlit/secrets.toml`と`.env`を記述した上で、コミットしてください。\
+> これは、GitHubに「`secrets.toml`と`.env`は秘密だから公開しないでください」という指示を意味します。
 
-### .streamlitフォルダの表示方法
+### .streamlitフォルダと.env環境変数ファイルの表示方法
 - **MacOS**: `Command` + `Shift` + `.`
 - **Windows**: 「表示」タブ → 「表示」 → 「隠しファイル」
+
+#### secrets.tomlへの記述方法
+
+JSONファイルの構文を変換：
+```
+元: {"xxx": "yyy", "aaa": "bbb"}
+↓
+変換後:
+xxx = "yyy"
+aaa = "bbb"
+```
+
+#### .envへの記述方法
+JSONファイルの構文を変換：
+```
+元: {"xxx": "yyy", "aaa": "bbb"}
+↓
+変換後:
+xxx = yyy
+aaa = bbb
+```
 
 ---
 
@@ -48,17 +72,6 @@
 5. 作成されたサービスアカウントの**メール**をクリック
 6. **鍵** → **キーを追加** → **新しい鍵を作成** → **JSON** → **作成**
 7. ダウンロードされたJSONファイルを開く
-
-#### secrets.tomlへの記述方法
-
-JSONファイルの構文を変換：
-```
-元: {"xxx": "yyy", "aaa": "bbb"}
-↓
-変換後:
-xxx = "yyy"
-aaa = "bbb"
-```
 
 **secrets.toml**の`[GCP]`セクションに貼り付け：
 ```toml
@@ -75,6 +88,21 @@ auth_provider_x509_cert_url = "https://www.googleapis.com/oauth2/v1/certs"
 client_x509_cert_url = "https://www.googleapis.com/robot/v1/metadata/x509/..."
 universe_domain = "googleapis.com"
 ```
+
+**.env**ファイルに貼り付け：
+```env  
+GCP_type = service_account
+GCP_project_id = your-project-id
+GCP_private_key_id = your-private-key-id
+GCP_private_key = -----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n
+GCP_client_email = your-service-account@project.iam.gserviceaccount.com
+GCP_client_id = 123456789
+GCP_auth_uri = https://accounts.google.com/o/oauth2/auth
+GCP_token_uri = https://oauth2.googleapis.com/token
+GCP_auth_provider_x509_cert_url = https://www.googleapis.com/oauth2/v1/certs
+GCP_client_x509_cert_url = https://www.googleapis.com/robot/v1/metadata/x509/...
+GCP_universe_domain = googleapis.com
+``` 
 
 ---
 
@@ -95,9 +123,17 @@ secret_access_key = "your-secret-access-key"
 jurisdiction_specific_endpoints = "https://your-account-id.r2.cloudflarestorage.com"
 ```
 
+#### .envへの記述
+```env      
+CloudflareR2_access_key_id = your-access-key-id
+CloudflareR2_secret_access_key = your-secret-access-key
+CloudflareR2_jurisdiction_specific_endpoints = https://your-account-id.r2.cloudflarestorage.com
+```
+
 ---
 
 ### 3. その他の設定項目
+#### secrets.tomlへの記述
 ```toml
 [init]
 collection_name = "your-collection-name"
@@ -107,10 +143,20 @@ id = "admin-password"
 checker_id = "reviewer-password"
 ```
 
+#### secrets.tomlへの記述
+```env
+init_collection_name = your-collection-name
+super_id = admin-password
+super_CHECKER_id = reviewer-password
+```
+
 ---
 
 ### secrets.tomlの使い方
 Streamlit Community Cloudでデプロイする際、UIで「高度」タプを開いて、当該箇所に上記にように記述したsecrets.tomlの内容をコピー&ヘイストしてください。
+
+### .envの使い方
+GitHubなどの外部プラットフォームでデプロイする際、当該プラットフォームの環境変数設定画面に上記にように記述した.envの内容をコピー&ヘイストしてください。
 
 ---
 
@@ -235,6 +281,9 @@ spreadsheet_format:
 
 ---
 
+## これからは、ソースコードとそのカスタム化方法について解説します。PythonおよびAPI運用の基礎知識があることを前提としています。
+
+
 ## 環境構築
 
 ### 必要なツール
@@ -254,7 +303,7 @@ conda create -n 任意の環境名 python=3.11.14
 conda activate 先指定した環境名
 
 # 3. 依存ライブラリをインストール（conda installは使用しないこと）
-pip install streamlit firebase-admin gspread oauth2client boto3 PyYAML platformdirs
+pip install streamlit firebase-admin gspread oauth2client boto3 PyYAML platformdirs discord.py python-dotenv
 ```
 
 > ⚠️ **重要**: システム安定性のため、必ずpip installを使用してください。conda installは使用しないでください。
@@ -267,6 +316,8 @@ conda activate 先指定した環境名
 cd プロジェクトルートディレクトリ
 # Streamlit アプリケーションの起動
 streamlit run 実行したいファイル.py
+# また、Discordボットを起動する場合
+python3 discord_connection.py
 ```
 
 ---
@@ -283,6 +334,11 @@ streamlit run 実行したいファイル.py
 | `ref_xxx_obj` | データベースのオブジェクト | `ref_setting_obj` |
 | `ref_xxx` | `ref_xxx_obj.get()`の結果（参照点） | `ref_setting` |
 | `xxx_data` | `ref_xxx.to_dict()`の結果（辞書データ） | `proj_setting_data` |
+
+#### C1loudflare R2関連
+Cloudflare R2関連のモジュールとクラスは、"Cloudflare_R2"または"R2"を名前に含みます。
+ただし、そのクライエント参照は`s3_client`と命名されます。
+これは、boto3のS3クライアントAPIを使用してR2にアクセスすることを強調するためです。
 
 #### 作業工程関連
 | 用語 | 説明 |
@@ -308,18 +364,16 @@ class AccessDB:
 
 ---
 
-#### 2. request_r2.py
-**役割**: R2ストレージへのアクセスとファイルの取得・アップロード
+#### 2. access_r2.py
+**役割**: Cloudflare R2ストレージへのアクセスし、アップロード・ダウンロードを実行
 ```python
-class Cloudflare_R2_service:
+class Claoudflare_R2_service_Access:
     def __init__(self):
         # R2へ認証情報を提供し、バケットへのアクセスを取得
     
-    def upload_file(self, uploaded_file, file_path):
-        # UIからアップロードされたファイルをR2の正しい場所に保存
-    
-    def download_file(self, file_naming, to_download_file, download_destination):
-        # 指定ファイルを取得し、ローカルにダウンロード
+    @property
+    def rs3_client(self):
+        # R2クライアントへの参照を返す
 ```
 
 ---
@@ -338,7 +392,23 @@ class AccessSpreadSheet:
 
 ---
 
-#### 4. load_spread_sheet.py
+#### 4. request_r2.py
+**役割**: R2ストレージへのアクセスとファイルの取得・アップロード
+```python
+class Cloudflare_R2_service:
+    def __init__(self, s3_client):
+        # R2クライアントを受け取り、バケットへのアクセスを初期化
+    
+    def upload_file(self, uploaded_file, file_path):
+        # UIからアップロードされたファイルをR2の正しい場所に保存
+    
+    def download_file(self, file_naming, to_download_file, download_destination):
+        # 指定ファイルを取得し、ローカルにダウンロード
+```
+
+---
+
+#### 5. load_spread_sheet.py
 **役割**: スプレッドシート情報の取得・書き込み・更新
 ```python
 class LoadSpreadSheet:
@@ -366,8 +436,22 @@ class LoadSpreadSheet:
 ```
 
 ---
+#### 6. discord_connection.py
+**役割**: Discordボットの接続とメッセージ送信
+```python
+async def submit_file(message, submitting_person, submitting_cut, submitting_component, submission_raw):
+    # Discord経由でファイルを提出する
 
-#### 5. project_setting.py
+async def push_action(message, submitting_cut, submitting_component):
+    # Discord経由で提出（プッシュ）するときの挙動
+
+async def on_message(message):
+    # メッセージ受信を監視し、提出コマンドを処理
+```
+
+---
+
+#### 7. project_setting.py
 **役割**: プロジェクトの初期設定を実行
 
 > ⚠️ **注意**: プロジェクト新規作成時に**一度のみ**実行
@@ -392,7 +476,29 @@ def main():
 
 ---
 
-#### 6. common_initialisation.py
+#### 8. file_operation.py
+**役割**: ファイルの命名とデータベースの更新を一元管理
+```python
+class FileOperation:
+    def __init__(self):
+        pass
+    
+    def renamed(self, proj_setting_data, working_index, submitting_cut, current_take):
+        # ファイル命名規則に基づき、正しいファイル名を生成して返す
+    
+    def work_info(self, proj_setting_data, processing_component):
+        # 作業工程情報を処理して返す
+
+ 　　def update_database(self, current_take=None, work_data=None, active=None, temporary=None, non_active=None):
+        # データベースの更新を実行
+        # Noneの時、当該項目は更新されない
+        # 各引数は辞書形式で渡す
+        # non_activeが更新されるたび、current_reject_countも更新される
+```
+
+---
+
+#### 9. common_initialisation.py
 **役割**: 提出・取得・レビュー機能が共通使用するロジックと変数の一元管理
 
 **提供される共通変数**:
@@ -430,29 +536,26 @@ class CommonInitialisation:
     
     @property
     def loadGS(self):
-        # LoadSpreadSheetインスタンス
-    
-    def work_info(self, processing_component):
-        # 作業工程情報を取得
+        # LoadSpreadSheetインスタンス参照
 ```
 
 ---
 
-#### 7. submission.py
+#### 10. submission.py
 **役割**: ファイルの提出
 
 UIとロジック定義を行います。
 
 ---
 
-#### 8. requesting.py
+#### 11. requesting.py
 **役割**: ファイルの取得
 
 UIとロジック定義を行います。
 
 ---
 
-#### 9. reviewer.py
+#### 12. reviewer.py
 **役割**: ファイルのレビュー
 
 UIとロジック定義を行います。
@@ -464,10 +567,12 @@ UIとロジック定義を行います。
 ### 設計原則
 
 1. **処理ロジックとUI操作**: `requesting.py`, `reviewer.py`, `submission.py`で行う
-2. **外部データサービスの認証とアクセス**: `access_database.py`, `access_spreadsheet.py`, `request_r2.py`で行う
+2. **外部データサービスの認証とクライアント参照へのアクセス**: `access_database.py`, `access_spreadsheet.py`, `access_r2.py`で行う・また上記3ファイルはUIコードから隠蔽
 3. **初期設定制御**: `project_setting.py`は他のコードとの独立性を維持
 4. **スプレッドシート操作**: `load_spread_sheet.py`を介して行う
-5. **共通ロジックと変数**: `common_initialisation.py`に集約
+5. **ストレージとのやり取り**: `request_r2.py`を介して行う
+6. **命名操作とデータベース更新**: `file_operation.py`を介して行う
+7. **共通ロジックと変数**: `common_initialisation.py`に集約
 
 ---
 
@@ -538,10 +643,33 @@ loadGS.load_spreadsheet(
 
 #### ガイドライン
 
-1. **UIロジック**: 新しい`.py`ファイルを作成（`requesting.py`等を参考）
-2. **データベース構造の変更**: `project_setting.py`の`build_main_proj_db()`を編集
-3. **共通処理の追加**: `common_initialisation.py`にメソッドを追加
-4. **スプレッドシート操作**: 必ず`load_spread_sheet.py`を介して行う
+- **UIロジックを変更する場合**: `pages`フォルダに新しい`.py`ファイルを作成し、UIとロジックを定義
+- **新しいデータサービスを追加する場合**: `backend`フォルダの新しい`access_新サービス名.py`を作成し、認証とクライアント参照を管理（必要に応じて`common_initialisation.py`にプロパティメソッドを追加・`request_サービス名.py`/`load_サービス名.py`系ファイルも作成）
+- **新しいバックエンドロジックを追加する場合**: `backend`フォルダに新しい`.py`ファイルを作成し、ロジックを定義
+- **新しいDiscordボットを追加する場合**: `discord_connection.py`にメソッドを追加・あるいは`discord_bot`フォルダに新しい`.py`ファイルを作成
+- **データベース構造を変更する場合**: `project_setting.yaml`を編集し、それに応じて`project_setting.py`の`build_main_proj_db()`を編集
+- **共通処理追加の場合**: `common_initialisation.py`にプロパティメソッドを追加（必要に応じて__init__に必要な変数も追加）
+- **新しいファイル処理が必要な場合**: `file_operation.py`にメソッドを追加
+- **スプレッドシート操作する場合**: 必ず`load_spread_sheet.py`を介して行う
+
+#### バックエンドモジュールの使用
+必要なモジュールをインポートする。ただしUIが定義されているスクリプトには、`access_database.py`, `access_spreadsheet.py`, `access_r2.py`をインポートしないでください
+
+**`pages`または`discord_bot`フォルダからの使用:**
+```python
+project_root = os.path.dirname(os.path.abspath(__file__)) 
+if project_root not in sys.path:
+    sys.path.append(project_root)
+
+from backend.モジュールファイル名 import クラス名 as エイリアス名
+# 例: from backend.request_r2 import Cloudflare_R2_service as R2
+```
+
+**`backend`フォルダ内のモジュールからの使用:**
+```python
+from .モジュールファイル名 import クラス名 as エイリアス名
+# 例: from .access_r2 import Cloudflare_R2_service_Access as R2Access
+```
 
 ---
 
@@ -623,17 +751,18 @@ loadGS.load_spreadsheet(
 
 - [Streamlit Documentation](https://docs.streamlit.io/)
 - [Firebase Documentation](https://firebase.google.com/docs)
-- [Google Sheets API](https://developers.google.com/sheets/api)
+- [gspread](https://docs.gspread.org/en/latest/)
 - [Cloudflare R2 Documentation](https://developers.cloudflare.com/r2/)
 - [boto3 Documentation](https://boto3.amazonaws.com/v1/documentation/api/latest/index.html)
+- [discord.py Documentation](https://discordpy.readthedocs.io/ja/latest/api.html#)
 
 ---
 
 ## バージョン履歴
 
-| バージョン | 日付 | 変更内容 |
-|-----------|------|----------|
-| 1.0 | 2025-11-30 | 初版作成 |
+| バージョン | 変更内容 |
+|-----------|----------|
+| 2.0 | バックエンドのStreamlitへの依存性解消およびDiscord対応 |
 
 ---
 
@@ -643,5 +772,5 @@ loadGS.load_spreadsheet(
 
 ---
 
-**Document Version**: 1.0  
+**Document Version**: 2.0  
 **Last Updated**: 2025

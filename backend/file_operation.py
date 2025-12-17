@@ -48,7 +48,7 @@ class FileOperation:
         if temporary != None:
             temporary = clr if temporary == "clr" else temporary
             structure["temporary"] = temporary
-        if non_active != None:
+        if non_active != None and work_data != None:
             rejected_index = f"non_active_{non_active['take']:02}"
             structure[rejected_index] = non_active
             current_reject_count = int(work_data["current_reject_count"]) 
