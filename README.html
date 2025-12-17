@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>Shell Arc - &#x30d7;&#x30ed;&#x30b8;&#x30a7;&#x30af;&#x30c8;&#x7ba1;&#x7406;&#x30d7;&#x30e9;&#x30c3;&#x30c8;&#x30d5;&#x30a9;&#x30fc;&#x30e0; - &#x6280;&#x8853;&#x30c9;&#x30ad;&#x30e5;&#x30e1;&#x30f3;&#x30c8;</title>
+            <style>
+/* From extension vscode.github */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+.vscode-dark img[src$=\#gh-light-mode-only],
+.vscode-light img[src$=\#gh-dark-mode-only],
+.vscode-high-contrast:not(.vscode-high-contrast-light) img[src$=\#gh-light-mode-only],
+.vscode-high-contrast-light img[src$=\#gh-dark-mode-only] {
+	display: none;
+}
+
+</style>
+            
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/markdown.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/highlight.css">
+<style>
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI', system-ui, 'Ubuntu', 'Droid Sans', sans-serif;
+                font-size: 14px;
+                line-height: 1.6;
+            }
+        </style>
+        <style>
+.task-list-item {
+    list-style-type: none;
+}
+
+.task-list-item-checkbox {
+    margin-left: -20px;
+    vertical-align: middle;
+    pointer-events: none;
+}
+</style>
+<style>
+:root {
+  --color-note: #0969da;
+  --color-tip: #1a7f37;
+  --color-warning: #9a6700;
+  --color-severe: #bc4c00;
+  --color-caution: #d1242f;
+  --color-important: #8250df;
+}
+
+</style>
+<style>
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-note: #2f81f7;
+    --color-tip: #3fb950;
+    --color-warning: #d29922;
+    --color-severe: #db6d28;
+    --color-caution: #f85149;
+    --color-important: #a371f7;
+  }
+}
+
+</style>
+<style>
+.markdown-alert {
+  padding: 0.5rem 1rem;
+  margin-bottom: 16px;
+  color: inherit;
+  border-left: .25em solid #888;
+}
+
+.markdown-alert>:first-child {
+  margin-top: 0
+}
+
+.markdown-alert>:last-child {
+  margin-bottom: 0
+}
+
+.markdown-alert .markdown-alert-title {
+  display: flex;
+  font-weight: 500;
+  align-items: center;
+  line-height: 1
+}
+
+.markdown-alert .markdown-alert-title .octicon {
+  margin-right: 0.5rem;
+  display: inline-block;
+  overflow: visible !important;
+  vertical-align: text-bottom;
+  fill: currentColor;
+}
+
+.markdown-alert.markdown-alert-note {
+  border-left-color: var(--color-note);
+}
+
+.markdown-alert.markdown-alert-note .markdown-alert-title {
+  color: var(--color-note);
+}
+
+.markdown-alert.markdown-alert-important {
+  border-left-color: var(--color-important);
+}
+
+.markdown-alert.markdown-alert-important .markdown-alert-title {
+  color: var(--color-important);
+}
+
+.markdown-alert.markdown-alert-warning {
+  border-left-color: var(--color-warning);
+}
+
+.markdown-alert.markdown-alert-warning .markdown-alert-title {
+  color: var(--color-warning);
+}
+
+.markdown-alert.markdown-alert-tip {
+  border-left-color: var(--color-tip);
+}
+
+.markdown-alert.markdown-alert-tip .markdown-alert-title {
+  color: var(--color-tip);
+}
+
+.markdown-alert.markdown-alert-caution {
+  border-left-color: var(--color-caution);
+}
+
+.markdown-alert.markdown-alert-caution .markdown-alert-title {
+  color: var(--color-caution);
+}
+
+</style>
+        
+        </head>
+        <body class="vscode-body vscode-light">
+            <h1 id="shell-arc---プロジェクト管理プラットフォーム---技術ドキュメント">Shell Arc - プロジェクト管理プラットフォーム - 技術ドキュメント</h1>
+<h2 id="目次">目次</h2>
+<ol>
+<li><a href="#api%E8%A8%AD%E5%AE%9A">API設定</a></li>
+<li><a href="#%E3%83%87%E3%83%BC%E3%82%BF%E3%82%B5%E3%83%BC%E3%83%93%E3%82%B9%E3%81%AE%E5%88%9D%E6%9C%9F%E8%A8%AD%E5%AE%9A">データサービスの初期設定</a></li>
+<li><a href="#%E3%83%97%E3%83%AD%E3%82%B8%E3%82%A7%E3%82%AF%E3%83%88%E8%A8%AD%E5%AE%9A">プロジェクト設定</a></li>
+<li><a href="#%E7%92%B0%E5%A2%83%E6%A7%8B%E7%AF%89">環境構築</a></li>
+<li><a href="#%E3%82%BD%E3%83%BC%E3%82%B9%E3%82%B3%E3%83%BC%E3%83%89%E8%A7%A3%E8%AA%AC">ソースコード解説</a></li>
+<li><a href="#%E3%82%AB%E3%82%B9%E3%82%BF%E3%83%9E%E3%82%A4%E3%82%BA%E3%82%AC%E3%82%A4%E3%83%89">カスタマイズガイド</a></li>
+</ol>
+<blockquote>
+<p>⚠️ システムの設定方法と利用方法は、本ドキュメントの第1〜3節で記載されています。<br>
+第4−6節は、環境構築およびソースコードの詳しい解説ですので、システム本体をカスタム・改造したい場合のみご参照ください。</p>
+</blockquote>
+<hr>
+<h2 id="api設定">API設定</h2>
+<h3 id="概要">概要</h3>
+<p>本プラットフォームは以下のAPIを使用しています：</p>
+<ul>
+<li><strong>boto3 Python API</strong> - R2ストレージ</li>
+<li><strong>Firebase Python API</strong> - データベース</li>
+<li><strong>oauth2client Python API</strong> - GCP認証</li>
+<li><strong>gspread</strong> - スプレッドシート操作</li>
+</ul>
+<h3 id="secretstomlファイルの場所">secrets.tomlファイルの場所</h3>
+<p><code>プロジェクトルート/.streamlit/secrets.toml</code></p>
+<blockquote>
+<p>🔒 <strong>セキュリティ注意</strong>: APIキー情報は極めてセンシティブです。必ず<code>secrets.toml</code>に記述し、それ以外のどこにも平文で記述しないでください。<br>
+また、<code>secrets.toml</code>の内容は、Streamlit Community Cloudでデプロイする際、Streamlit Community CloudのUI上で記述するものです<br>
+Githubへのコミットを含め、あらゆるプラットフォームでの公開をお避けください</p>
+</blockquote>
+<blockquote>
+<p>⚠️ <strong>重要</strong>: プロジェクトをGitHubにコミットする際、必ず<code>.gitignore</code>ファイルを作り、その中に<code>.streamlit/secrets.toml</code>を記述した上で、コミットしてください。<br>
+これは、GitHubに「<code>secrets.toml</code>は秘密だから公開しないでください」という指示を意味します。</p>
+</blockquote>
+<h3 id="streamlitフォルダの表示方法">.streamlitフォルダの表示方法</h3>
+<ul>
+<li><strong>MacOS</strong>: <code>Command</code> + <code>Shift</code> + <code>.</code></li>
+<li><strong>Windows</strong>: 「表示」タブ → 「表示」 → 「隠しファイル」</li>
+</ul>
+<hr>
+<h3 id="1-gcpgoogle-cloud-platform認証情報の取得">1. GCP（Google Cloud Platform）認証情報の取得</h3>
+<h4 id="手順">手順</h4>
+<ol>
+<li><a href="https://console.cloud.google.com/">Google Cloud Platform</a>にアクセスし、Googleアカウントでログイン</li>
+<li>コンソールから新規プロジェクトを作成</li>
+<li><strong>APIとサービス</strong> → <strong>ライブラリ</strong> → <strong>Google Sheet API</strong>を検索し有効化</li>
+<li><strong>APIとサービス</strong> → <strong>認証情報</strong> → <strong>認証情報を作成</strong> → <strong>サービスアカウントを作成</strong></li>
+<li>作成されたサービスアカウントの<strong>メール</strong>をクリック</li>
+<li><strong>鍵</strong> → <strong>キーを追加</strong> → <strong>新しい鍵を作成</strong> → <strong>JSON</strong> → <strong>作成</strong></li>
+<li>ダウンロードされたJSONファイルを開く</li>
+</ol>
+<h4 id="secretstomlへの記述方法">secrets.tomlへの記述方法</h4>
+<p>JSONファイルの構文を変換：</p>
+<pre><code>元: {&quot;xxx&quot;: &quot;yyy&quot;, &quot;aaa&quot;: &quot;bbb&quot;}
+↓
+変換後:
+xxx = &quot;yyy&quot;
+aaa = &quot;bbb&quot;
+</code></pre>
+<p><strong>secrets.toml</strong>の<code>[GCP]</code>セクションに貼り付け：</p>
+<pre><code class="language-toml"><span class="hljs-section">[GCP]</span>
+<span class="hljs-attr">type</span> = <span class="hljs-string">&quot;service_account&quot;</span>
+<span class="hljs-attr">project_id</span> = <span class="hljs-string">&quot;your-project-id&quot;</span>
+<span class="hljs-attr">private_key_id</span> = <span class="hljs-string">&quot;your-private-key-id&quot;</span>
+<span class="hljs-attr">private_key</span> = <span class="hljs-string">&quot;-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n&quot;</span>
+<span class="hljs-attr">client_email</span> = <span class="hljs-string">&quot;your-service-account@project.iam.gserviceaccount.com&quot;</span>
+<span class="hljs-attr">client_id</span> = <span class="hljs-string">&quot;123456789&quot;</span>
+<span class="hljs-attr">auth_uri</span> = <span class="hljs-string">&quot;https://accounts.google.com/o/oauth2/auth&quot;</span>
+<span class="hljs-attr">token_uri</span> = <span class="hljs-string">&quot;https://oauth2.googleapis.com/token&quot;</span>
+<span class="hljs-attr">auth_provider_x509_cert_url</span> = <span class="hljs-string">&quot;https://www.googleapis.com/oauth2/v1/certs&quot;</span>
+<span class="hljs-attr">client_x509_cert_url</span> = <span class="hljs-string">&quot;https://www.googleapis.com/robot/v1/metadata/x509/...&quot;</span>
+<span class="hljs-attr">universe_domain</span> = <span class="hljs-string">&quot;googleapis.com&quot;</span>
+</code></pre>
+<hr>
+<h3 id="2-cloudflare-r2認証情報の取得">2. Cloudflare R2認証情報の取得</h3>
+<h4 id="手順-1">手順</h4>
+<ol>
+<li><a href="https://www.cloudflare.com/">Cloudflare</a>にアクセスし、アカウント作成またはログイン</li>
+<li>Dashboardにアクセス</li>
+<li><strong>Build</strong> → <strong>R2 object storage</strong> → <strong>Overview</strong> → <strong>Account Details</strong> → <strong>Manage</strong> → <strong>Create Account API token</strong></li>
+<li>指示に従ってAPI認証情報を取得</li>
+</ol>
+<h4 id="secretstomlへの記述">secrets.tomlへの記述</h4>
+<pre><code class="language-toml"><span class="hljs-section">[CloudflareR2]</span>
+<span class="hljs-attr">access_key_id</span> = <span class="hljs-string">&quot;your-access-key-id&quot;</span>
+<span class="hljs-attr">secret_access_key</span> = <span class="hljs-string">&quot;your-secret-access-key&quot;</span>
+<span class="hljs-attr">jurisdiction_specific_endpoints</span> = <span class="hljs-string">&quot;https://your-account-id.r2.cloudflarestorage.com&quot;</span>
+</code></pre>
+<hr>
+<h3 id="3-その他の設定項目">3. その他の設定項目</h3>
+<pre><code class="language-toml"><span class="hljs-section">[init]</span>
+<span class="hljs-attr">collection_name</span> = <span class="hljs-string">&quot;your-collection-name&quot;</span>
+
+<span class="hljs-section">[super]</span>
+<span class="hljs-attr">id</span> = <span class="hljs-string">&quot;admin-password&quot;</span>
+<span class="hljs-attr">checker_id</span> = <span class="hljs-string">&quot;reviewer-password&quot;</span>
+</code></pre>
+<hr>
+<h3 id="secretstomlの使い方">secrets.tomlの使い方</h3>
+<p>Streamlit Community Cloudでデプロイする際、UIで「高度」タプを開いて、当該箇所に上記にように記述したsecrets.tomlの内容をコピー&amp;ヘイストしてください。</p>
+<hr>
+<h2 id="データサービスの初期設定">データサービスの初期設定</h2>
+<p>新しい認証情報で以下のサービスを設定してください。</p>
+<h3 id="firebase">Firebase</h3>
+<h4 id="手順-2">手順</h4>
+<ol>
+<li><a href="https://firebase.google.com/">Firebase</a>にアクセスし、GCPと同じアカウントでログイン</li>
+<li>コンソールから<strong>新しいFirebaseプロジェクトを作成</strong></li>
+<li>プロジェクト内で<strong>アプリを追加</strong>し、指示に従ってアプリ情報を登録</li>
+<li><strong>プロダクトカテゴリ</strong> → <strong>構築</strong> → <strong>Firestore Database</strong>をクリック</li>
+<li>データベースを作成</li>
+<li>コレクションを作成（名前は<code>secrets.toml</code>の<code>[init]</code>セクションに記述）</li>
+</ol>
+<hr>
+<h3 id="google-sheets">Google Sheets</h3>
+<h4 id="手順-3">手順</h4>
+<ol>
+<li><a href="https://sheets.google.com/">Google Sheets</a>で新規スプレッドシートを作成</li>
+<li><code>secrets.toml</code>の<code>[GCP]</code>セクションから<code>client_email</code>をコピー</li>
+<li>スプレッドシートを<code>client_email</code>と共有し、<strong>編集権限</strong>を付与</li>
+<li>スプレッドシートのURLからキーを取得</li>
+</ol>
+<p><strong>URLの形式</strong>:</p>
+<pre><code>https://docs.google.com/spreadsheets/d/【キー】/edit?gid=0#gid=0
+</code></pre>
+<hr>
+<h3 id="cloudflare-r2">Cloudflare R2</h3>
+<h4 id="手順-4">手順</h4>
+<ol>
+<li><a href="https://www.cloudflare.com/">Cloudflare</a>にアクセスし、ログイン</li>
+<li>Dashboardにアクセス</li>
+<li><strong>Build</strong> → <strong>R2 object storage</strong> → <strong>Overview</strong> → <strong>Create bucket</strong></li>
+<li>バケットを作成</li>
+</ol>
+<blockquote>
+<p>⚠️ <strong>重要</strong>: バケット名は必ずプロジェクト名と同じにしてください。</p>
+</blockquote>
+<hr>
+<h2 id="プロジェクト設定">プロジェクト設定</h2>
+<h3 id="project_settingyamlについて">project_setting.yamlについて</h3>
+<p>プロジェクト新規作成時、全ての情報を<code>project_setting.yaml</code>に記述します。</p>
+<blockquote>
+<p>⚠️ <strong>警告</strong>:</p>
+<ul>
+<li>このファイルは<strong>プロジェクト初期化専用</strong>です</li>
+<li>アップロードのたびにデータベースが<strong>完全に初期化</strong>されます</li>
+<li>既存データが削除されるため、初期化以外では絶対に実行しないでください</li>
+<li>システム安定性のため、新項目の追加や既存項目の削除は行わないでください</li>
+</ul>
+</blockquote>
+<hr>
+<h3 id="project_settingyamlの記述方法">project_setting.yamlの記述方法</h3>
+<pre><code class="language-yaml"><span class="hljs-comment"># プロジェクト基本情報</span>
+<span class="hljs-attr">project_name:</span> <span class="hljs-string">プロジェクトの名称</span>
+<span class="hljs-attr">mode:</span> <span class="hljs-string">cut_base</span>  <span class="hljs-comment"># ← そのままにしてください</span>
+<span class="hljs-attr">cut_number:</span> <span class="hljs-string">総カット数</span>
+<span class="hljs-attr">component_number:</span> <span class="hljs-string">作業工程（原画、中割りなど）の数</span>
+
+<span class="hljs-comment"># パート分け</span>
+<span class="hljs-attr">parts:</span>
+  <span class="hljs-string">パート1名:</span> [<span class="hljs-string">始まりのカット数</span>, <span class="hljs-string">終わりのカット数</span>]
+  <span class="hljs-string">パート2名:</span> [<span class="hljs-string">始まりのカット数</span>, <span class="hljs-string">終わりのカット数</span>]
+  <span class="hljs-comment"># パート名（A1、A2など）は自由に設定可能</span>
+
+<span class="hljs-comment"># 作業工程の定義</span>
+<span class="hljs-attr">component:</span>
+  <span class="hljs-attr">1:</span>
+    <span class="hljs-attr">process:</span> <span class="hljs-string">プログラム内部で使う名前</span>  <span class="hljs-comment"># 必ず英文</span>
+    <span class="hljs-attr">display:</span> <span class="hljs-string">UIで表示される名前</span>  <span class="hljs-comment"># 日本語推奨</span>
+    <span class="hljs-attr">naming_section:</span> <span class="hljs-string">命名の構成部分の数</span>  <span class="hljs-comment"># 例: &quot;cut01_take02_genga&quot; → 3</span>
+    <span class="hljs-attr">name_component_1:</span> <span class="hljs-string">-cut</span>  <span class="hljs-comment"># -cutと-takeは動的に番号付け</span>
+    <span class="hljs-attr">name_component_2:</span> <span class="hljs-string">-take</span>
+    <span class="hljs-attr">name_component_3:</span> <span class="hljs-string">&quot;genga&quot;</span>
+    <span class="hljs-comment"># naming_sectionの数だけname_componentを定義</span>
+    <span class="hljs-attr">format:</span> [<span class="hljs-string">ファイル形式</span>, <span class="hljs-string">MIME形式</span>]  <span class="hljs-comment"># 例: [&quot;png&quot;, &quot;image/png&quot;]</span>
+    <span class="hljs-attr">progress:</span> <span class="hljs-number">0</span>  <span class="hljs-comment"># 進捗状況の初期値</span>
+  <span class="hljs-attr">2:</span>
+    <span class="hljs-comment"># 同様に定義</span>
+  <span class="hljs-comment"># component_numberの数だけ定義</span>
+
+<span class="hljs-comment"># スプレッドシート書式（デフォルトスプレッドシート使用時は変更不要）</span>
+<span class="hljs-attr">spreadsheet_format:</span>
+  <span class="hljs-attr">row_before_cut_1:</span> <span class="hljs-string">カット1のすぐ上の行番号</span>
+  <span class="hljs-attr">progress_data_n_lines_under_last_cut:</span> <span class="hljs-string">最後の行の下のn行目</span>
+  <span class="hljs-attr">component_info_range:</span> <span class="hljs-string">各作業工程が占める列数</span>  <span class="hljs-comment"># 例: 担当者と状態で2列</span>
+  
+  <span class="hljs-comment"># 作業工程に関係ない列の位置</span>
+  <span class="hljs-attr">common_column:</span>
+    <span class="hljs-attr">part:</span> <span class="hljs-number">2</span>      <span class="hljs-comment"># 列番号（A=1, B=2, ...）</span>
+    <span class="hljs-attr">cut:</span> <span class="hljs-number">3</span>
+    <span class="hljs-attr">difficulty:</span> <span class="hljs-number">4</span>
+    <span class="hljs-comment"># ⚠️ この項目名はプログラム基幹に関わるため変更非推奨</span>
+  
+  <span class="hljs-comment"># 各作業工程の情報列の位置（作業工程の左端を0とする）</span>
+  <span class="hljs-attr">component_info_column_structure:</span>
+    <span class="hljs-attr">member:</span> <span class="hljs-number">0</span>
+    <span class="hljs-attr">situation:</span> <span class="hljs-number">1</span>
+    <span class="hljs-attr">progress:</span> <span class="hljs-number">0</span>  <span class="hljs-comment"># ← そのままにしてください</span>
+    <span class="hljs-comment"># ⚠️ この項目名はプログラム基幹に関わるため変更非推奨</span>
+</code></pre>
+<hr>
+<h3 id="プロジェクト初期化の実行">プロジェクト初期化の実行</h3>
+<ol>
+<li><code>project_setting.yaml</code>をsubmittingポータルにアップロード</li>
+<li>スプレッドシートキーを入力（上記「Google Sheets」セクション参照）</li>
+<li>データベースとスプレッドシートが自動生成されます</li>
+</ol>
+<hr>
+<h2 id="環境構築">環境構築</h2>
+<h3 id="必要なツール">必要なツール</h3>
+<ul>
+<li>Conda</li>
+<li>PIP</li>
+<li>Python 3.11.14</li>
+</ul>
+<h3 id="セットアップ手順">セットアップ手順</h3>
+<p><strong>Conda をインストールしていない場合、<a href="https://docs.conda.io/projects/conda/en/latest/user-guide/getting-started.html">公式サイト</a>からインストールしてから、お進みください。</strong></p>
+<pre><code class="language-bash"><span class="hljs-comment"># 1. Python 3.11の仮想環境を作成</span>
+conda create -n 任意の環境名 python=3.11.14
+
+<span class="hljs-comment"># 2. 仮想環境を有効化</span>
+conda activate 先指定した環境名
+
+<span class="hljs-comment"># 3. 依存ライブラリをインストール（conda installは使用しないこと）</span>
+pip install streamlit firebase-admin gspread oauth2client boto3 PyYAML platformdirs
+</code></pre>
+<blockquote>
+<p>⚠️ <strong>重要</strong>: システム安定性のため、必ずpip installを使用してください。conda installは使用しないでください。</p>
+</blockquote>
+<h3 id="ローカルで実行デバッグする方法">ローカルで実行・デバッグする方法</h3>
+<pre><code class="language-bash"><span class="hljs-comment"># Conda 仮想環境を有効化</span>
+conda activate 先指定した環境名
+<span class="hljs-comment"># プロジェクトルートディレクトリに移動</span>
+<span class="hljs-built_in">cd</span> プロジェクトルートディレクトリ
+<span class="hljs-comment"># Streamlit アプリケーションの起動</span>
+streamlit run 実行したいファイル.py
+</code></pre>
+<hr>
+<h2 id="ソースコード解説">ソースコード解説</h2>
+<h3 id="命名規則の理解">命名規則の理解</h3>
+<p>プロジェクトで使用される命名パターン：</p>
+<h4 id="firebase関連">Firebase関連</h4>
+<table>
+<thead>
+<tr>
+<th>名前パターン</th>
+<th>説明</th>
+<th>例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ref_xxx_obj</code></td>
+<td>データベースのオブジェクト</td>
+<td><code>ref_setting_obj</code></td>
+</tr>
+<tr>
+<td><code>ref_xxx</code></td>
+<td><code>ref_xxx_obj.get()</code>の結果（参照点）</td>
+<td><code>ref_setting</code></td>
+</tr>
+<tr>
+<td><code>xxx_data</code></td>
+<td><code>ref_xxx.to_dict()</code>の結果（辞書データ）</td>
+<td><code>proj_setting_data</code></td>
+</tr>
+</tbody>
+</table>
+<h4 id="作業工程関連">作業工程関連</h4>
+<table>
+<thead>
+<tr>
+<th>用語</th>
+<th>説明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>component</code></td>
+<td>各作業工程全般を指す</td>
+</tr>
+<tr>
+<td><code>work</code></td>
+<td>現在処理中の工程を指す</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h3 id="ファイル別解説">ファイル別解説</h3>
+<h4 id="1-access_databasepy">1. access_database.py</h4>
+<p><strong>役割</strong>: Firestore Databaseへのアクセス</p>
+<pre><code class="language-python"><span class="hljs-keyword">class</span> <span class="hljs-title class_">AccessDB</span>:
+    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params">self</span>):
+        <span class="hljs-comment"># データベースへ認証情報を提供し、アクセスを取得</span>
+    
+<span class="hljs-meta">    @property</span>
+    <span class="hljs-keyword">def</span> <span class="hljs-title function_">database</span>(<span class="hljs-params">self</span>):
+        <span class="hljs-comment"># データベースへの参照を返す</span>
+</code></pre>
+<hr>
+<h4 id="2-request_r2py">2. request_r2.py</h4>
+<p><strong>役割</strong>: R2ストレージへのアクセスとファイルの取得・アップロード</p>
+<pre><code class="language-python"><span class="hljs-keyword">class</span> <span class="hljs-title class_">Cloudflare_R2_service</span>:
+    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params">self</span>):
+        <span class="hljs-comment"># R2へ認証情報を提供し、バケットへのアクセスを取得</span>
+    
+    <span class="hljs-keyword">def</span> <span class="hljs-title function_">upload_file</span>(<span class="hljs-params">self, uploaded_file, file_path</span>):
+        <span class="hljs-comment"># UIからアップロードされたファイルをR2の正しい場所に保存</span>
+    
+    <span class="hljs-keyword">def</span> <span class="hljs-title function_">download_file</span>(<span class="hljs-params">self, file_naming, to_download_file, download_destination</span>):
+        <span class="hljs-comment"># 指定ファイルを取得し、ローカルにダウンロード</span>
+</code></pre>
+<hr>
+<h4 id="3-access_spreadsheetpy">3. access_spreadsheet.py</h4>
+<p><strong>役割</strong>: Google Sheetsスプレッドシートへのアクセス</p>
+<pre><code class="language-python"><span class="hljs-keyword">class</span> <span class="hljs-title class_">AccessSpreadSheet</span>:
+    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params">self, spreadsheet_key</span>):
+        <span class="hljs-comment"># Google Sheetsへ認証情報を提供し、アクセスを取得</span>
+    
+<span class="hljs-meta">    @property</span>
+    <span class="hljs-keyword">def</span> <span class="hljs-title function_">spreadsheet_obj</span>(<span class="hljs-params">self</span>):
+        <span class="hljs-comment"># スプレッドシートへの参照を返す</span>
+</code></pre>
+<hr>
+<h4 id="4-load_spread_sheetpy">4. load_spread_sheet.py</h4>
+<p><strong>役割</strong>: スプレッドシート情報の取得・書き込み・更新</p>
+<pre><code class="language-python"><span class="hljs-keyword">class</span> <span class="hljs-title class_">LoadSpreadSheet</span>:
+    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params">self, spreadsheet_format_data</span>):
+        <span class="hljs-comment"># project_setting.yamlのspreadsheet_formatを取得</span>
+        <span class="hljs-comment"># アクセスアルゴリズムを標準化</span>
+    
+    <span class="hljs-keyword">def</span> <span class="hljs-title function_">cell_id</span>(<span class="hljs-params">self, column_index, row_index</span>):
+        <span class="hljs-comment"># 行と列の番号を&quot;A1&quot;形式のセル名に変換</span>
+        <span class="hljs-comment"># 例: (1, 1) → &quot;A1&quot;</span>
+    
+    <span class="hljs-keyword">def</span> <span class="hljs-title function_">column_index_of_requested_component_info</span>(<span class="hljs-params">self, component_index, requesting_info</span>):
+        <span class="hljs-comment"># 問い合わせ情報の該当列数を返す</span>
+    
+    <span class="hljs-keyword">def</span> <span class="hljs-title function_">load_spreadsheet</span>(<span class="hljs-params">self, spreadsheet, cut_index, target_info, 
+                         update_info=<span class="hljs-literal">None</span>, component_index=<span class="hljs-number">0</span></span>):
+        <span class="hljs-comment"># 情報の取得と更新</span>
+        <span class="hljs-comment"># update_info=None → 取得（問い合わせ）</span>
+        <span class="hljs-comment"># update_info指定 → 書き込み</span>
+    
+    <span class="hljs-keyword">def</span> <span class="hljs-title function_">load_progress</span>(<span class="hljs-params">self, spreadsheet, component_index, is_get, total_cut_number</span>):
+        <span class="hljs-comment"># 進捗の取得と更新</span>
+        <span class="hljs-comment"># is_get=True → 進捗を0-1の小数文字列で返す</span>
+        <span class="hljs-comment"># is_get=False → 進捗を単純計算で更新</span>
+</code></pre>
+<hr>
+<h4 id="5-project_settingpy">5. project_setting.py</h4>
+<p><strong>役割</strong>: プロジェクトの初期設定を実行</p>
+<blockquote>
+<p>⚠️ <strong>注意</strong>: プロジェクト新規作成時に<strong>一度のみ</strong>実行</p>
+</blockquote>
+<pre><code class="language-python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">generate_meta</span>(<span class="hljs-params">dict_from_yaml_data, collection_name, spreadsheet_key</span>):
+    <span class="hljs-comment"># データベースのsettingドキュメントに格納する情報を生成</span>
+    <span class="hljs-comment"># 辞書として返す</span>
+
+<span class="hljs-keyword">def</span> <span class="hljs-title function_">generate_spreadsheet_format</span>(<span class="hljs-params">dict_from_yaml_data</span>):
+    <span class="hljs-comment"># データベースのspreadsheet_formatドキュメントに格納する情報を生成</span>
+    <span class="hljs-comment"># 辞書として返す</span>
+
+<span class="hljs-keyword">def</span> <span class="hljs-title function_">build_main_proj_db</span>(<span class="hljs-params">db, dict_from_yaml_data, proj_collection, spreadsheet_key</span>):
+    <span class="hljs-comment"># データベース自体の作成と構築</span>
+
+<span class="hljs-keyword">def</span> <span class="hljs-title function_">build_main_proj_spread_sheet</span>(<span class="hljs-params">spreadsheet, dict_from_yaml_data, proj_collection</span>):
+    <span class="hljs-comment"># スプレッドシート自体の作成と構築</span>
+
+<span class="hljs-keyword">def</span> <span class="hljs-title function_">main</span>():
+    <span class="hljs-comment"># UIの定義とプログラムフローの制御</span>
+</code></pre>
+<hr>
+<h4 id="6-common_initialisationpy">6. common_initialisation.py</h4>
+<p><strong>役割</strong>: 提出・取得・レビュー機能が共通使用するロジックと変数の一元管理</p>
+<p><strong>提供される共通変数</strong>:</p>
+<ul>
+<li>データベースのオブジェクト、参照、辞書</li>
+<li>スプレッドシートへの参照</li>
+<li>LoadSpreadSheetクラスのインスタンス参照</li>
+<li>作業工程のインデックス、英文名、ファイル形式、MIME形式</li>
+</ul>
+<p><strong>プロパティメソッド</strong>:
+提出・取得・レビュー用コードで使用される変数と同名のプロパティメソッドが定義されています。</p>
+<pre><code class="language-python"><span class="hljs-keyword">class</span> <span class="hljs-title class_">CommonInitialisation</span>:
+    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params">self</span>):
+        <span class="hljs-comment"># 共通変数の初期化</span>
+    
+<span class="hljs-meta">    @property</span>
+    <span class="hljs-keyword">def</span> <span class="hljs-title function_">ref_setting_obj</span>(<span class="hljs-params">self</span>):
+        <span class="hljs-comment"># プロジェクト設定データオブジェクト</span>
+    
+<span class="hljs-meta">    @property</span>
+    <span class="hljs-keyword">def</span> <span class="hljs-title function_">ref_setting</span>(<span class="hljs-params">self</span>):
+        <span class="hljs-comment"># プロジェクト設定データ参照</span>
+    
+<span class="hljs-meta">    @property</span>
+    <span class="hljs-keyword">def</span> <span class="hljs-title function_">proj_setting_data</span>(<span class="hljs-params">self</span>):
+        <span class="hljs-comment"># プロジェクト設定データ辞書</span>
+    
+<span class="hljs-meta">    @property</span>
+    <span class="hljs-keyword">def</span> <span class="hljs-title function_">ref_collection</span>(<span class="hljs-params">self</span>):
+        <span class="hljs-comment"># プロジェクトメインデータ参照</span>
+    
+<span class="hljs-meta">    @property</span>
+    <span class="hljs-keyword">def</span> <span class="hljs-title function_">spreadsheet</span>(<span class="hljs-params">self</span>):
+        <span class="hljs-comment"># スプレッドシート参照</span>
+    
+<span class="hljs-meta">    @property</span>
+    <span class="hljs-keyword">def</span> <span class="hljs-title function_">loadGS</span>(<span class="hljs-params">self</span>):
+        <span class="hljs-comment"># LoadSpreadSheetインスタンス</span>
+    
+    <span class="hljs-keyword">def</span> <span class="hljs-title function_">work_info</span>(<span class="hljs-params">self, processing_component</span>):
+        <span class="hljs-comment"># 作業工程情報を取得</span>
+</code></pre>
+<hr>
+<h4 id="7-submissionpy">7. <a href="http://submission.py">submission.py</a></h4>
+<p><strong>役割</strong>: ファイルの提出</p>
+<p>UIとロジック定義を行います。</p>
+<hr>
+<h4 id="8-requestingpy">8. <a href="http://requesting.py">requesting.py</a></h4>
+<p><strong>役割</strong>: ファイルの取得</p>
+<p>UIとロジック定義を行います。</p>
+<hr>
+<h4 id="9-reviewerpy">9. <a href="http://reviewer.py">reviewer.py</a></h4>
+<p><strong>役割</strong>: ファイルのレビュー</p>
+<p>UIとロジック定義を行います。</p>
+<hr>
+<h2 id="カスタマイズガイド">カスタマイズガイド</h2>
+<h3 id="設計原則">設計原則</h3>
+<ol>
+<li><strong>処理ロジックとUI操作</strong>: <code>requesting.py</code>, <code>reviewer.py</code>, <code>submission.py</code>で行う</li>
+<li><strong>外部データサービスの認証とアクセス</strong>: <code>access_database.py</code>, <code>access_spreadsheet.py</code>, <code>request_r2.py</code>で行う</li>
+<li><strong>初期設定制御</strong>: <code>project_setting.py</code>は他のコードとの独立性を維持</li>
+<li><strong>スプレッドシート操作</strong>: <code>load_spread_sheet.py</code>を介して行う</li>
+<li><strong>共通ロジックと変数</strong>: <code>common_initialisation.py</code>に集約</li>
+</ol>
+<hr>
+<h3 id="ケース1-project_settingyamlに項目を追加spreadsheet_format以外">ケース1: project_setting.yamlに項目を追加（spreadsheet_format以外）</h3>
+<h4 id="手順-5">手順</h4>
+<p><strong>ステップ1</strong>: <code>project_setting.yaml</code>に項目追加</p>
+<pre><code class="language-yaml"><span class="hljs-attr">new_setting:</span> <span class="hljs-string">新しい値</span>
+</code></pre>
+<p><strong>ステップ2</strong>: <code>project_setting.py</code>の<code>generate_meta()</code>メソッドを編集</p>
+<pre><code class="language-python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">generate_meta</span>(<span class="hljs-params">dict_from_yaml_data, collection_name, spreadsheet_key</span>):
+    meta_info = {
+        <span class="hljs-string">&quot;project_name&quot;</span>: dict_from_yaml_data[<span class="hljs-string">&quot;project_name&quot;</span>],
+        <span class="hljs-comment"># ... 既存の項目 ...</span>
+        <span class="hljs-string">&quot;new_setting&quot;</span>: dict_from_yaml_data[<span class="hljs-string">&quot;new_setting&quot;</span>]  <span class="hljs-comment"># ← 追加</span>
+    }
+    <span class="hljs-keyword">return</span> meta_info
+</code></pre>
+<p><strong>ステップ3</strong>: データの使用</p>
+<pre><code class="language-python"><span class="hljs-comment"># requesting.py, reviewer.py, submission.pyで使用可能</span>
+value = proj_setting_data[<span class="hljs-string">&quot;new_setting&quot;</span>]
+
+<span class="hljs-comment"># その他の場所では</span>
+value = common.proj_setting_data[<span class="hljs-string">&quot;new_setting&quot;</span>]
+</code></pre>
+<hr>
+<h3 id="ケース2-spreadsheet_formatの変更">ケース2: spreadsheet_formatの変更</h3>
+<h4 id="手順-6">手順</h4>
+<p><strong>ステップ1</strong>: <code>project_setting.yaml</code>の<code>spreadsheet_format</code>を編集</p>
+<pre><code class="language-yaml"><span class="hljs-attr">spreadsheet_format:</span>
+  <span class="hljs-attr">common_column:</span>
+    <span class="hljs-attr">part:</span> <span class="hljs-number">2</span>
+    <span class="hljs-attr">cut:</span> <span class="hljs-number">3</span>
+    <span class="hljs-attr">difficulty:</span> <span class="hljs-number">4</span>
+    <span class="hljs-attr">new_column:</span> <span class="hljs-number">5</span>  <span class="hljs-comment"># ← 追加</span>
+  
+  <span class="hljs-attr">component_info_column_structure:</span>
+    <span class="hljs-attr">member:</span> <span class="hljs-number">0</span>
+    <span class="hljs-attr">situation:</span> <span class="hljs-number">1</span>
+    <span class="hljs-attr">new_info:</span> <span class="hljs-number">2</span>  <span class="hljs-comment"># ← 追加</span>
+</code></pre>
+<p><strong>ステップ2</strong>: 新しい情報にアクセス</p>
+<pre><code class="language-python"><span class="hljs-comment"># load_spread_sheet.pyのLoadSpreadSheetクラスのメソッドを使用</span>
+loadGS.load_spreadsheet(
+    spreadsheet=spreadsheet,
+    cut_index=<span class="hljs-number">1</span>,
+    target_info=<span class="hljs-string">&quot;new_column&quot;</span>,  <span class="hljs-comment"># または &quot;new_info&quot;</span>
+    component_index=<span class="hljs-number">0</span>  <span class="hljs-comment"># common_columnの場合は0</span>
+)
+</code></pre>
+<hr>
+<h3 id="ケース3-新しい機能の追加">ケース3: 新しい機能の追加</h3>
+<h4 id="ガイドライン">ガイドライン</h4>
+<ol>
+<li><strong>UIロジック</strong>: 新しい<code>.py</code>ファイルを作成（<code>requesting.py</code>等を参考）</li>
+<li><strong>データベース構造の変更</strong>: <code>project_setting.py</code>の<code>build_main_proj_db()</code>を編集</li>
+<li><strong>共通処理の追加</strong>: <code>common_initialisation.py</code>にメソッドを追加</li>
+<li><strong>スプレッドシート操作</strong>: 必ず<code>load_spread_sheet.py</code>を介して行う</li>
+</ol>
+<hr>
+<h3 id="ケース4-認証情報の更新">ケース4: 認証情報の更新</h3>
+<p>管理者が変更になった場合：</p>
+<ol>
+<li><strong>GCP認証情報を再取得</strong> → <a href="#api%E8%A8%AD%E5%AE%9A">API設定</a>参照</li>
+<li><strong>Cloudflare R2認証情報を再取得</strong> → <a href="#api%E8%A8%AD%E5%AE%9A">API設定</a>参照</li>
+<li><strong><code>secrets.toml</code>を更新</strong></li>
+<li><strong>各サービスの共有設定を更新</strong> → <a href="#%E3%83%87%E3%83%BC%E3%82%BF%E3%82%B5%E3%83%BC%E3%83%93%E3%82%B9%E3%81%AE%E5%88%9D%E6%9C%9F%E8%A8%AD%E5%AE%9A">データサービスの初期設定</a>参照</li>
+</ol>
+<hr>
+<h2 id="トラブルシューティング">トラブルシューティング</h2>
+<h3 id="よくある問題">よくある問題</h3>
+<h4 id="問題1-データベース接続エラー">問題1: データベース接続エラー</h4>
+<p><strong>原因</strong>:</p>
+<ul>
+<li><code>secrets.toml</code>の<code>[GCP]</code>セクションが正しく設定されていない</li>
+<li>Firebaseプロジェクトが作成されていない</li>
+</ul>
+<p><strong>解決策</strong>:</p>
+<ol>
+<li><code>secrets.toml</code>の認証情報を確認</li>
+<li>Firebaseコンソールでプロジェクトとデータベースが存在するか確認</li>
+</ol>
+<hr>
+<h4 id="問題2-スプレッドシートアクセスエラー">問題2: スプレッドシートアクセスエラー</h4>
+<p><strong>原因</strong>:</p>
+<ul>
+<li>スプレッドシートが<code>client_email</code>と共有されていない</li>
+<li>スプレッドシートキーが間違っている</li>
+</ul>
+<p><strong>解決策</strong>:</p>
+<ol>
+<li><code>secrets.toml</code>の<code>client_email</code>を確認</li>
+<li>Google Sheetsの共有設定で<code>client_email</code>に編集権限があるか確認</li>
+<li>URLからキーを正しく取得できているか確認</li>
+</ol>
+<hr>
+<h4 id="問題3-r2ストレージアクセスエラー">問題3: R2ストレージアクセスエラー</h4>
+<p><strong>原因</strong>:</p>
+<ul>
+<li>バケット名がプロジェクト名と一致していない</li>
+<li>API認証情報が間違っている</li>
+</ul>
+<p><strong>解決策</strong>:</p>
+<ol>
+<li>Cloudflare R2のバケット名を確認</li>
+<li><code>secrets.toml</code>の<code>[CloudflareR2]</code>セクションを確認</li>
+<li><code>request_r2.py</code>の<code>R2_BUCKET</code>変数がプロジェクト名と一致するか確認</li>
+</ol>
+<hr>
+<h4 id="問題4-プロジェクト初期化が失敗する">問題4: プロジェクト初期化が失敗する</h4>
+<p><strong>原因</strong>:</p>
+<ul>
+<li><code>project_setting.yaml</code>の形式が間違っている</li>
+<li>スプレッドシートキーが無効</li>
+</ul>
+<p><strong>解決策</strong>:</p>
+<ol>
+<li>YAMLの構文エラーをチェック（インデントなど）</li>
+<li>必須項目が全て記述されているか確認</li>
+<li>スプレッドシートキーを再確認</li>
+</ol>
+<hr>
+<h3 id="推奨開発環境">推奨開発環境</h3>
+<ul>
+<li><strong>IDE</strong>: Visual Studio Code</li>
+<li><strong>Python</strong>: 3.11.14</li>
+<li><strong>OS</strong>: MacOS, Windows, Linux</li>
+</ul>
+<hr>
+<h3 id="関連リンク">関連リンク</h3>
+<ul>
+<li><a href="https://docs.streamlit.io/">Streamlit Documentation</a></li>
+<li><a href="https://firebase.google.com/docs">Firebase Documentation</a></li>
+<li><a href="https://developers.google.com/sheets/api">Google Sheets API</a></li>
+<li><a href="https://developers.cloudflare.com/r2/">Cloudflare R2 Documentation</a></li>
+<li><a href="https://boto3.amazonaws.com/v1/documentation/api/latest/index.html">boto3 Documentation</a></li>
+</ul>
+<hr>
+<h2 id="バージョン履歴">バージョン履歴</h2>
+<table>
+<thead>
+<tr>
+<th>バージョン</th>
+<th>日付</th>
+<th>変更内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1.0</td>
+<td>2025-11-30</td>
+<td>初版作成</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="ライセンス">ライセンス</h2>
+<p>本システムは、Apache License 2.0ライセンスに基づいて配布されています。</p>
+<hr>
+<p><strong>Document Version</strong>: 1.0<br>
+<strong>Last Updated</strong>: 2025</p>
+
+            
+            
+        </body>
+        </html>
