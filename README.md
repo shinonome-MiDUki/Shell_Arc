@@ -768,7 +768,7 @@ from .モジュールファイル名 import クラス名 as エイリアス名
 
 ## ライセンス
 
-本システムは、Apache License 2.0ライセンスに基づいて配布されています。
+本システムは、GNU General Public License v3.0ライセンスに基づいて配布されています。
 
 ---
 
