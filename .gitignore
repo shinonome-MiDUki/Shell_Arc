@@ -1,2 +1,9 @@
 .streamlit/secrets.toml
+.streamlit/.DS_Store
 .env
+.DS_Store
+discord_bot/.DS_Store
+backend/.DS_Store
+pages/.DS_Store
+backend/__pycache__/
+pages/__pycache__/
