@@ -11,6 +11,7 @@ if project_root not in sys.path:
 from backend.request_r2 import Cloudflare_R2_service as R2
 from backend.common_initialisation import CommonInitialisation as Common
 from backend.file_operation import FileOperation as FileOp
+from discord_bot.discord_notice_webhook import DiscordNotice as Notice
 
 def main():
     st.set_page_config(
@@ -94,6 +95,8 @@ def main():
                 loadGS.load_spreadsheet(spreadsheet=spreadsheet, cut_index=submitting_cut, target_info="member", update_info=submitting_person, component_index=working_index)
                 loadGS.load_spreadsheet(spreadsheet=spreadsheet, cut_index=submitting_cut, target_info="situation", update_info="作業中", component_index=working_index)
 
+                notice = Notice()
+                notice.discord_notice(submitting_cut, submitting_component, current_take, submitting_person)
                 st.write("提出が完了しました。お疲れ様でした！")
 
 

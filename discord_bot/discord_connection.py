@@ -5,32 +5,139 @@ import io
 import asyncio
 
 import discord
+from discord.ext import commands
 from dotenv import load_dotenv
 
-proj_root = os.path.dirname(os.path.abspath(__file__))
+proj_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if proj_root not in sys.path:
     sys.path.append(proj_root)
 
 from backend.request_r2 import Cloudflare_R2_service as R2
 from backend.common_initialisation import CommonInitialisation as Common
 from backend.file_operation import FileOperation as FileOp
+from discord_notice_webhook import DiscordNotice as Notice
 
 load_dotenv(verbose=True)
 dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
 load_dotenv(dotenv_path)
 TOKEN = os.environ.get("Discord_token")
 SERVER_ID = os.environ.get("Discord_server_id")
-dc_client = discord.Client(intents=discord.Intents.all())
+# dc_client = discord.Client(intents=discord.Intents.all())
+
+shell_arc_bot = commands.Bot(command_prefix="..", intents=discord.Intents.all())
 
 component_reference_dict = {
     "genga" : "原画",
     "nakawari" : "中割り", 
     "haikei" : "背景",
     "satsuei" : "撮影",
-    "hennsyu" : "編集"
+    "hennsyu" : "編集",
+    "原画" : "原画",
+    "中割り" : "中割り",
+    "背景" : "背景",
+    "撮影" : "撮影",
+    "編集" : "編集",
+    "g" : "原画",
+    "n" : "中割り",
+    "h" : "背景",
+    "s" : "撮影",
+    "hen" : "編集"
 }
 
-@dc_client.event
+class SubmissionSelectionView(discord.ui.View): 
+    def __init__(self, timeout=120, message=None):
+        super().__init__(timeout=timeout)
+        self.message = message
+
+    @discord.ui.select(
+        cls=discord.ui.Select,
+        placeholder="提出する部分を選択してください",
+        options=[
+            discord.SelectOption(label="原画"),
+            discord.SelectOption(label="中割り"),
+            discord.SelectOption(label="背景"),
+            discord.SelectOption(label="撮影"),
+            discord.SelectOption(label="編集"),
+        ]
+    )
+    async def select(self, interaction: discord.Interaction, select: discord.ui.Select):
+        await interaction.response.defer()
+
+        message = self.message
+        channel_name = str(message.channel.name.lower())
+        try:
+            submitting_cut = str(channel_name.split("_")[0])
+            submitting_cut = re.sub(r"[^\d]", "", submitting_cut)
+            submitting_cut = int(submitting_cut)
+            submitting_person = str(channel_name.split("_")[1])
+            submitting_component = str(select.values[0])
+        except:
+            await message.channel.send("!!ERROR!!")
+            return
+        print(submitting_cut)
+        print(submitting_component)
+
+        if submitting_person != str(message.author.display_name):
+            await message.channel.send("Warning : 提出者アカウント名はチャンネルで指定された担当者名と異なります")
+            submitting_person = str(message.author.display_name)
+        await interaction.channel.send(f"カット{submitting_cut}・{submitting_component} 提出しますか（はい・いいえ）")
+        def check(m):
+            return m.author == message.author and m.channel == message.channel
+        try:
+            reply_message = await shell_arc_bot.wait_for('message', check=check, timeout=30.0)
+        except asyncio.TimeoutError:
+            await message.channel.send("時間超過です。やり直してください")
+        except:
+            await message.channel.send("!!ERROR!!")
+        if reply_message.content == "はい":
+            shell_arc_bot.dispatch("push_action", message, submitting_cut, submitting_component, submitting_person)
+        else:
+            await message.channel.send("提出が棄却されました")
+
+class ReviewSelectionView(discord.ui.View): 
+    def __init__(self, timeout=120, message=None):
+        super().__init__(timeout=timeout)
+        self.message = message
+
+    @discord.ui.select(
+        cls=discord.ui.Select,
+        placeholder="提出する部分を選択してください",
+        options=[
+            discord.SelectOption(label="原画"),
+            discord.SelectOption(label="中割り"),
+            discord.SelectOption(label="背景"),
+            discord.SelectOption(label="撮影"),
+            discord.SelectOption(label="編集"),
+        ]
+    )
+    async def select(self, interaction: discord.Interaction, select: discord.ui.Select):
+        await interaction.response.defer()
+
+        message = self.message
+        channel_name = str(message.channel.name.lower())
+        try:
+            reviewing_cut = str(channel_name.split("_")[0])
+            reviewing_cut = re.sub(r"[^\d]", "", reviewing_cut)
+            reviewing_cut = int(reviewing_cut)
+            reviewing_person = str(message.author.display_name)
+            reviewing_component = str(select.values[0])
+        except:
+            await message.channel.send("!!ERROR!!")
+            return
+        await message.channel.send("許可しますか（はい・いいえ）")
+        def check(m):
+            return m.author == message.author and m.channel == message.channel
+        try:
+            reply_message = await shell_arc_bot.wait_for('message', check=check, timeout=30.0)
+        except asyncio.TimeoutError:
+            await message.channel.send("時間超過です。やり直してください")
+        if reply_message.content == "はい":
+            shell_arc_bot.dispatch("reviewing_action", message, reviewing_cut, reviewing_component, reviewing_person)
+        else:
+            await message.channel.send("許可コマンドが棄却されました")
+        
+
+@shell_arc_bot.event
 async def submit_file(message, submitting_person, submitting_cut, submitting_component, submission_raw):
     common = Common()
     fileop = FileOp()
@@ -70,13 +177,13 @@ async def submit_file(message, submitting_person, submitting_cut, submitting_com
     current_take = int(work_data["current_take"]) + 1
     renamed = fileop.renamed(proj_setting_data, working_index, submitting_cut, current_take)
 
-    # if work_data["temporary"]["naming"] != None:
-    #     temporary = {"naming": renamed, "cut": submitting_cut, "take": current_take, "creator": str(submitting_person), "reviewer": None, "comments": None}
-    #     structure = fileop.update_database(current_take=current_take, work_data=work_data, temporary=temporary, non_active=work_data["temporary"])
-    # else:
-    #     temporary = {"naming": renamed, "cut": submitting_cut, "take": current_take, "creator": str(submitting_person), "reviewer": None, "comments": None}
-    #     structure = fileop.update_database(current_take=current_take, work_data=work_data, temporary=temporary)
-    # ref_work_obj.update(structure)
+    if work_data["temporary"]["naming"] != None:
+        temporary = {"naming": renamed, "cut": submitting_cut, "take": current_take, "creator": str(submitting_person), "reviewer": None, "comments": None}
+        structure = fileop.update_database(current_take=current_take, work_data=work_data, temporary=temporary, non_active=work_data["temporary"])
+    else:
+        temporary = {"naming": renamed, "cut": submitting_cut, "take": current_take, "creator": str(submitting_person), "reviewer": None, "comments": None}
+        structure = fileop.update_database(current_take=current_take, work_data=work_data, temporary=temporary)
+    ref_work_obj.update(structure)
 
     r2 = R2(common.s3_client)
     r2.upload_file(submission, f"{proj_setting_data['collection_name']}/cut{submitting_cut:02}/{working_component}/{renamed}.{required_format[0]}")
@@ -84,44 +191,105 @@ async def submit_file(message, submitting_person, submitting_cut, submitting_com
     loadGS.load_spreadsheet(spreadsheet=spreadsheet, cut_index=submitting_cut, target_info="member", update_info=submitting_person, component_index=working_index)
     loadGS.load_spreadsheet(spreadsheet=spreadsheet, cut_index=submitting_cut, target_info="situation", update_info="作業中", component_index=working_index)
 
-    await message.channel.send(f"カット{submitting_cut}・{submitting_component} にプッシュしました")
+    await message.channel.send(f"カット{submitting_cut}・{submitting_component} にアップロードしました")
+    notice = Notice()
+    notice.discord_notice(submitting_cut, submitting_component, current_take, submitting_person)
 
-@dc_client.event
+@shell_arc_bot.event
+async def approve_file(message, reviewing_person, reviewing_cut, reviewing_component):
+    common = Common()
+    fileop = FileOp()
+
+    #access firebase database
+    ref_setting_obj = common.ref_setting_obj  #project setting data object   
+    ref_setting = common.ref_setting #project setting data referncer
+    proj_setting_data = common.proj_setting_data #project setting data dictionary
+    ref_collection = common.ref_collection #project main data referncer
+
+    #access spreadsheet
+    spreadsheet = common.spreadsheet
+    loadGS = common.loadGS
+    
+    #obtain or set needed variables 
+    cut_num = int(proj_setting_data["cut_number"])
+    component_number = int(proj_setting_data["component_number"])
+
+    reviewing_cut = int(reviewing_cut)
+    reviewing_person = str(reviewing_person)
+    reviewing_component = reviewing_component
+    working_data = fileop.work_info(proj_setting_data, reviewing_component)
+    working_index = working_data["working_index"]
+    working_component = working_data["working_component"]
+
+    ref_work_obj = ref_collection.collection(f"cut{reviewing_cut:02}").document(working_component)
+    ref_work = ref_work_obj.get()
+    work_data = ref_work.to_dict()
+
+    if work_data["temporary"]["naming"] == None:
+        await message.channel.send("検査待ちの提出物はありません")
+        return
+    
+    if work_data["active"]["naming"] != None:
+        structure = fileop.update_database(work_data=work_data, active=work_data["temporary"], temporary="clr", non_active=work_data["active"])
+        ref_work_obj.update(structure)
+    else:
+        structure = fileop.update_database(work_data=work_data, active=work_data["temporary"], temporary="clr")
+        ref_work_obj.update(structure)
+        
+        current_progress = float(proj_setting_data[f"component{working_index}"]["progress"])
+        current_progress += (1 / cut_num)
+        loadGS.load_progress(spreadsheet, working_index, False, cut_num)
+        ref_setting_obj.update({f"component{working_index}.progress" : current_progress})
+
+    loadGS.load_spreadsheet(spreadsheet=spreadsheet, cut_index=reviewing_cut, target_info="situation", update_info="完了", component_index=working_index)
+
+    await message.channel.send(f"カット{reviewing_cut}・{reviewing_component}は確定されました")
+
+
+@shell_arc_bot.event
 async def on_ready():
     print("ログインしました")
 
-@dc_client.event
-async def push_action(message, submitting_cut, submitting_component):
-    submitting_person = str(message.author.display_name)
+@shell_arc_bot.event
+async def on_push_action(message, submitting_cut, submitting_component, submitting_person):
     submitting_component = component_reference_dict[submitting_component]
     submission_raw = message.attachments[0]
     await submit_file(message, submitting_person, submitting_cut, submitting_component, submission_raw)
 
-@dc_client.event
-async def approve_action(message, num, part):
-    await message.channel.send(f"カット{num}・{part} を許可します")
+@shell_arc_bot.event
+async def on_reviewing_action(message, reviewing_cut, reviewing_component_raw, reviewing_person):
+    reviewing_component = component_reference_dict[reviewing_component_raw]
+    await approve_file(message, reviewing_person, reviewing_cut, reviewing_component)
 
-@dc_client.event
-async def on_message(message):
-    if message.author.bot:
+@shell_arc_bot.command()
+async def up(ctx):
+    message = ctx.message
+    if not message.attachments:
+        await message.channel.send("ファイルを添付してからプッシュしてくださいください")
         return
-    
-    if re.fullmatch(r"..push>\d+>[a-z]+", message.content) != None:
-        if not message.attachments:
-            await message.channel.send("ファイルを添付してからプッシュしてくださいください")
-            return
-        submitting_cut = int(message.content.split(">")[1])
-        submitting_component = str(message.content.split(">")[2])
-        await message.channel.send("プッシュしますか（はい・いいえ）")
-        def check(m):
-            return m.author == message.author and m.channel == message.channel
-        try:
-            reply_message = await dc_client.wait_for('message', check=check, timeout=30.0)
-        except asyncio.TimeoutError:
-            await message.channel.send("時間超過です。やり直してください")
-        if reply_message.content == "はい":
-            await push_action(message, submitting_cut, submitting_component)
+    view = SubmissionSelectionView(timeout=None, message=message)
+    await ctx.send(view=view)
 
-dc_client.run(TOKEN)
+@shell_arc_bot.command()
+async def appr(ctx):
+    message = ctx.message
+    view = ReviewSelectionView(timeout=None, message=message)
+    await ctx.send(view=view)
 
-#conda activate null_proj ; cd /Users/shiinaayame/Documents/Shell_Arcのコピー ; python3 discord_connection.py
+"""
+@shell_arc_bot.event
+async def test_action(ctx):
+    view = SubmissionSelectionView(timeout=None)
+    await ctx.send(view=view)
+
+@shell_arc_bot.command()
+async def test(ctx):
+    message = ctx.message
+    await message.channel.send("テストです")
+    await test_action(ctx)
+"""
+
+shell_arc_bot.run(TOKEN)
+# dc_client.run(TOKEN)
+
+#conda activate null_proj ; cd /Users/shiinaayame/Documents/Shell_Arc_crossplatform/discord_bot ; python3 discord_connection.py
