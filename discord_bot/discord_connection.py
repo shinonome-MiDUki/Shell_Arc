@@ -16,7 +16,7 @@ if proj_root not in sys.path:
 from backend.request_r2 import Cloudflare_R2_service as R2
 from backend.common_initialisation import CommonInitialisation as Common
 from backend.file_operation import FileOperation as FileOp
-#from discord_notice_webhook import DiscordNotice as Notice
+from discord_notice_webhook import DiscordNotice as Notice
 
 load_dotenv(verbose=True)
 dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
@@ -26,6 +26,8 @@ SERVER_ID = os.environ.get("Discord_server_id")
 dc_client = discord.Client(intents=discord.Intents.all())
 
 shell_arc_bot = commands.Bot(command_prefix="..", intents=discord.Intents.all())
+
+TOTAL_CUT_COUNT = 5
 
 component_reference_dict = {
     "genga" : "原画",
@@ -51,6 +53,7 @@ component_index_reference_dict = {
     "撮影" : 4,
     "編集" : 5
 }
+rev_component_index_reference_dict = {v: k for k, v in component_index_reference_dict.items()}
 
 class SubmissionSelectionView(discord.ui.View): 
     def __init__(self, timeout=120, message=None):
@@ -289,7 +292,7 @@ async def up(ctx):
     if "_" not in message.channel.name:
         return
     if not message.attachments:
-        await message.channel.send("ファイルを添付してからプッシュしてくださいください")
+        await message.channel.send("ファイルを添付してから提出してくださいccc")
         return
     view = SubmissionSelectionView(timeout=None, message=message)
     await ctx.send(view=view)
@@ -311,7 +314,28 @@ async def ask(ctx):
         asking_person = str(message.content.split(" ")[1])
     except:
         asking_person = str(message.author.display_name)
-    await message.channel.send(f"{asking_person} : 作業1 / 作業2 / ...")
+    await message.channel.send("検索中...\n10秒ほどお待ちいただく場合があります")
+    common = Common()
+    loadGS = common.loadGS
+    scheduled_work_list = []
+    for cut_num in range(1, TOTAL_CUT_COUNT+1):
+        for part_num in range(1, len(component_index_reference_dict)+1):
+            person_incharge = str(loadGS.load_spreadsheet(spreadsheet=common.spreadsheet, 
+                            cut_index=cut_num, 
+                            target_info="member", 
+                            update_info=None, 
+                            component_index=part_num
+                            ))
+            if person_incharge == asking_person:
+                scheduled_work_list.append(f"カット{cut_num} {rev_component_index_reference_dict[part_num]}")
+                
+    query_answer_message = f"{asking_person} : "
+    if scheduled_work_list:
+        for scheduled_work in scheduled_work_list:
+            query_answer_message += f"\n{scheduled_work}"
+    else:
+        query_answer_message += "担当作業がありません"
+    await message.channel.send(query_answer_message)
 
 @shell_arc_bot.command()
 async def reg(ctx):
