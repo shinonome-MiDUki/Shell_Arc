@@ -232,6 +232,7 @@ https://docs.google.com/spreadsheets/d/【キー】/edit?gid=0#gid=0
 ```yaml
 # プロジェクト基本情報
 project_name: プロジェクトの名称
+collection_name: R2のコレクション名 
 mode: cut_base  # ← そのままにしてください
 cut_number: 総カット数
 component_number: 作業工程（原画、中割りなど）の数
@@ -259,6 +260,7 @@ component:
   # component_numberの数だけ定義
 
 # スプレッドシート書式（デフォルトスプレッドシート使用時は変更不要）
+spreadsheet_key: スプレッドシートURLからキーを抜き取って記述  # 例: https://docs.google.com/spreadsheets/d/【キー】/edit?gid=0#gid=0
 spreadsheet_format:
   row_before_cut_1: カット1のすぐ上の行番号
   progress_data_n_lines_under_last_cut: 最後の行の下のn行目
@@ -444,17 +446,18 @@ class LoadSpreadSheet:
 ```
 
 ---
-#### 6. discord_connection.py
-**役割**: Discordボットの接続とメッセージ送信
+
+#### 6. yaml_to_json_convertor.py
+**役割**: YAML形式のスプレッドシート書式をJSON形式（JSON形式の辞書）に変換
 ```python
-async def submit_file(message, submitting_person, submitting_cut, submitting_component, submission_raw):
-    # Discord経由でファイルを提出する
-
-async def push_action(message, submitting_cut, submitting_component):
-    # Discord経由で提出（プッシュ）するときの挙動
-
-async def on_message(message):
-    # メッセージ受信を監視し、提出コマンドを処理
+class YamlJsonConvertor:
+    def __init__(self, dict_from_yaml_data):
+        # project_setting.yamlの内容を受け取り、スプレッドシート書式の部分をJSON形式の辞書に変換
+        # project_setting.yamlをopen関数で読み込んで、yaml.safe_load関数で辞書に変換したものを引数として受け取ることを想定
+    
+    @property
+    def meta_setitng(self):
+        # 変換されたJSON形式の辞書を返す
 ```
 
 ---
@@ -517,10 +520,15 @@ class FileOperation:
 
 **プロパティメソッド**:
 提出・取得・レビュー用コードで使用される変数と同名のプロパティメソッドが定義されています。
+
 ```python
-class CommonInitialisation:
-    def __init__(self):
-        # 共通変数の初期化
+class CommonInitialisation():
+    def __init__(self, uninit=None, exclude_init_confirm=False):
+        # 使用できるプロパティメソッドと同名の変数が定義されています
+        #デフォルトでは、R2ストレージ、設定データベース、プロジェクトデータベースおよびスプレッドシートが全てロードされます
+        # ただし、引数uninitに、"r2"、"setting_db"、"project_db"、"spreadsheet"の中から、ロードしたくない部分の名前を文字列のリスト形式で指定すし、引数uninitとして渡すことで、特定のデータサービスをロードせずに初期化することができます
+        #　一部のサービスのロードをスキップする場合、一部のプロパティメソッドは使用できなくなります。例えば、"r2"をuninitに指定して初期化した場合、s3_clientプロパティは使用できなくなります。これに関しては、現時点でエラー処理は実装されていないため、プログラマの側で、どのプロパティが使用できなくなるかを把握した上で、適切にコードを記述する必要があります
+        # 確認として、uninitを指定する場合、excude_init_confirmをTrueにしてください。そうしなければ、ご指定のデータサービスロードはスキップされません
     
     @property
     def ref_setting_obj(self):
@@ -537,6 +545,11 @@ class CommonInitialisation:
     @property
     def ref_collection(self):
         # プロジェクトメインデータ参照
+
+    @property
+    def s3_client(self):
+        # R2クライアント参照
+        # Boto3のS3クライアントAPIを使用するため、s3_clientという名前で参照を提供しています
     
     @property
     def spreadsheet(self):
@@ -546,24 +559,114 @@ class CommonInitialisation:
     def loadGS(self):
         # LoadSpreadSheetインスタンス参照
 ```
+---
+#### 10. discord_connection.py
+**役割**: Discordボットの接続とメッセージ送信
+```python
+class SubmissionSelectionView(discord.ui.View): 
+    def __init__(self, timeout=120, message=None):
+        super().__init__(timeout=timeout)
+        self.message = message
+
+    @discord.ui.select(
+        cls=discord.ui.Select,
+        placeholder="提出する部分を選択してください",
+        options=[discord.SelectOption(label=component) for component in component_index_reference_dict]
+    )
+    async def select(self, interaction: discord.Interaction, select: discord.ui.Select):
+
+class ReviewSelectionView(discord.ui.View): 
+    def __init__(self, timeout=120, message=None):
+        super().__init__(timeout=timeout)
+        self.message = message
+
+    @discord.ui.select(
+        cls=discord.ui.Select,
+        placeholder="チェックする部分を選択してください",
+        options=[discord.SelectOption(label=component) for component in component_index_reference_dict]
+    )
+    async def select(self, interaction: discord.Interaction, select: discord.ui.Select):
+
+@shell_arc_bot.event
+async def submit_file(message, submitting_person, submitting_cut, submitting_component, submission_raw):
+    # Discord経由でファイルを提出する
+
+@shell_arc_bot.event
+async def approve_file(message, reviewing_person, reviewing_cut, reviewing_component):
+    # Discord経由でファイルを承認する
+
+@shell_arc_bot.event
+async def on_ready():
+    print("ログインしました")
+    # Botの起動後の確認
+
+@shell_arc_bot.event
+async def on_push_action(message, submitting_cut, submitting_component, submitting_person):
+    # 提出されたファイルの情報をもとに、提出されたファイルの命名規則に基づいて正しいファイル名を生成し、提出されたファイルをR2ストレージに保存する
+
+@shell_arc_bot.event
+async def on_reviewing_action(message, reviewing_cut, reviewing_component_raw, reviewing_person):
+    # レビューされたファイルの情報をもとに、レビューされたファイルの命名規則に基づいて正しいファイル名を生成し、レビューされたファイルをR2ストレージからダウンロードする
+
+@shell_arc_bot.command()
+async def up(ctx):
+    # Botに「..up」と入力すると、提出選択UIを表示
+
+@shell_arc_bot.command()
+async def appr(ctx):
+    # Botに「..appr」と入力すると、レビュー選択UIを表示
+@shell_arc_bot.command()
+async def ask(ctx):
+    # Botに「..ask」と入力すると、自分の担当部分を問い合わせることができる
+
+@shell_arc_bot.command()
+async def reg(ctx):
+    # Botに「..reg」と入力すると、自分が作業したい（作業する）部分を登録することができる
+
+@shell_arc_bot.command()
+async def build_project_server(ctx):
+    > ⚠️ **注意**: プロジェクト新規作成時に**一度のみ**実行
+    # Botに「..build_project_server」と入力すると、プロジェクト用のDiscordカテゴリとチャンネルを作成することができる
+    # このコマンドを実行する前に、"BUILD_CHANNEL"という名前を持つチャンネルを作成し、"SETTER_ADMIN"という名前のロールを設定者に付与してください。このコマンドは、"BUILD_CHANNEL"でのみ実行可能です。
+    # 設定が完了したら、"BUILD_CHANNEL"チャンネルと"SETTER_ADMIN"ロールを削除することを推奨します
+
+@shell_arc_bot.event
+async def on_message(message):
+    # 提出通知センターでWebhookボットの提出通知を待ち受け、その通知を該当のカットのチャンネルに転送します
+
+shell_arc_bot.run(TOKEN)
+#必ず最後に記述してください。そうしないと、Botが起動しません
+```
+---
+
+#### 11. discord_notice_webhook.py
+**役割**: 提出がある度、Discordの提出通知センターへのWebhookで提出通知を送信
+```python
+class DiscordNotice:
+    def __init__(self):
+        # Discordの提出通知センターへのWebhook URLを取得
+    
+    def discord_notice(self, submitting_cut, submitting_component, submitting_take, submitting_person):
+        # 提出通知センターへの提出通知を送信
+```
 
 ---
 
-#### 10. submission.py
+#### 12. submission.py
 **役割**: ファイルの提出
 
 UIとロジック定義を行います。
 
 ---
 
-#### 11. requesting.py
+#### 13. requesting.py
 **役割**: ファイルの取得
 
 UIとロジック定義を行います。
 
 ---
 
-#### 12. reviewer.py
+#### 14. reviewer.py
 **役割**: ファイルのレビュー
 
 UIとロジック定義を行います。
@@ -575,12 +678,13 @@ UIとロジック定義を行います。
 ### 設計原則
 
 1. **処理ロジックとUI操作**: `requesting.py`, `reviewer.py`, `submission.py`で行う
-2. **外部データサービスの認証とクライアント参照へのアクセス**: `access_database.py`, `access_spreadsheet.py`, `access_r2.py`で行う・また上記3ファイルはUIコードから隠蔽
-3. **初期設定制御**: `project_setting.py`は他のコードとの独立性を維持
-4. **スプレッドシート操作**: `load_spread_sheet.py`を介して行う
-5. **ストレージとのやり取り**: `request_r2.py`を介して行う
-6. **命名操作とデータベース更新**: `file_operation.py`を介して行う
-7. **共通ロジックと変数**: `common_initialisation.py`に集約
+2. **Discordボット**: 全て`discord_connection.py`で定義（`discord_notice_webhook.py`は現時点提出通知センターへの送信のみに使う・Webhookを用いた他の機能を追加する場合はここで定義することを推奨）
+3. **外部データサービスの認証とクライアント参照へのアクセス**: `access_database.py`, `access_spreadsheet.py`, `access_r2.py`で行う・また上記3ファイルはUIコードから隠蔽
+4. **初期設定制御**: `project_setting.py`は他のコードとの独立性を維持
+5. **スプレッドシート操作**: `load_spread_sheet.py`を介して行う
+6. **ストレージとのやり取り**: `request_r2.py`を介して行う
+7. **命名操作とデータベース更新**: `file_operation.py`を介して行う
+8. **共通ロジックと変数**: `common_initialisation.py`に集約
 
 ---
 
@@ -701,10 +805,12 @@ from .モジュールファイル名 import クラス名 as エイリアス名
 **原因**:
 - `secrets.toml`の`[GCP]`セクションが正しく設定されていない
 - Firebaseプロジェクトが作成されていない
+- - `load_spread_sheet.py`で`uninit`引数でスキップされているデータサービスに関するプロパティメソッドが呼び出されている
 
 **解決策**:
 1. `secrets.toml`の認証情報を確認
 2. Firebaseコンソールでプロジェクトとデータベースが存在するか確認
+3. `common_initialisation.py`の`__init__`メソッドで、データベース関連のプロパティメソッドが使用できるように初期化されているか確認
 
 ---
 
@@ -726,11 +832,13 @@ from .モジュールファイル名 import クラス名 as エイリアス名
 **原因**:
 - バケット名がプロジェクト名と一致していない
 - API認証情報が間違っている
+- `load_spread_sheet.py`で`uninit`引数でスキップされているデータサービスに関するプロパティメソッドが呼び出されている
 
 **解決策**:
 1. Cloudflare R2のバケット名を確認
 2. `secrets.toml`の`[CloudflareR2]`セクションを確認
 3. `request_r2.py`の`R2_BUCKET`変数がプロジェクト名と一致するか確認
+4. `common_initialisation.py`の`__init__`メソッドで、R2関連のプロパティメソッドが使用できるように初期化されているか確認
 
 ---
 
@@ -744,6 +852,22 @@ from .モジュールファイル名 import クラス名 as エイリアス名
 1. YAMLの構文エラーをチェック（インデントなど）
 2. 必須項目が全て記述されているか確認
 3. スプレッドシートキーを再確認
+
+---
+
+#### 問題5: Discordボットが反応しない
+**原因**:
+- Botの認証・権限情報が間違っている
+- ループが阻害されている
+- 使用量制限に達している
+
+**解決策**:
+1. `discord_connection.py`の`TOKEN`変数を確認
+2. DiscordサーバーのメンバーリストでBotが参加しているか確認
+3. Botに必要な権限（メッセージの送信、チャンネルの管理など）が付与されているか確認
+4. `discord_connection.py`の最後に`run(TOKEN)`が呼び出されているか確認
+5. `on_message`イベントの末尾に`await shell_arc_bot.process_commands(message)`が呼び出されているか確認
+6. Discordの使用量制限に達していないか確認（Botが大量のメッセージを送信している場合、一時的に反応しなくなることがあります）
 
 ---
 
@@ -770,7 +894,9 @@ from .モジュールファイル名 import クラス名 as エイリアス名
 
 | バージョン | 変更内容 |
 |-----------|----------|
+| 1.0 | 初版リリース |
 | 2.0 | バックエンドのStreamlitへの依存性解消およびDiscord対応 |
+| 2.1 | Discordボット機能強化・データアクセスパフォマンス最適化 |
 
 ---
 
@@ -780,5 +906,5 @@ from .モジュールファイル名 import クラス名 as エイリアス名
 
 ---
 
-**Document Version**: 2.0  
-**Last Updated**: 2025
+**Document Version**: 2.1  
+**Last Updated**: 2026-02-15

@@ -68,7 +68,12 @@ class CommonInitialisation():
         #access spreadsheet
         if "spreadsheet" not in self.uninit:
             spreadsheet_key = self.proj_setting_data_snapshot["spreadsheet_key"]
-            spreadsheet_format_data = db.collection(collection_name).document("spreadsheet_format").get().to_dict() #project spreadsheet format data dictionary
+
+            #spreadsheet_format_data = db.collection(collection_name).document("spreadsheet_format").get().to_dict() 
+            #project spreadsheet format data dictionary
+            #THIS PART should be deleted 
+
+            spreadsheet_format_data = dict_from_yaml_data["spreadsheet_format"]
             gs = GS(spreadsheet_key)
             self._spreadsheet = gs.spreadsheet_obj
             self._loadGS = LoadGS(spreadsheet_format_data, gs.spreadsheet_obj)

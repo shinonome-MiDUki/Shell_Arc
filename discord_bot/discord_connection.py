@@ -318,7 +318,7 @@ async def ask(ctx):
         asking_person = str(message.content.split(" ")[1])
     except:
         asking_person = str(message.author.display_name)
-    await message.channel.send("検索中...\n10秒ほどお待ちいただく場合があります")
+    await message.reply("検索中...\n10秒ほどお待ちいただく場合があります")
     common = Common(uninit=["r2", "project_db", "setting_db"], exclude_init_confirm=True)
     loadGS = common.loadGS
     spreadsheet_cache = loadGS.spreadsheet_cache
@@ -326,12 +326,11 @@ async def ask(ctx):
     for cut_num in range(1, TOTAL_CUT_COUNT+1):
         for part_num in range(1, len(component_index_reference_dict)+1):
             person_incharge = loadGS.efficient_get_spreadsheet(
-                spreadsheet_cache=spreadsheet_cache, 
+                current_spreadsheet_cache=spreadsheet_cache, 
                 cut_index=cut_num, 
                 target_info="member",
                 component_index=part_num
             )
-            print(person_incharge)
             person_incharge = str(person_incharge)
             if person_incharge == asking_person:
                 cut_channel = discord.utils.find(lambda c: c.name.startswith(f"{cut_num}{channel_name_divider}"), message.guild.text_channels)
@@ -343,7 +342,7 @@ async def ask(ctx):
             query_answer_message += f"\n{scheduled_work}"
     else:
         query_answer_message += "担当作業がありません"
-    await message.channel.send(query_answer_message)
+    await message.reply(query_answer_message)
 
 @shell_arc_bot.command()
 async def reg(ctx):
@@ -424,17 +423,17 @@ async def test(ctx):
     await message.channel.send("テストです")
     await test_action(ctx)
 """
-@shell_arc_bot.command()
-async def test(ctx):
-    message = ctx.message
-    if message.author.bot:
-        return
-    common = Common()
-    loadGS = common.loadGS
-    result = common.spreadsheet.get_all_values()
-    print(result)
+# @shell_arc_bot.command()
+# async def test(ctx):
+#     message = ctx.message
+#     if message.author.bot:
+#         return
+#     await message.reply("MyReply")
 
-shell_arc_bot.run(TOKEN)
+
 # dc_client.run(TOKEN)
 
 #conda activate null_proj ; cd /Users/shiinaayame/Documents/Shell_Arc_discordbot/discord_bot ; python3 discord_connection.py
+
+
+shell_arc_bot.run(TOKEN)
