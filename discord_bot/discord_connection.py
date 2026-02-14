@@ -327,7 +327,15 @@ async def ask(ctx):
                             component_index=part_num
                             ))
             if person_incharge == asking_person:
-                scheduled_work_list.append(f"カット{cut_num} {rev_component_index_reference_dict[part_num]}")
+                cut_channel = discord.utils.find(lambda c: c.name.startswith(f"{cut_num}_"), message.guild.text_channels)
+                scheduled_work_list.append(f"カット{cut_num} {rev_component_index_reference_dict[part_num]} <#{cut_channel.id}>")
+                print(cut_channel)
+                print(type(cut_channel))
+                try:
+                    print(cut_channel.id)
+                    print(str(cut_channel))
+                except:
+                    pass
                 
     query_answer_message = f"{asking_person} : "
     if scheduled_work_list:
