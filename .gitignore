@@ -3,6 +3,8 @@
 .env
 .DS_Store
 discord_bot/.DS_Store
+discord_bot/test.py
+__pycache__
 backend/.DS_Store
 pages/.DS_Store
 backend/__pycache__/
