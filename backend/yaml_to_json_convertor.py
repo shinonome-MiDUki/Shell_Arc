@@ -17,7 +17,3 @@ class YamlJsonConvertor:
     @property
     def meta_setting(self):
         return self._meta_setting
-
-
-
-    dict_from_yaml_data = yaml.safe_load(proj_setting_yaml)

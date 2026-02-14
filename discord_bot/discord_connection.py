@@ -153,7 +153,7 @@ class ReviewSelectionView(discord.ui.View):
 
 @shell_arc_bot.event
 async def submit_file(message, submitting_person, submitting_cut, submitting_component, submission_raw):
-    common = Common()
+    common = Common(uninit=["setting_db"], exclude_init_confirm=True)
     fileop = FileOp()
 
     #access firebase database
@@ -319,7 +319,7 @@ async def ask(ctx):
     except:
         asking_person = str(message.author.display_name)
     await message.channel.send("検索中...\n10秒ほどお待ちいただく場合があります")
-    common = Common()
+    common = Common(uninit=["r2", "project_db", "setting_db"], exclude_init_confirm=True)
     loadGS = common.loadGS
     spreadsheet_cache = loadGS.spreadsheet_cache
     scheduled_work_list = []
@@ -364,7 +364,7 @@ async def reg(ctx):
         register_person = str(message.author.display_name)
     await message.channel.edit(name=f"{register_cut}{channel_name_divider}{register_person}")
     
-    common = Common()
+    common = Common(uninit=["r2", "project_db", "setting_db"], exclude_init_confirm=True)
     loadGS = common.loadGS
     loadGS.load_spreadsheet(cut_index=register_cut, 
                             target_info="member", 

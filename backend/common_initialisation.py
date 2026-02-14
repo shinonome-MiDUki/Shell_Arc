@@ -11,8 +11,11 @@ from .load_spread_sheet import LoadSpreadSheet as LoadGS
 from .yaml_to_json_convertor import YamlJsonConvertor as YtoJ
 
 class CommonInitialisation():
-    def __init__(self, uninit=[]):
-        self.uninit = uninit
+    def __init__(self, uninit=None, exclude_init_confirm=False):
+        if uninit is None: 
+            self.uninit = []
+        else:
+            self.uninit = uninit if exclude_init_confirm == True else []
 
         #access firebase database
         try:
@@ -25,11 +28,11 @@ class CommonInitialisation():
             load_dotenv(dotenv_path)
             collection_name = os.environ.get("init_collection_name")
             
-        if "setting_db" not in uninit and "project_db" not in uninit:
+        if "setting_db" not in self.uninit and "project_db" not in self.uninit:
             db_instance = DB()
             db = db_instance.database
 
-        if "setting_db" not in uninit:
+        if "setting_db" not in self.uninit:
             self._ref_setting_obj = db.collection(collection_name).document("setting")  #project setting data object
             ref_setting_snapshot = db.collection(collection_name).document("setting").get() #project setting data referencer
             self._ref_setting = ref_setting_snapshot #property use duplicate
@@ -40,30 +43,30 @@ class CommonInitialisation():
             try:
                 with open(setting_yaml_file_path, "r", encoding="utf-8") as f:
                     dict_from_yaml_data = yaml.safe_load(f)
-                    ytoj = YtoJ(dict_from_yaml_data)
-                    self.proj_setting_data_snapshot = ytoj.meta_setting
-                    self._proj_setting_data = self.proj_setting_data_snapshot
-                    self._ref_setting = None
-                    self._ref_setting_obj = None
+                ytoj = YtoJ(dict_from_yaml_data)
+                self.proj_setting_data_snapshot = ytoj.meta_setting
+                self._proj_setting_data = self.proj_setting_data_snapshot
+                self._ref_setting = None
+                self._ref_setting_obj = None
             except FileNotFoundError:
                 print("File not found")
                 return
 
 
-        if "project_db" not in uninit:
+        if "project_db" not in self.uninit:
             self._ref_collection = db.collection(collection_name).document("main_proj") #project main data referncer
         else:
             self._ref_collection = None
 
         #access R2 storage
-        if "r2" not in uninit:
+        if "r2" not in self.uninit:
             r2access = R2Access()
             self._s3_client = r2access.s3_client
         else:
             self._s3_client = None
 
         #access spreadsheet
-        if "spreadsheet" not in uninit:
+        if "spreadsheet" not in self.uninit:
             spreadsheet_key = self.proj_setting_data_snapshot["spreadsheet_key"]
             spreadsheet_format_data = db.collection(collection_name).document("spreadsheet_format").get().to_dict() #project spreadsheet format data dictionary
             gs = GS(spreadsheet_key)
