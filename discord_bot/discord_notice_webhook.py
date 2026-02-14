@@ -17,9 +17,25 @@ class DiscordNotice:
         submitting_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
 
         message = {
+            "content" : f"カット{submitting_cut}・{submitting_component}・テイク{submitting_take}\n{submitting_time} - {submitting_person}"
+        }
+        headers = {
+            "Content-Type": "application/json"
+        }
+
+        response = requests.post(self.WEBHOOK_URL, data=json.dumps(message), headers=headers)
+
+        if response.status_code != 204:
+            print(f"エラーが発生しました: {response.status_code}")
+
+# dcn = DiscordNotice()
+# dcn.discord_notice(3, "テスト", 1, "TestingPerson")
+
+"""
+message = {
             "embeds": [
             {
-                "title": f"カット{submitting_cut}・{submitting_component}・テイク{submitting_take}",
+                "title": f"カット*{submitting_cut}*・{submitting_component}・テイク{submitting_take}",
                 "description": f"{submitting_time} - {submitting_person}"
             }
         ]
@@ -27,8 +43,4 @@ class DiscordNotice:
         headers = {
             'Content-Type': 'application/json'
         }
-
-        response = requests.post(self.WEBHOOK_URL, data=json.dumps(message), headers=headers)
-
-        if response.status_code != 204:
-            print(f"エラーが発生しました: {response.status_code}")
+        """
