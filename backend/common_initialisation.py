@@ -7,7 +7,7 @@ from .access_spread_sheet import AccessSpreadSheet as GS
 from .load_spread_sheet import LoadSpreadSheet as LoadGS
 
 class CommonInitialisation():
-    def __init__(self):
+    def __init__(self, uninit=[]):
         #access firebase database
         try:
             import streamlit as st

@@ -8,6 +8,7 @@ import discord
 from discord.ext import commands
 from discord import Webhook as Webhook
 from dotenv import load_dotenv
+import gspread
 
 proj_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if proj_root not in sys.path:
@@ -291,6 +292,8 @@ async def on_reviewing_action(message, reviewing_cut, reviewing_component_raw, r
 @shell_arc_bot.command()
 async def up(ctx):
     message = ctx.message
+    if message.author.bot:
+        return
     if channel_name_divider not in message.channel.name:
         return
     if not message.attachments:
@@ -302,6 +305,8 @@ async def up(ctx):
 @shell_arc_bot.command()
 async def appr(ctx):
     message = ctx.message
+    if message.author.bot:
+        return
     if channel_name_divider not in message.channel.name:
         return
     view = ReviewSelectionView(timeout=None, message=message)
@@ -310,6 +315,8 @@ async def appr(ctx):
 @shell_arc_bot.command()
 async def ask(ctx):
     message = ctx.message
+    if message.author.bot:
+        return
     if message.channel.name != center_channel_names["schedule_query_center"]:
         return
     try:
@@ -319,28 +326,21 @@ async def ask(ctx):
     await message.channel.send("検索中...\n10秒ほどお待ちいただく場合があります")
     common = Common()
     loadGS = common.loadGS
+    spreadsheet_cache = common.spreadsheet.get_all_values()
     scheduled_work_list = []
     for cut_num in range(1, TOTAL_CUT_COUNT+1):
         for part_num in range(1, len(component_index_reference_dict)+1):
-            person_incharge = await asyncio.to_thread(
-                loadGS.load_spreadsheet,
-                common.spreadsheet,
-                cut_num,
-                "member",
-                None,
-                part_num
+            person_incharge = loadGS.efficient_get_spreadsheet(
+                spreadsheet_cache=spreadsheet_cache, 
+                cut_index=cut_num, 
+                target_info="member",
+                component_index=part_num
             )
+            print(person_incharge)
             person_incharge = str(person_incharge)
             if person_incharge == asking_person:
                 cut_channel = discord.utils.find(lambda c: c.name.startswith(f"{cut_num}{channel_name_divider}"), message.guild.text_channels)
                 scheduled_work_list.append(f"カット{cut_num} {rev_component_index_reference_dict[part_num]} <#{cut_channel.id}>")
-                print(cut_channel)
-                print(type(cut_channel))
-                try:
-                    print(cut_channel.id)
-                    print(str(cut_channel))
-                except:
-                    pass
                 
     query_answer_message = f"{asking_person} : "
     if scheduled_work_list:
@@ -353,6 +353,8 @@ async def ask(ctx):
 @shell_arc_bot.command()
 async def reg(ctx):
     message = ctx.message
+    if message.author.bot:
+        return
     if channel_name_divider not in message.channel.name:
         return
     try:
@@ -365,6 +367,7 @@ async def reg(ctx):
         register_person = str(message.content.split(" ")[2])
     except:
         register_person = str(message.author.display_name)
+    await message.channel.edit(name=f"{register_cut}{channel_name_divider}{register_person}")
     
     common = Common()
     loadGS = common.loadGS
@@ -374,12 +377,13 @@ async def reg(ctx):
                             update_info=register_person, 
                             component_index=component_index_reference_dict[register_part]
                             )
-    await message.channel.edit(name=f"{register_cut}{channel_name_divider}{register_person}")
     await message.channel.send(f"{register_person} カット{register_cut} {register_part} を登録します")
 
 @shell_arc_bot.command()
 async def build_project_server(ctx):
     message = ctx.message
+    if message.author.bot:
+        return
     author_roles = [role.name for role in message.author.roles]
     if "SETTER_ADMIN" not in author_roles or message.channel.name != "BUILD_CHANNEL":
         await message.channel.send("\"BUILD_CHANNEL\"という名前を持つチャンネルを作成し、\"SETTER_ADMIN\"という名前のロールを設定者に付与してください")
@@ -426,6 +430,15 @@ async def test(ctx):
     await message.channel.send("テストです")
     await test_action(ctx)
 """
+@shell_arc_bot.command()
+async def test(ctx):
+    message = ctx.message
+    if message.author.bot:
+        return
+    common = Common()
+    loadGS = common.loadGS
+    result = common.spreadsheet.get_all_values()
+    print(result)
 
 shell_arc_bot.run(TOKEN)
 # dc_client.run(TOKEN)

@@ -38,6 +38,12 @@ class LoadSpreadSheet:
             info_requested = spreadsheet.acell(cell_id).value
             return info_requested
         
+    def efficient_get_spreadsheet(self, spreadsheet_cache, cut_index, target_info, component_index=0):
+        first_index = self.row_before_cut_1 + cut_index
+        second_index = self.common_column[target_info] if component_index == 0 else self.column_index_of_requested_component_info(component_index, target_info)
+        info_requested = spreadsheet_cache[first_index-1][second_index-1]
+        return info_requested
+        
     def load_progress(self, spreadsheet, component_index, is_get, total_cut_number):
         column_index = self.column_index_of_requested_component_info(component_index, "progress")
         row_index = int(total_cut_number + self.row_before_cut_1 + self.progress_data_n_lines_under_last_cut)
