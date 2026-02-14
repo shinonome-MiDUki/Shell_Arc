@@ -25,6 +25,7 @@ TOKEN = os.environ.get("Discord_token")
 SERVER_ID = os.environ.get("Discord_server_id")
 dc_client = discord.Client(intents=discord.Intents.all())
 
+#以下設定ファイル
 TOTAL_CUT_COUNT = 5
 
 component_reference_dict = {
@@ -61,8 +62,10 @@ center_channel_names = {
 }
 webhook_bot_name = "Shell_Arc_Notice_Center"
 notice_message_cut_extraction_regex = r"カット(\d+?)・"
+submission_channel_catagory_name = "カット提出"
 channel_name_divider = "_"
 bot_command = ".."
+#以上設定ファイル
 
 shell_arc_bot = commands.Bot(command_prefix=bot_command, intents=discord.Intents.all())
 
@@ -319,12 +322,15 @@ async def ask(ctx):
     scheduled_work_list = []
     for cut_num in range(1, TOTAL_CUT_COUNT+1):
         for part_num in range(1, len(component_index_reference_dict)+1):
-            person_incharge = str(loadGS.load_spreadsheet(spreadsheet=common.spreadsheet, 
-                            cut_index=cut_num, 
-                            target_info="member", 
-                            update_info=None, 
-                            component_index=part_num
-                            ))
+            person_incharge = await asyncio.to_thread(
+                loadGS.load_spreadsheet,
+                common.spreadsheet,
+                cut_num,
+                "member",
+                None,
+                part_num
+            )
+            person_incharge = str(person_incharge)
             if person_incharge == asking_person:
                 cut_channel = discord.utils.find(lambda c: c.name.startswith(f"{cut_num}{channel_name_divider}"), message.guild.text_channels)
                 scheduled_work_list.append(f"カット{cut_num} {rev_component_index_reference_dict[part_num]} <#{cut_channel.id}>")
@@ -371,8 +377,26 @@ async def reg(ctx):
     await message.channel.edit(name=f"{register_cut}{channel_name_divider}{register_person}")
     await message.channel.send(f"{register_person} カット{register_cut} {register_part} を登録します")
 
+@shell_arc_bot.command()
+async def build_project_server(ctx):
+    message = ctx.message
+    author_roles = [role.name for role in message.author.roles]
+    if "SETTER_ADMIN" not in author_roles or message.channel.name != "BUILD_CHANNEL":
+        await message.channel.send("\"BUILD_CHANNEL\"という名前を持つチャンネルを作成し、\"SETTER_ADMIN\"という名前のロールを設定者に付与してください")
+        return
+    
+    Category = await ctx.guild.create_category(submission_channel_catagory_name)
+    await Category.create_text_channel(center_channel_names["notice_center"])
+    await Category.create_text_channel(center_channel_names["schedule_query_center"])
+    for count in range(1, TOTAL_CUT_COUNT+1):
+        await Category.create_text_channel(f"{count}{channel_name_divider}?")
+
+    await message.channel.send("設定完了です\n\"BUILD_CHANNEL\"チャンネルと\"SETTER_ADMIN\"ロールを削除してください")
+
 @shell_arc_bot.event
 async def on_message(message):
+    if message.author == shell_arc_bot.user:
+        return
     if message.author.display_name != webhook_bot_name or message.channel.name != center_channel_names["notice_center"]:
         await shell_arc_bot.process_commands(message)
         return
