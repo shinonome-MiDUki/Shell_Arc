@@ -161,7 +161,6 @@ async def submit_file(message, submitting_person, submitting_cut, submitting_com
     ref_collection = common.ref_collection #project main data referncer
 
     #access spreadsheet
-    spreadsheet = common.spreadsheet
     loadGS = common.loadGS
 
     submitting_person = submitting_person
@@ -202,15 +201,13 @@ async def submit_file(message, submitting_person, submitting_cut, submitting_com
     r2 = R2(common.s3_client)
     r2.upload_file(submission, f"{proj_setting_data['collection_name']}/cut{submitting_cut:02}/{working_component}/{renamed}.{required_format[0]}")
 
-    loadGS.load_spreadsheet(spreadsheet=spreadsheet,
-                            cut_index=submitting_cut,
+    loadGS.load_spreadsheet(cut_index=submitting_cut,
                             target_info="member",
                             update_info=submitting_person,
                             component_index=working_index
                             )
     
-    loadGS.load_spreadsheet(spreadsheet=spreadsheet,
-                            cut_index=submitting_cut,
+    loadGS.load_spreadsheet(cut_index=submitting_cut,
                             target_info="situation",
                             update_info="作業中",
                             component_index=working_index)
@@ -231,7 +228,6 @@ async def approve_file(message, reviewing_person, reviewing_cut, reviewing_compo
     ref_collection = common.ref_collection #project main data referncer
 
     #access spreadsheet
-    spreadsheet = common.spreadsheet
     loadGS = common.loadGS
     
     #obtain or set needed variables 
@@ -262,11 +258,10 @@ async def approve_file(message, reviewing_person, reviewing_cut, reviewing_compo
         
         current_progress = float(proj_setting_data[f"component{working_index}"]["progress"])
         current_progress += (1 / cut_num)
-        loadGS.load_progress(spreadsheet, working_index, False, cut_num)
+        loadGS.load_progress(component_index=working_index, is_get=False, total_cut_number=cut_num)
         ref_setting_obj.update({f"component{working_index}.progress" : current_progress})
 
-    loadGS.load_spreadsheet(spreadsheet=spreadsheet, 
-                            cut_index=reviewing_cut,
+    loadGS.load_spreadsheet(cut_index=reviewing_cut,
                             target_info="situation",
                             update_info="完了",
                             component_index=working_index
@@ -326,7 +321,7 @@ async def ask(ctx):
     await message.channel.send("検索中...\n10秒ほどお待ちいただく場合があります")
     common = Common()
     loadGS = common.loadGS
-    spreadsheet_cache = common.spreadsheet.get_all_values()
+    spreadsheet_cache = loadGS.spreadsheet_cache
     scheduled_work_list = []
     for cut_num in range(1, TOTAL_CUT_COUNT+1):
         for part_num in range(1, len(component_index_reference_dict)+1):
@@ -371,8 +366,7 @@ async def reg(ctx):
     
     common = Common()
     loadGS = common.loadGS
-    loadGS.load_spreadsheet(spreadsheet=common.spreadsheet, 
-                            cut_index=register_cut, 
+    loadGS.load_spreadsheet(cut_index=register_cut, 
                             target_info="member", 
                             update_info=register_person, 
                             component_index=component_index_reference_dict[register_part]
