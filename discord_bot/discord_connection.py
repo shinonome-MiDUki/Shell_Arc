@@ -25,8 +25,6 @@ TOKEN = os.environ.get("Discord_token")
 SERVER_ID = os.environ.get("Discord_server_id")
 dc_client = discord.Client(intents=discord.Intents.all())
 
-shell_arc_bot = commands.Bot(command_prefix="..", intents=discord.Intents.all())
-
 TOTAL_CUT_COUNT = 5
 
 component_reference_dict = {
@@ -54,6 +52,19 @@ component_index_reference_dict = {
     "編集" : 5
 }
 rev_component_index_reference_dict = {v: k for k, v in component_index_reference_dict.items()}
+admin_roles = {
+    "keyframe_qc" : "作画監督"
+}
+center_channel_names = {
+    "notice_center" : "提出通知センター",
+    "schedule_query_center" : "担当作業問い合わせ"
+}
+webhook_bot_name = "Shell_Arc_Notice_Center"
+notice_message_cut_extraction_regex = r"カット(\d+?)・"
+channel_name_divider = "_"
+bot_command = ".."
+
+shell_arc_bot = commands.Bot(command_prefix=bot_command, intents=discord.Intents.all())
 
 class SubmissionSelectionView(discord.ui.View): 
     def __init__(self, timeout=120, message=None):
@@ -63,13 +74,7 @@ class SubmissionSelectionView(discord.ui.View):
     @discord.ui.select(
         cls=discord.ui.Select,
         placeholder="提出する部分を選択してください",
-        options=[
-            discord.SelectOption(label="原画"),
-            discord.SelectOption(label="中割り"),
-            discord.SelectOption(label="背景"),
-            discord.SelectOption(label="撮影"),
-            discord.SelectOption(label="編集"),
-        ]
+        options=[discord.SelectOption(label=component) for component in component_index_reference_dict]
     )
     async def select(self, interaction: discord.Interaction, select: discord.ui.Select):
         await interaction.response.defer()
@@ -77,10 +82,10 @@ class SubmissionSelectionView(discord.ui.View):
         message = self.message
         channel_name = str(message.channel.name.lower())
         try:
-            submitting_cut = str(channel_name.split("_")[0])
+            submitting_cut = str(channel_name.split(channel_name_divider)[0])
             submitting_cut = re.sub(r"[^\d]", "", submitting_cut)
             submitting_cut = int(submitting_cut)
-            submitting_person = str(channel_name.split("_")[1])
+            submitting_person = str(channel_name.split(channel_name_divider)[1])
             submitting_component = str(select.values[0])
         except:
             await message.channel.send("!!ERROR!!")
@@ -112,14 +117,8 @@ class ReviewSelectionView(discord.ui.View):
 
     @discord.ui.select(
         cls=discord.ui.Select,
-        placeholder="提出する部分を選択してください",
-        options=[
-            discord.SelectOption(label="原画"),
-            discord.SelectOption(label="中割り"),
-            discord.SelectOption(label="背景"),
-            discord.SelectOption(label="撮影"),
-            discord.SelectOption(label="編集"),
-        ]
+        placeholder="チェックする部分を選択してください",
+        options=[discord.SelectOption(label=component) for component in component_index_reference_dict]
     )
     async def select(self, interaction: discord.Interaction, select: discord.ui.Select):
         await interaction.response.defer()
@@ -127,7 +126,7 @@ class ReviewSelectionView(discord.ui.View):
         message = self.message
         channel_name = str(message.channel.name.lower())
         try:
-            reviewing_cut = str(channel_name.split("_")[0])
+            reviewing_cut = str(channel_name.split(channel_name_divider)[0])
             reviewing_cut = re.sub(r"[^\d]", "", reviewing_cut)
             reviewing_cut = int(reviewing_cut)
             reviewing_person = str(message.author.display_name)
@@ -289,10 +288,10 @@ async def on_reviewing_action(message, reviewing_cut, reviewing_component_raw, r
 @shell_arc_bot.command()
 async def up(ctx):
     message = ctx.message
-    if "_" not in message.channel.name:
+    if channel_name_divider not in message.channel.name:
         return
     if not message.attachments:
-        await message.channel.send("ファイルを添付してから提出してくださいccc")
+        await message.channel.send("ファイルを添付してから提出してください")
         return
     view = SubmissionSelectionView(timeout=None, message=message)
     await ctx.send(view=view)
@@ -300,7 +299,7 @@ async def up(ctx):
 @shell_arc_bot.command()
 async def appr(ctx):
     message = ctx.message
-    if "_" not in message.channel.name:
+    if channel_name_divider not in message.channel.name:
         return
     view = ReviewSelectionView(timeout=None, message=message)
     await ctx.send(view=view)
@@ -308,7 +307,7 @@ async def appr(ctx):
 @shell_arc_bot.command()
 async def ask(ctx):
     message = ctx.message
-    if message.channel.name != "担当作業問い合わせ":
+    if message.channel.name != center_channel_names["schedule_query_center"]:
         return
     try:
         asking_person = str(message.content.split(" ")[1])
@@ -327,7 +326,7 @@ async def ask(ctx):
                             component_index=part_num
                             ))
             if person_incharge == asking_person:
-                cut_channel = discord.utils.find(lambda c: c.name.startswith(f"{cut_num}_"), message.guild.text_channels)
+                cut_channel = discord.utils.find(lambda c: c.name.startswith(f"{cut_num}{channel_name_divider}"), message.guild.text_channels)
                 scheduled_work_list.append(f"カット{cut_num} {rev_component_index_reference_dict[part_num]} <#{cut_channel.id}>")
                 print(cut_channel)
                 print(type(cut_channel))
@@ -348,11 +347,11 @@ async def ask(ctx):
 @shell_arc_bot.command()
 async def reg(ctx):
     message = ctx.message
-    if "_" not in message.channel.name:
+    if channel_name_divider not in message.channel.name:
         return
     try:
         register_part = str(message.content.split(" ")[1])
-        register_cut = str(message.channel.name.split("_")[0])
+        register_cut = str(message.channel.name.split(channel_name_divider)[0])
         register_cut = int(re.sub(r"[^\d]", "", register_cut))
     except:
         return
@@ -369,28 +368,28 @@ async def reg(ctx):
                             update_info=register_person, 
                             component_index=component_index_reference_dict[register_part]
                             )
-    await message.channel.edit(name=f"{register_cut}_{register_person}")
+    await message.channel.edit(name=f"{register_cut}{channel_name_divider}{register_person}")
     await message.channel.send(f"{register_person} カット{register_cut} {register_part} を登録します")
 
 @shell_arc_bot.event
 async def on_message(message):
-    if message.author.display_name != "Shell_Arc_Notice_Center" or message.channel.name != "提出通知センター":
+    if message.author.display_name != webhook_bot_name or message.channel.name != center_channel_names["notice_center"]:
         await shell_arc_bot.process_commands(message)
         return
     notice_content = str(message.content)
-    cut_num_matching = re.search(r"カット(\d+?)・", notice_content)
+    cut_num_matching = re.search(notice_message_cut_extraction_regex, notice_content)
     if cut_num_matching:
         cut_num = cut_num_matching.group(1)
     cut_num = int(cut_num)
-    cut_channel = discord.utils.find(lambda c: c.name.startswith(f"{cut_num}_"), message.guild.text_channels)
+    cut_channel = discord.utils.find(lambda c: c.name.startswith(f"{cut_num}{channel_name_divider}"), message.guild.text_channels)
     print(cut_num)
     print(cut_channel)
-    mentioning_role = discord.utils.get(message.guild.roles, name="作画監督")
+    mentioning_role = discord.utils.get(message.guild.roles, name=admin_roles["keyframe_qc"])
     if mentioning_role:
         await cut_channel.send(f"{mentioning_role.mention} {notice_content}")
     await shell_arc_bot.process_commands(message)
 
-
+#テスト用コード
 """
 @shell_arc_bot.event
 async def test_action(ctx):
