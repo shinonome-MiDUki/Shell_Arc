@@ -1,5 +1,5 @@
 .streamlit/secrets.toml
 .env
-**/.DS_StoreO
-discord_bot/.DS_Store
-discord_bot/test.py
+**/.DS_Store
+**/__pycache__/**
+
