@@ -1,8 +1,8 @@
-project_name: null2025_test
-collection_name: null_portal_test
+project_name: null2026_shinkan
+collection_name: null_shinkan_2026
 mode: cut_base
-cut_number: 5
-component_number: 5
+cut_number: 8
+component_number: 8
 
 parts:
   A1: [1,2]
@@ -70,7 +70,3 @@ spreadsheet_format:
     situation: 1
     progress: 0
 
-discord:
-  push_command: ">>push"
-
-  

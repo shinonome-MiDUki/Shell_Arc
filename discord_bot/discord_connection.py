@@ -3,6 +3,8 @@ import os
 import sys
 import io
 import asyncio
+import json
+from pathlib import Path
 
 import discord
 from discord.ext import commands
@@ -26,47 +28,23 @@ TOKEN = os.environ.get("Discord_token")
 SERVER_ID = os.environ.get("Discord_server_id")
 dc_client = discord.Client(intents=discord.Intents.all())
 
-#以下設定ファイル
-TOTAL_CUT_COUNT = 5
+#load config
+discord_config_file_path = Path(__file__).parent / "discord_config.json"
+with open(discord_config_file_path, mode="r", encoding="utf-8") as config_file:
+    discord_config_dict = json.load(config_file)
+    config = discord_config_dict
 
-component_reference_dict = {
-    "genga" : "原画",
-    "nakawari" : "中割り", 
-    "haikei" : "背景",
-    "satsuei" : "撮影",
-    "hennsyu" : "編集",
-    "原画" : "原画",
-    "中割り" : "中割り",
-    "背景" : "背景",
-    "撮影" : "撮影",
-    "編集" : "編集",
-    "g" : "原画",
-    "n" : "中割り",
-    "h" : "背景",
-    "s" : "撮影",
-    "hen" : "編集"
-}
-component_index_reference_dict = {
-    "原画" : 1,
-    "中割り" : 2,
-    "背景" : 3,
-    "撮影" : 4,
-    "編集" : 5
-}
+TOTAL_CUT_COUNT = config["total_cut_count"]
+component_reference_dict = config["component_reference"]
+component_index_reference_dict = config["component_index_reference"]
 rev_component_index_reference_dict = {v: k for k, v in component_index_reference_dict.items()}
-admin_roles = {
-    "keyframe_qc" : "作画監督"
-}
-center_channel_names = {
-    "notice_center" : "提出通知センター",
-    "schedule_query_center" : "担当作業問い合わせ"
-}
-webhook_bot_name = "Shell_Arc_Notice_Center"
-notice_message_cut_extraction_regex = r"カット(\d+?)・"
-submission_channel_catagory_name = "カット提出"
-channel_name_divider = "_"
-bot_command = ".."
-#以上設定ファイル
+admin_roles = config["admin_roles"]
+center_channel_names = config["center_channel_names"]
+webhook_bot_name = config["webhook_bot_name"]
+notice_message_cut_extraction_regex = config["notice_message_cut_extraction_regex"]
+submission_channel_catagory_name = config["submission_channel_catagory_name"]
+channel_name_divider = config["channel_name_divider"]
+bot_command = config["bot_command"]
 
 shell_arc_bot = commands.Bot(command_prefix=bot_command, intents=discord.Intents.all())
 
@@ -352,7 +330,7 @@ async def reg(ctx):
     if channel_name_divider not in message.channel.name:
         return
     try:
-        register_part = str(message.content.split(" ")[1])
+        register_part = component_reference_dict[str(message.content.split(" ")[1])]
         register_cut = str(message.channel.name.split(channel_name_divider)[0])
         register_cut = int(re.sub(r"[^\d]", "", register_cut))
     except:
