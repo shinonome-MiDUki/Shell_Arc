@@ -1,0 +1,7 @@
+version: '3.8'
+services:
+  bot:
+    build: .
+    restart: always
+    tty: true
+    stdin_open: true
