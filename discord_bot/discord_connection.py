@@ -339,14 +339,14 @@ async def reg(ctx):
         print("regコマンドが実行されましたが、チャンネル名に区切り文字が含まれていません")
         return
     try:
-        register_part = component_reference_dict[str(message.content.split(" ")[1])]
+        register_part_raw = str(message.content.split(" ")[1])
+    except:
+        register_part_raw_list = [part for part in component_index_reference_dict.keys()]
+        register_part_raw = ", ".join(register_part_raw_list)
+    finally:
         register_cut_cluster = str(message.channel.name.split(channel_name_divider)[0])
         register_cut = str(register_cut_cluster.split("、")[0])
         register_cut = int(re.sub(r"[^\d]", "", register_cut))
-    except:
-        await message.channel.send("「..reg 登録したい部分」、で登録してください")
-        print("regコマンドが実行されましたが、コマンドの形式が正しくないかチャンネル名の形式が正しくありません")
-        return
     try:
         register_person = str(message.content.split(" ")[2])
     except:
@@ -355,11 +355,16 @@ async def reg(ctx):
     
     common = Common(uninit=["r2", "project_db", "setting_db"], exclude_init_confirm=True)
     loadGS = common.loadGS
-    loadGS.load_spreadsheet(cut_index=register_cut, 
-                            target_info="member", 
-                            update_info=register_person, 
-                            component_index=component_index_reference_dict[register_part]+1
-                            )
+    register_parts_input = register_part_raw.split(",")
+    for register_part_input in register_parts_input:
+        register_part = component_reference_dict.get(register_part_input.strip(), None)
+        if register_part is None:
+            continue
+        loadGS.load_spreadsheet(cut_index=register_cut, 
+                                target_info="member", 
+                                update_info=register_person, 
+                                component_index=component_index_reference_dict[register_part]+1
+                                )
     await message.channel.send(f"{register_person} カット{register_cut} {register_part} を登録します")
 
 @shell_arc_bot.command()
