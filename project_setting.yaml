@@ -1,13 +1,11 @@
 project_name: null2026_shinkan
 collection_name: null_shinkan_2026
 mode: cut_base
-cut_number: 8
-component_number: 8
+cut_number: 27
+component_number: 4
 
 parts:
-  A1: [1,2]
-  A2: [3,4]
-  A3: [5,5]
+  A: [1,27]
 
 component:
   1: 
@@ -19,16 +17,25 @@ component:
     name_component_3: "genga01"
     format: ["png", "image/png"]
     progress: 0
-  2:
+  2: 
+    process: character_keyframe_2
+    display: 原画2
+    naming_section: 3
+    name_component_1: -cut
+    name_component_2: -take
+    name_component_3: "genga02"
+    format: ["png", "image/png"]
+    progress: 0
+  3:
     process: character_animation
     display: 中割り
     naming_section: 3
     name_component_1: -cut
     name_component_2: -take
-    name_component_3: inzip
+    name_component_3: anim
     format: ["zip", "application/zip"]
     progress: 0
-  3:
+  4:
     process: background
     display: 背景
     naming_section: 3
@@ -36,24 +43,6 @@ component:
     name_component_2: -take
     name_component_3: bg
     format: ["png", "image/png"]
-    progress: 0
-  4:
-    process: compositing
-    display: 撮影
-    naming_section: 3
-    name_component_1: -cut
-    name_component_2: -take
-    name_component_3: compo
-    format: ["mov", "video/quicktime"]
-    progress: 0
-  5:
-    process: editing
-    display: 編集
-    naming_section: 3
-    name_component_1: -cut
-    name_component_2: -take
-    name_component_3: edit
-    format: ["mov", "video/quicktime"]
     progress: 0
     
 spreadsheet_key: 1_hQ2VMaLD8Jd8SbCXs503-Eth6IrVozNSvJjeap-lHE

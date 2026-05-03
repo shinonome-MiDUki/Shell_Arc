@@ -2,6 +2,7 @@ import re
 import os
 import sys
 import io
+import time
 import asyncio
 import json
 from pathlib import Path
@@ -365,6 +366,8 @@ async def build_project_server(ctx):
     await Category.create_text_channel(center_channel_names["schedule_query_center"])
     for count in range(1, TOTAL_CUT_COUNT+1):
         await Category.create_text_channel(f"{count}{channel_name_divider}?")
+        if count % 5 == 0:
+            time.sleep(1.5)
 
     await message.channel.send("設定完了です\n\"BUILD_CHANNEL\"チャンネルと\"SETTER_ADMIN\"ロールを削除してください")
 
