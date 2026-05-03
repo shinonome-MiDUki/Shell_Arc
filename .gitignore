@@ -2,4 +2,6 @@
 .env
 **/.DS_Store
 **/__pycache__/**
+linker_setting.yaml
+project_setting_yaml
 

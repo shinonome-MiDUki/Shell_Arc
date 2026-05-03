@@ -23,6 +23,7 @@ class Cloudflare_R2_service:
                 )
             except Exception as e:
                 print(e)
+                print("ファイルのアップロードに失敗しました")
             finally:
                 os.unlink(tmp_file_path)
 
@@ -40,3 +41,4 @@ class Cloudflare_R2_service:
             except: pass
         except Exception as e:
             print(e)
+            print("ファイルのダウンロードに失敗しました")

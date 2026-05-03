@@ -6,12 +6,13 @@ import streamlit as st
 import gspread
 import yaml
 
-project_root = os.path.dirname(os.path.abspath(__file__)) 
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if project_root not in sys.path:
     sys.path.append(project_root)
 
 from backend.access_database import AccessDB as DB
 from backend.access_spread_sheet import AccessSpreadSheet as SpreadSheet
+from backend.linker_parser import MakeLinker as MakeLinker
 
 def process_layered_component(index, dict_from_yaml_data):
     return dict_from_yaml_data["component"][index]
@@ -36,7 +37,8 @@ def generate_spreadsheet_format(dict_from_yaml_data):
         "progress_data_n_lines_under_last_cut" : dict_from_yaml_data["spreadsheet_format"]["progress_data_n_lines_under_last_cut"],
         "component_info_range" : dict_from_yaml_data["spreadsheet_format"]["component_info_range"],
         "common_column" : dict_from_yaml_data["spreadsheet_format"]["common_column"],
-        "component_info_column_structure" : dict_from_yaml_data["spreadsheet_format"]["component_info_column_structure"]
+        "component_info_column_structure" : dict_from_yaml_data["spreadsheet_format"]["component_info_column_structure"],
+        "spreadsheet_key" : dict_from_yaml_data["spreadsheet_format"]["spreadsheet_key"]
     }
     return spreadsheet_format
 
@@ -60,6 +62,8 @@ def build_main_proj_db(db, dict_from_yaml_data, proj_collection, spreadsheet_key
 
     if linker is not None:
         db.collection(proj_collection).document("linker").set(linker, merge=True)
+    else:
+        db.collection(proj_collection).document("linker").set({"linker" : "0"}, merge=True)
 
 def build_main_proj_spread_sheet(spreadsheet, dict_from_yaml_data, proj_collection):
     cut_number = int(dict_from_yaml_data["cut_number"])
@@ -93,6 +97,8 @@ def main():
     pw = st.text_input("管理員ID", type="password")
     if pw == st.secrets["super"]["id"]:
         proj_setting_yaml = st.file_uploader("プロジェクト設定ファイル(.yaml)", type=["yaml"])
+        linker_doc_yaml = st.file_uploader("リンカーファイル(.yaml)", type=["yaml"])
+        
         proj_collection = str(st.text_input("プロジェクトコレクション名を入力してください"))
         if proj_collection != st.secrets["init"]["collection_name"] and proj_collection != "":
             st.write("プロジェクトコレクションが不正です")
@@ -101,6 +107,12 @@ def main():
         custom_spreadsheet = st.checkbox("カスタムスプレッドシートを使います")
         if proj_setting_yaml is not None and proj_collection != "" and spreadsheet_key != "":
             dict_from_yaml_data = yaml.safe_load(proj_setting_yaml)
+            if linker_doc_yaml is not None:
+                linker_doc_dict = yaml.safe_load(linker_doc_yaml)
+                linker_doc_dict = MakeLinker.restructure_linker(linker_doc_dict)
+                print(linker_doc_dict)
+            else:
+                linker_doc_dict = None
             if st.button("プロジェクトをビルド"):
                 with st.spinner("ビルド中"):
                     time.sleep(0.5)
@@ -117,7 +129,7 @@ def main():
                     #build firebase DB
                     db_instance = DB()
                     db = db_instance.database
-                    build_main_proj_db(db, dict_from_yaml_data, proj_collection, spreadsheet_key)
+                    build_main_proj_db(db, dict_from_yaml_data, proj_collection, spreadsheet_key, linker=linker_doc_dict)
                     st.write("ビルド完了")
     elif pw != st.secrets["super"]["id"] and pw != "":
         st.warning("IDは不正です")

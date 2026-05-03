@@ -9,6 +9,7 @@ class LoadSpreadSheet:
         self.common_column = spreadsheet_format_data["common_column"]
         self.component_info_range = spreadsheet_format_data["component_info_range"]
         self.component_info_column_structure = spreadsheet_format_data["component_info_column_structure"]
+        print(f"component_info_column_structure is {self.component_info_column_structure}")
         self.progress_data_n_lines_under_last_cut = spreadsheet_format_data["progress_data_n_lines_under_last_cut"]
         self.component_info_starting_column_index = max([self.common_column[k] for k in self.common_column]) + 1
 

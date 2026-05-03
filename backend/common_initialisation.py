@@ -28,9 +28,8 @@ class CommonInitialisation():
             load_dotenv(dotenv_path)
             collection_name = os.environ.get("init_collection_name")
             
-        if "setting_db" not in self.uninit and "project_db" not in self.uninit:
-            db_instance = DB()
-            db = db_instance.database
+        db_instance = DB()
+        db = db_instance.database
 
         if "setting_db" not in self.uninit:
             self._ref_setting_obj = db.collection(collection_name).document("setting")  #project setting data object
@@ -58,6 +57,11 @@ class CommonInitialisation():
         else:
             self._ref_collection = None
 
+        if "linker_db" not in self.uninit:
+            self._ref_linker = db.collection(collection_name).document("linker")
+        else:
+            self._ref_linker = None
+
         #access R2 storage
         if "r2" not in self.uninit:
             r2access = R2Access()
@@ -67,13 +71,14 @@ class CommonInitialisation():
 
         #access spreadsheet
         if "spreadsheet" not in self.uninit:
-            spreadsheet_key = self.proj_setting_data_snapshot["spreadsheet_key"]
+            #spreadsheet_key = self.proj_setting_data_snapshot["spreadsheet_key"]
 
-            #spreadsheet_format_data = db.collection(collection_name).document("spreadsheet_format").get().to_dict() 
+            spreadsheet_format_data = db.collection(collection_name).document("spreadsheet_format").get().to_dict() 
             #project spreadsheet format data dictionary
             #THIS PART should be deleted 
 
-            spreadsheet_format_data = dict_from_yaml_data["spreadsheet_format"]
+            #spreadsheet_format_data = dict_from_yaml_data["spreadsheet_format"]
+            spreadsheet_key = spreadsheet_format_data["spreadsheet_key"]
             gs = GS(spreadsheet_key)
             self._spreadsheet = gs.spreadsheet_obj
             self._loadGS = LoadGS(spreadsheet_format_data, gs.spreadsheet_obj)
@@ -104,6 +109,10 @@ class CommonInitialisation():
     @property
     def ref_collection(self):
         return self._ref_collection
+    
+    @property
+    def ref_linker(self):
+        return self._ref_linker
     
     @property
     def s3_client(self):

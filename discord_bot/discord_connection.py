@@ -20,6 +20,7 @@ if proj_root not in sys.path:
 from backend.request_r2 import Cloudflare_R2_service as R2
 from backend.common_initialisation import CommonInitialisation as Common
 from backend.file_operation import FileOperation as FileOp
+from backend.linker_parser import LinkerParser as LinkP
 from discord_notice_webhook import DiscordNotice as Notice
 
 load_dotenv(verbose=True)
@@ -65,7 +66,8 @@ class SubmissionSelectionView(discord.ui.View):
         message = self.message
         channel_name = str(message.channel.name.lower())
         try:
-            submitting_cut = str(channel_name.split(channel_name_divider)[0])
+            submitting_cut_cluster = str(channel_name.split(channel_name_divider)[0])
+            submitting_cut = str(submitting_cut_cluster.split("、")[0])
             submitting_cut = re.sub(r"[^\d]", "", submitting_cut)
             submitting_cut = int(submitting_cut)
             submitting_person = str(channel_name.split(channel_name_divider)[1])
@@ -73,10 +75,8 @@ class SubmissionSelectionView(discord.ui.View):
         except:
             await message.channel.send("!!ERROR!!")
             return
-        print(submitting_cut)
-        print(submitting_component)
 
-        if submitting_person != str(message.author.display_name):
+        if submitting_person != "" and submitting_person != str(message.author.display_name):
             await message.channel.send("Warning : 提出者アカウント名はチャンネルで指定された担当者名と異なります")
             submitting_person = str(message.author.display_name)
         await interaction.channel.send(f"カット{submitting_cut}・{submitting_component} 提出しますか（はい・いいえ）")
@@ -86,6 +86,7 @@ class SubmissionSelectionView(discord.ui.View):
             reply_message = await shell_arc_bot.wait_for('message', check=check, timeout=30.0)
         except asyncio.TimeoutError:
             await message.channel.send("時間超過です。やり直してください")
+            return
         except:
             await message.channel.send("!!ERROR!!")
         if reply_message.content == "はい":
@@ -109,7 +110,8 @@ class ReviewSelectionView(discord.ui.View):
         message = self.message
         channel_name = str(message.channel.name.lower())
         try:
-            reviewing_cut = str(channel_name.split(channel_name_divider)[0])
+            reviewing_cut_cluster = str(channel_name.split(channel_name_divider)[0])
+            reviewing_cut = str(reviewing_cut_cluster.split("、")[0])
             reviewing_cut = re.sub(r"[^\d]", "", reviewing_cut)
             reviewing_cut = int(reviewing_cut)
             reviewing_person = str(message.author.display_name)
@@ -191,7 +193,8 @@ async def submit_file(message, submitting_person, submitting_cut, submitting_com
                             update_info="作業中",
                             component_index=working_index)
     
-    await message.channel.send(f"カット{submitting_cut}・{submitting_component} にアップロードしました")
+    mentioning_role = discord.utils.get(message.guild.roles, name=admin_roles["keyframe_qc"])
+    await message.channel.send(f"カット{submitting_cut}・{submitting_component} にアップロードしました {mentioning_role.mention}")
     notice = Notice()
     notice.discord_notice(submitting_cut, submitting_component, current_take, submitting_person)
 
@@ -302,7 +305,9 @@ async def ask(ctx):
     loadGS = common.loadGS
     spreadsheet_cache = loadGS.spreadsheet_cache
     scheduled_work_list = []
+    escaped_divider = re.escape(channel_name_divider)
     for cut_num in range(1, TOTAL_CUT_COUNT+1):
+        re_pattern = rf"^{cut_num}({escaped_divider}|、)"
         for part_num in range(1, len(component_index_reference_dict)+1):
             person_incharge = loadGS.efficient_get_spreadsheet(
                 current_spreadsheet_cache=spreadsheet_cache, 
@@ -312,8 +317,10 @@ async def ask(ctx):
             )
             person_incharge = str(person_incharge)
             if person_incharge == asking_person:
-                cut_channel = discord.utils.find(lambda c: c.name.startswith(f"{cut_num}{channel_name_divider}"), message.guild.text_channels)
-                scheduled_work_list.append(f"カット{cut_num} {rev_component_index_reference_dict[part_num]} <#{cut_channel.id}>")
+                cut_channel = discord.utils.find(
+                    lambda c: re.match(re_pattern, c.name), 
+                    message.guild.text_channels)
+                scheduled_work_list.append(f"カット{cut_num} {rev_component_index_reference_dict[part_num-1]} <#{cut_channel.id}>")
                 
     query_answer_message = f"{asking_person} : "
     if scheduled_work_list:
@@ -329,25 +336,29 @@ async def reg(ctx):
     if message.author.bot:
         return
     if channel_name_divider not in message.channel.name:
+        print("regコマンドが実行されましたが、チャンネル名に区切り文字が含まれていません")
         return
     try:
         register_part = component_reference_dict[str(message.content.split(" ")[1])]
-        register_cut = str(message.channel.name.split(channel_name_divider)[0])
+        register_cut_cluster = str(message.channel.name.split(channel_name_divider)[0])
+        register_cut = str(register_cut_cluster.split("、")[0])
         register_cut = int(re.sub(r"[^\d]", "", register_cut))
     except:
+        await message.channel.send("「..reg 登録したい部分」、で登録してください")
+        print("regコマンドが実行されましたが、コマンドの形式が正しくないかチャンネル名の形式が正しくありません")
         return
     try:
         register_person = str(message.content.split(" ")[2])
     except:
         register_person = str(message.author.display_name)
-    await message.channel.edit(name=f"{register_cut}{channel_name_divider}{register_person}")
+    await message.channel.edit(name=f"{register_cut_cluster}{channel_name_divider}{register_person}")
     
     common = Common(uninit=["r2", "project_db", "setting_db"], exclude_init_confirm=True)
     loadGS = common.loadGS
     loadGS.load_spreadsheet(cut_index=register_cut, 
                             target_info="member", 
                             update_info=register_person, 
-                            component_index=component_index_reference_dict[register_part]
+                            component_index=component_index_reference_dict[register_part]+1
                             )
     await message.channel.send(f"{register_person} カット{register_cut} {register_part} を登録します")
 
@@ -357,15 +368,25 @@ async def build_project_server(ctx):
     if message.author.bot:
         return
     author_roles = [role.name for role in message.author.roles]
-    if "SETTER_ADMIN" not in author_roles or message.channel.name != "BUILD_CHANNEL":
-        await message.channel.send("\"BUILD_CHANNEL\"という名前を持つチャンネルを作成し、\"SETTER_ADMIN\"という名前のロールを設定者に付与してください")
+    if "SETTER_ADMIN" not in author_roles or message.channel.name != "build_channel":
+        await message.channel.send("\"build_channel\"という名前を持つチャンネルを作成し、\"SETTER_ADMIN\"という名前のロールを設定者に付与してください")
         return
     
     Category = await ctx.guild.create_category(submission_channel_catagory_name)
     await Category.create_text_channel(center_channel_names["notice_center"])
     await Category.create_text_channel(center_channel_names["schedule_query_center"])
+    linkp = LinkP()
+    linker_children_set = linkp.find_children()
     for count in range(1, TOTAL_CUT_COUNT+1):
-        await Category.create_text_channel(f"{count}{channel_name_divider}?")
+        if count in linker_children_set:
+            continue
+        child_cut = linkp.trace_to_child(count)
+        if child_cut is not None:
+            child_text = "、".join([str(i) for i in child_cut])
+            child_text = str(count) + "、" + child_text
+        else: 
+            child_text = str(count)
+        await Category.create_text_channel(f"{child_text}{channel_name_divider}")
         if count % 5 == 0:
             time.sleep(1.5)
 
@@ -378,14 +399,20 @@ async def on_message(message):
     if message.author.display_name != webhook_bot_name or message.channel.name != center_channel_names["notice_center"]:
         await shell_arc_bot.process_commands(message)
         return
+    print("notice_centerにメッセージが投稿されました")
     notice_content = str(message.content)
     cut_num_matching = re.search(notice_message_cut_extraction_regex, notice_content)
     if cut_num_matching:
         cut_num = cut_num_matching.group(1)
     cut_num = int(cut_num)
-    cut_channel = discord.utils.find(lambda c: c.name.startswith(f"{cut_num}{channel_name_divider}"), message.guild.text_channels)
+    escaped_divider = re.escape(channel_name_divider)
+    re_pattern = rf"^{cut_num}({escaped_divider}|、).+"
+    cut_channel = discord.utils.find(
+        lambda c: re.match(re_pattern, c.name),
+        message.guild.text_channels)
     print(cut_num)
     print(cut_channel)
+    print("****")
     mentioning_role = discord.utils.get(message.guild.roles, name=admin_roles["keyframe_qc"])
     if mentioning_role:
         await cut_channel.send(f"{mentioning_role.mention} {notice_content}")
