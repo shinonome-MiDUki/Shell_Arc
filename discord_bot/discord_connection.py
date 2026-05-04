@@ -51,7 +51,7 @@ bot_command = config["bot_command"]
 shell_arc_bot = commands.Bot(command_prefix=bot_command, intents=discord.Intents.all())
 
 def process_cut_num(cut_cluster):
-    match = re.search(r"([^\d]*(\d+))", cut_cluster)
+    match = re.search(r'カット(\d+)、', cut_cluster)
     if match:
         return str(match.group(1))
     return None
@@ -76,7 +76,8 @@ class SubmissionSelectionView(discord.ui.View):
             submitting_cut = process_cut_num(submitting_cut_cluster)
             if submitting_cut is None:
                 raise ValueError("カット番号の抽出に失敗しました")
-            submitting_cut = re.sub(r"[^\d]", "", submitting_cut)
+            #submitting_cut = re.sub(r"[^\d]", "", submitting_cut)
+            print(f"抽出されたカット番号: {submitting_cut}")
             submitting_cut = int(submitting_cut)
             submitting_person = str(channel_name.split(channel_name_divider)[1])
             submitting_component = str(select.values[0])
@@ -316,7 +317,7 @@ async def ask(ctx):
     spreadsheet_cache = loadGS.spreadsheet_cache
     scheduled_work_list = []
     escaped_divider = re.escape(channel_name_divider)
-    re_pattern = re.compile(r'（[^\d]*(\d+)')
+    re_pattern = re.compile(r'カット(\d+)、')
     for cut_num in range(1, TOTAL_CUT_COUNT+1):
         for part_num in range(1, len(component_index_reference_dict)+1):
             person_incharge = loadGS.efficient_get_spreadsheet(
@@ -345,14 +346,14 @@ async def reg(ctx):
     message = ctx.message
     if message.author.bot:
         return
-    if channel_name_divider not in message.channel.name:
-        print("regコマンドが実行されましたが、チャンネル名に区切り文字が含まれていません")
-        return
+    # if channel_name_divider not in message.channel.name:
+    #     print("regコマンドが実行されましたが、チャンネル名に区切り文字が含まれていません")
+    #     return
     try:
         register_part_raw = str(message.content.split(" ")[1])
     except:
         register_part_raw_list = [part for part in component_index_reference_dict.keys()]
-        register_part_raw = ", ".join(register_part_raw_list)
+        register_part_raw = ",".join(register_part_raw_list)
     finally:
         register_cut_cluster = str(message.channel.name.split(channel_name_divider)[0])
         register_cut = process_cut_num(register_cut_cluster)
@@ -366,8 +367,13 @@ async def reg(ctx):
     common = Common(uninit=["r2", "project_db", "setting_db"], exclude_init_confirm=True)
     loadGS = common.loadGS
     register_parts_input = register_part_raw.split(",")
-    for register_part_input in register_parts_input:
-        register_part = component_reference_dict.get(register_part_input.strip(), None)
+    register_parts = []
+    for part_input in register_parts_input:
+        part_input = part_input.strip()
+        part = component_reference_dict.get(part_input, None)
+        if part is not None:
+            register_parts.append(part)
+    for register_part in register_parts:
         if register_part is None:
             continue
         loadGS.load_spreadsheet(cut_index=register_cut, 
@@ -375,7 +381,8 @@ async def reg(ctx):
                                 update_info=register_person, 
                                 component_index=component_index_reference_dict[register_part]+1
                                 )
-    await message.channel.send(f"{register_person} カット{register_cut} {register_part} を登録します")
+    registed_parts_text = "、".join(register_parts)
+    await message.channel.send(f"{register_person} カット{register_cut} {registed_parts_text} を登録します")
 
 @shell_arc_bot.command()
 async def build_project_server(ctx):
@@ -421,7 +428,7 @@ async def on_message(message):
         cut_num = cut_num_matching.group(1)
     cut_num = int(cut_num)
     escaped_divider = re.escape(channel_name_divider)
-    re_pattern = re.compile(r'（[^\d]*(\d+)')
+    re_pattern = re.compile(r'カット(\d+)、')
     cut_channel = discord.utils.find(
         lambda c: (m := re_pattern.search(c.name)) and m.group(1) == str(cut_num),
         message.guild.text_channels)
