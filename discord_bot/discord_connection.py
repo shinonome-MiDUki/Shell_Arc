@@ -50,6 +50,12 @@ bot_command = config["bot_command"]
 
 shell_arc_bot = commands.Bot(command_prefix=bot_command, intents=discord.Intents.all())
 
+def process_cut_num(cut_cluster):
+    match = re.search(r"([^\d]*(\d+))", cut_cluster)
+    if match:
+        return str(match.group(1))
+    return None
+
 class SubmissionSelectionView(discord.ui.View): 
     def __init__(self, timeout=120, message=None):
         super().__init__(timeout=timeout)
@@ -67,7 +73,9 @@ class SubmissionSelectionView(discord.ui.View):
         channel_name = str(message.channel.name.lower())
         try:
             submitting_cut_cluster = str(channel_name.split(channel_name_divider)[0])
-            submitting_cut = str(submitting_cut_cluster.split("、")[0])
+            submitting_cut = process_cut_num(submitting_cut_cluster)
+            if submitting_cut is None:
+                raise ValueError("カット番号の抽出に失敗しました")
             submitting_cut = re.sub(r"[^\d]", "", submitting_cut)
             submitting_cut = int(submitting_cut)
             submitting_person = str(channel_name.split(channel_name_divider)[1])
@@ -111,7 +119,9 @@ class ReviewSelectionView(discord.ui.View):
         channel_name = str(message.channel.name.lower())
         try:
             reviewing_cut_cluster = str(channel_name.split(channel_name_divider)[0])
-            reviewing_cut = str(reviewing_cut_cluster.split("、")[0])
+            reviewing_cut = process_cut_num(reviewing_cut_cluster)
+            if reviewing_cut is None:
+                raise ValueError("カット番号の抽出に失敗しました")
             reviewing_cut = re.sub(r"[^\d]", "", reviewing_cut)
             reviewing_cut = int(reviewing_cut)
             reviewing_person = str(message.author.display_name)
@@ -306,8 +316,8 @@ async def ask(ctx):
     spreadsheet_cache = loadGS.spreadsheet_cache
     scheduled_work_list = []
     escaped_divider = re.escape(channel_name_divider)
+    re_pattern = re.compile(r'（[^\d]*(\d+)')
     for cut_num in range(1, TOTAL_CUT_COUNT+1):
-        re_pattern = rf"^{cut_num}({escaped_divider}|、)"
         for part_num in range(1, len(component_index_reference_dict)+1):
             person_incharge = loadGS.efficient_get_spreadsheet(
                 current_spreadsheet_cache=spreadsheet_cache, 
@@ -318,7 +328,7 @@ async def ask(ctx):
             person_incharge = str(person_incharge)
             if person_incharge == asking_person:
                 cut_channel = discord.utils.find(
-                    lambda c: re.match(re_pattern, c.name), 
+                    lambda c: (m := re_pattern.search(c.name)) and m.group(1) == str(cut_num),
                     message.guild.text_channels)
                 scheduled_work_list.append(f"カット{cut_num} {rev_component_index_reference_dict[part_num-1]} <#{cut_channel.id}>")
                 
@@ -345,7 +355,7 @@ async def reg(ctx):
         register_part_raw = ", ".join(register_part_raw_list)
     finally:
         register_cut_cluster = str(message.channel.name.split(channel_name_divider)[0])
-        register_cut = str(register_cut_cluster.split("、")[0])
+        register_cut = process_cut_num(register_cut_cluster)
         register_cut = int(re.sub(r"[^\d]", "", register_cut))
     try:
         register_person = str(message.content.split(" ")[2])
@@ -411,9 +421,9 @@ async def on_message(message):
         cut_num = cut_num_matching.group(1)
     cut_num = int(cut_num)
     escaped_divider = re.escape(channel_name_divider)
-    re_pattern = rf"^{cut_num}({escaped_divider}|、).+"
+    re_pattern = re.compile(r'（[^\d]*(\d+)')
     cut_channel = discord.utils.find(
-        lambda c: re.match(re_pattern, c.name),
+        lambda c: (m := re_pattern.search(c.name)) and m.group(1) == str(cut_num),
         message.guild.text_channels)
     print(cut_num)
     print(cut_channel)
