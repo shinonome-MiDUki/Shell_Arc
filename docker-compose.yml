@@ -27,6 +27,7 @@ services:
       - NGROK_AUTHTOKEN=${ngrok_auth_token}
     env_file: .env
     command: 
+      - "ngrok"
       - "http"
       - "web:8501"
     depends_on:
