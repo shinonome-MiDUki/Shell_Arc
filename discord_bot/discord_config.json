@@ -2,31 +2,31 @@
     "total_cut_count" : 27,
     "webhook_bot_name" : "Shell_Arc_Notice_Center",
     "notice_message_cut_extraction_regex": "カット(\\d+?)・",
-    "submission_channel_catagory_name" : "カット提出",
+    "submission_channel_catagory_name" : "アニメーション",
     "channel_name_divider" : "_",
     "bot_command" : "..",
     "component_reference" : {
-        "genga" : "原画",
-        "genga2" : "原画2",
-        "nakawari" : "中割り", 
+        "sakuga" : "作画",
         "haikei" : "背景",
-        "原画" : "原画",
-        "原画2" : "原画2",
-        "中割り" : "中割り",
+        "sakugayobi" : "作画予備枠",
+        "staticimg" : "静止画予備枠", 
+        "作画" : "作画",
         "背景" : "背景",
-        "g" : "原画",
-        "g2" : "原画2",
-        "n" : "中割り",
-        "h" : "背景"
+        "作画予備枠" : "作画予備枠",
+        "静止画予備枠" : "静止画予備枠",
+        "s" : "作画",
+        "h" : "背景",
+        "s2" : "作画予備枠",
+        "i" : "静止画予備枠"
     },
     "component_index_reference" : {
-        "原画" : 0,
-        "原画2" : 1,
-        "中割り" : 2,
-        "背景" : 3
+        "作画" : 0,
+        "背景" : 1,
+        "作画予備枠" : 2,
+        "静止画予備枠" : 3
     },
     "admin_roles" : {
-        "keyframe_qc" : "作画監督"
+        "keyframe_qc" : "チェック"
     },
     "center_channel_names" : {
         "notice_center" : "提出通知センター",
