@@ -1,8 +1,33 @@
 version: '3.8'
 services:
   bot:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.dc
     restart: always
     tty: true
     stdin_open: true
     env_file: .env
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.stweb
+    restart: always
+    ports:
+      - "8501:8501"
+    env_file: .env
+    depends_on:
+      - bot
+
+  ngrok:
+    image: ngrok/ngrok:latest
+    restart: always
+    environment:
+      - NGROK_AUTHTOKEN=${ngrok_auth_token}
+    env_file: .env
+    command: 
+      - "http"
+      - "web:8501"
+    depends_on:
+      - web
