@@ -28,6 +28,7 @@ dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
 load_dotenv(dotenv_path)
 TOKEN = os.environ.get("Discord_token")
 SERVER_ID = os.environ.get("Discord_server_id")
+print(SERVER_ID)
 dc_client = discord.Client(intents=discord.Intents.all())
 
 #load config
@@ -51,7 +52,7 @@ bot_command = config["bot_command"]
 shell_arc_bot = commands.Bot(command_prefix=bot_command, intents=discord.Intents.all())
 
 def process_cut_num(cut_cluster):
-    match = re.search(r'カット(\d+)、', cut_cluster)
+    match = re.search(r'カット(\d+)、?', cut_cluster)
     if match:
         return str(match.group(1))
     return None
@@ -73,7 +74,9 @@ class SubmissionSelectionView(discord.ui.View):
         channel_name = str(message.channel.name.lower())
         try:
             submitting_cut_cluster = str(channel_name.split(channel_name_divider)[0])
+            print(f"submitting_cut_cluster is {submitting_cut_cluster}")
             submitting_cut = process_cut_num(submitting_cut_cluster)
+            print(f"submitting_cut is {submitting_cut}")
             if submitting_cut is None:
                 raise ValueError("カット番号の抽出に失敗しました")
             #submitting_cut = re.sub(r"[^\d]", "", submitting_cut)
@@ -81,8 +84,9 @@ class SubmissionSelectionView(discord.ui.View):
             submitting_cut = int(submitting_cut)
             submitting_person = str(channel_name.split(channel_name_divider)[1])
             submitting_component = str(select.values[0])
-        except:
-            await message.channel.send("!!ERROR!!")
+        except Exception as e:
+            print("Error occurred while processing the submission selection")
+            print(e)
             return
 
         if submitting_person != "" and submitting_person != str(message.author.display_name):
@@ -97,7 +101,7 @@ class SubmissionSelectionView(discord.ui.View):
             await message.channel.send("時間超過です。やり直してください")
             return
         except:
-            await message.channel.send("!!ERROR!!")
+            print("Error occurred while waiting for the submission confirmation")
         if reply_message.content == "はい":
             shell_arc_bot.dispatch("push_action", message, submitting_cut, submitting_component, submitting_person)
         else:
@@ -128,7 +132,7 @@ class ReviewSelectionView(discord.ui.View):
             reviewing_person = str(message.author.display_name)
             reviewing_component = str(select.values[0])
         except:
-            await message.channel.send("!!ERROR!!")
+            print("Error occurred while processing the review selection")
             return
         await message.channel.send("許可しますか（はい・いいえ）")
         def check(m):
@@ -343,6 +347,7 @@ async def ask(ctx):
 
 @shell_arc_bot.command()
 async def reg(ctx):
+    print("regコマンドが実行されました")
     message = ctx.message
     if message.author.bot:
         return
@@ -439,6 +444,8 @@ async def on_message(message):
     if mentioning_role:
         await cut_channel.send(f"{mentioning_role.mention} {notice_content}")
     await shell_arc_bot.process_commands(message)
+
+    
 
 #テスト用コード
 """
