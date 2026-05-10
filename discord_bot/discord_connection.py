@@ -5,6 +5,7 @@ import io
 import time
 import asyncio
 import json
+import random
 from pathlib import Path
 
 import discord
@@ -344,6 +345,17 @@ async def ask(ctx):
     else:
         query_answer_message += "担当作業がありません"
     await message.reply(query_answer_message)
+
+@shell_arc_bot.command()
+async def omikuji(ctx):
+    print("omikuji")
+    message = ctx.message
+    if message.author.bot:
+        return
+    omikuji_ls = ["大吉", "吉", "小吉", "半吉", "大吉", "吉", "小吉", "半吉", "大吉", "吉", "小吉", "半吉", "ぬるたろうのお守り"]
+    picked = str(random.choice(omikuji_ls))
+    await message.channel.send(f"{picked} !")
+
 
 @shell_arc_bot.command()
 async def reg(ctx):
