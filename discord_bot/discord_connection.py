@@ -356,6 +356,25 @@ async def omikuji(ctx):
     picked = str(random.choice(omikuji_ls))
     await message.channel.send(f"{picked} !")
 
+@shell_arc_bot.command()
+async def homero(ctx):
+    print("homero")
+    message = ctx.message
+    if message.author.bot:
+        return
+    praise_ls = [
+        "めっちゃ頑張ったねぬる。えらいぬる！",
+        "新歓に来てくれてありがとうぬる！お疲れぬる！",
+        "作品を出してくれてありがとうぬる！最高だよぬる",
+        "ぼくといてみちゃんをかわいくしてくれてありがとうぬる",
+        "長い一日、お疲れぬる！すごく素敵な作品だよぬる",
+        "ぬるぬるぬぬぬ〜る！",
+        "きみがいてくれたからこそ、ぼくといてみちゃんが動けたのぬる！ありがとうぬる！"
+    ]
+    picked = str(random.choice(praise_ls))
+    await message.channel.send(picked)
+
+
 
 @shell_arc_bot.command()
 async def reg(ctx):
