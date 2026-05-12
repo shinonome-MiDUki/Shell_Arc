@@ -4,5 +4,6 @@ Relase Shell Arc 2026.1.0 beta ;
 2026-05-12 : 
 Backend refactored ; 
 pyproject.toml introduced for packaging ; 
+Abolish Streamlit ;
 Create Shell_Arc_React branch for mobile app using React Native ; 
 Create Shell_Arc_Blender branch for Blender Addon for 3D workflow ;

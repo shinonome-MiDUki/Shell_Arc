@@ -1,5 +1,6 @@
 **/.streamlit/secrets.toml
 .env
+project_ctx/**
 **/.env
 **/.DS_Store
 **/__pycache__/**
