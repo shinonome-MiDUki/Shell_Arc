@@ -3,10 +3,10 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/shellarc_core"]
+packages = ["src/shellarc_core", "src/shellarc_api"]
 
 [project]
-name = "shell_arc"
+name = "ShellArc"
 version = "2026.1.1"
 dependencies = [
     "firebase_admin",
@@ -28,7 +28,7 @@ maintainers = [
 description = "Shell Arc 2026"
 readme = "README.md"
 license = "Apache-2.0"
-keywords = ["python", "shell_arc]
+keywords = ["python", "shell_arc"]
 classifiers = [
   "Development Status :: 4 - Beta",
   "Programming Language :: Python"

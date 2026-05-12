@@ -7,3 +7,4 @@ pyproject.toml introduced for packaging ;
 Abolish Streamlit ;
 Create Shell_Arc_React branch for mobile app using React Native ; 
 Create Shell_Arc_Blender branch for Blender Addon for 3D workflow ;
+Centralise project dependent files to project_ctx folder under Shell_Arc repository root ; 
