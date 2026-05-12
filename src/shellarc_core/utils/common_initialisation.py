@@ -1,50 +1,63 @@
 import os 
 
 import yaml
+from dotenv import load_dotenv
 from pathlib import Path
 
-from .access_database import AccessDB as DB
-from .request_r2 import Cloudflare_R2_service as R2
-from .access_r2 import Cloudflare_R2_service_Access as R2Access
-from .access_spread_sheet import AccessSpreadSheet as GS
-from .load_spread_sheet import LoadSpreadSheet as LoadGS
-from .yaml_to_json_convertor import YamlJsonConvertor as YtoJ
+from shellarc_core.auth.access_database import AccessDB as DB
+from shellarc_core.auth.access_r2 import Cloudflare_R2_service_Access as R2Access
+from shellarc_core.auth.access_spread_sheet import AccessSpreadSheet as GS
+from shellarc_core.processor.load_spread_sheet import LoadSpreadSheet as LoadGS
+from shellarc_core.processor.request_r2 import Cloudflare_R2_service as R2Access
+from shellarc_core.utils.yaml_to_json_convertor import YamlJsonConvertor as YtoJ
 
 class CommonInitialisation():
-    def __init__(self, uninit=None, exclude_init_confirm=False):
+    def __init__(self, 
+                 uninit: list[str] | None=None, 
+                 exclude_init_confirm: bool=False
+                 ) -> None:
+        """
+        list var uninit is a list of strings that specifies which part of the initialisation to skip
+        Possible values are "setting_db", "project_db", "linker_db", "r2", "spreadsheet"
+        bool var exclude_init_confirm is a confirmation flag
+        if True, the processes specofied in uninit will be skipped 
+        if False, the processes specified in uninit will be ignored and all initialisation processes will be executed
+        """
         if uninit is None: 
             self.uninit = []
         else:
             self.uninit = uninit if exclude_init_confirm == True else []
 
         #access firebase database
-        try:
-            import streamlit as st
-            collection_name = st.secrets["init"]["collection_name"]
-        except:
-            from dotenv import load_dotenv
-            load_dotenv(verbose=True)
-            dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
-            load_dotenv(dotenv_path)
-            collection_name = os.environ.get("init_collection_name")
-            
-        db_instance = DB()
-        db = db_instance.database
+        load_dotenv(verbose=True)
+        dotenv_path = Path(dotenv_path).resolve().parents[3] / 'project_ctx/.env'
+        load_dotenv(dotenv_path)
+        collection_name = os.environ.get("init_collection_name")
+        
+        if uninit != ["setting_db", "project_db", "linker_db", "spreadsheet"] or exclude_init_confirm == True:
+          db_instance = DB()
+          db = db_instance.database
 
+        """
+        firebase DB query structure:
+        db.collection(collection_name).document(document_name).get().to_dict() 
+        """
+
+        #project setting data object
         if "setting_db" not in self.uninit:
             self._ref_setting_obj = db.collection(collection_name).document("setting")  #project setting data object
             ref_setting_snapshot = db.collection(collection_name).document("setting").get() #project setting data referencer
-            self._ref_setting = ref_setting_snapshot #property use duplicate
+            self._ref_setting = ref_setting_snapshot.copy() #data copy for property use
             self.proj_setting_data_snapshot = ref_setting_snapshot.to_dict() #project setting data dictionary
-            self._proj_setting_data = self.proj_setting_data_snapshot #property use duplicate
+            self._proj_setting_data = self.proj_setting_data_snapshot.copy() #property use duplicate
         else:
-            setting_yaml_file_path = Path(__file__).resolve().parents[1] / "project_setting.yaml"
+            setting_yaml_file_path = Path(dotenv_path).resolve().parents[3] / 'project_ctx/project_setting.yaml'
             try:
                 with open(setting_yaml_file_path, "r", encoding="utf-8") as f:
                     dict_from_yaml_data = yaml.safe_load(f)
                 ytoj = YtoJ(dict_from_yaml_data)
                 self.proj_setting_data_snapshot = ytoj.meta_setting
-                self._proj_setting_data = self.proj_setting_data_snapshot
+                self._proj_setting_data = self.proj_setting_data_snapshot.copy() #property use duplicate
                 self._ref_setting = None
                 self._ref_setting_obj = None
             except FileNotFoundError:
@@ -71,13 +84,7 @@ class CommonInitialisation():
 
         #access spreadsheet
         if "spreadsheet" not in self.uninit:
-            #spreadsheet_key = self.proj_setting_data_snapshot["spreadsheet_key"]
-
             spreadsheet_format_data = db.collection(collection_name).document("spreadsheet_format").get().to_dict() 
-            #project spreadsheet format data dictionary
-            #THIS PART should be deleted 
-
-            #spreadsheet_format_data = dict_from_yaml_data["spreadsheet_format"]
             spreadsheet_key = spreadsheet_format_data["spreadsheet_key"]
             gs = GS(spreadsheet_key)
             self._spreadsheet = gs.spreadsheet_obj

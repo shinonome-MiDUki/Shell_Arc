@@ -1,5 +1,7 @@
 **/.streamlit/secrets.toml
 .env
+project_ctx/**
+**/.env
 **/.DS_Store
 **/__pycache__/**
 linker_setting.yaml
