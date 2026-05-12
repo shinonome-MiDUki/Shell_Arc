@@ -2,7 +2,15 @@ class FileOperation:
     def __init__(self):
         pass
 
-    def renamed(self, proj_setting_data, working_index, submitting_cut, current_take):
+    def renamed(self, 
+                proj_setting_data: dict, 
+                working_index: int, 
+                submitting_cut: int, 
+                current_take: int
+                ) -> str:
+        """
+        working_index, submitting_cut, current_take are 1-based index
+        """
         naming_reference = []
         for i in range(0, proj_setting_data[f"component{working_index}"]["naming_section"]):
             process_subdata = proj_setting_data[f"component{working_index}"]
@@ -17,7 +25,10 @@ class FileOperation:
         _renamed = "_".join(naming_reference)
         return _renamed
     
-    def work_info(self, proj_setting_data, processing_component):
+    def work_info(self, 
+                  proj_setting_data: dict, 
+                  processing_component: str
+                  ) -> dict:
         component_number = int(proj_setting_data["component_number"])
         component_list = []
         component_list_eng = []
@@ -29,17 +40,42 @@ class FileOperation:
         working_component = component_list_eng[working_index-1]
         required_format = [proj_setting_data[f"component{working_index}"]["format"][0]]
         mime_format = [proj_setting_data[f"component{working_index}"]["format"][1]]
-        rtn = {
+        _work_info = {
              "working_index" : working_index,
              "working_component" : working_component,
              "required_format" : required_format,
              "mime_format" : mime_format
         }
-        return rtn
+        return _work_info
     
-    def update_database(self, current_take=None, work_data=None, active=None, temporary=None, non_active=None):
+    def update_database(self, 
+                        current_take: int | None=None, 
+                        work_data: dict=None, 
+                        active: str | dict | None=None, 
+                        temporary: str | dict | None=None, 
+                        non_active: str | dict | None=None
+                        ) -> dict:
+        """
+        This function is designed to prepare the structure of the data to be updated in the database when a cut is submitted
+        which includes the current active take, temporary take, and non-active take
+
+        Input var active, temporary and non_active can be either,
+        a "clr" str for clearing command; or 
+        a dictionary for updating info
+        int var current_take is the current take number, it wont be updated when None
+        
+        The function returns a dictionary that can be directly used to update the database.
+        The returned dictionary structure not a full copy of the database, so merge but not overwrite the existing database when updating.
+        """
         structure = {}
-        clr = {"naming": None, "cut": None, "take": None, "creator": None, "reviewer": None, "comments": None}
+        clr = {
+            "naming": None, 
+            "cut": None, 
+            "take": None, 
+            "creator": None, 
+            "reviewer": None, 
+            "comments": None
+            }
         if current_take != None:
             structure["current_take"] = current_take
         if active != None:
