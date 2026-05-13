@@ -8,3 +8,5 @@ project_ctx/**
 **/__pycache__/**
 linker_setting.yaml
 project_setting.yaml
+*.zip
+**/keys/**
