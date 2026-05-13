@@ -1,5 +1,6 @@
 **/.streamlit/secrets.toml
-**/site_package/**
+**/site_packages/**
+!**/site_packages/.gitkeep
 .env
 project_ctx/**
 **/.env

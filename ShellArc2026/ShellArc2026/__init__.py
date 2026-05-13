@@ -46,7 +46,7 @@ classes = [
 
 
 def register():
-    site_package = str(Path(__file__).resolve().parent / "site_package")
+    site_package = str(Path(__file__).resolve().parent / "site_packages")
     if site_package not in sys.path:
         sys.path.append(site_package)
     for c in classes:
