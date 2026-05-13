@@ -2,7 +2,7 @@ from typing import Any
 
 import gspread
 
-from shellarc_core.auth.access_spread_sheet import AccessSpreadSheet as AccessGS
+from ..auth.access_spread_sheet import AccessSpreadSheet as AccessGS
 
 class LoadSpreadSheet:
     def __init__(self, 

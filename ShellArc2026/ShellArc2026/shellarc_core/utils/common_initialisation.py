@@ -4,12 +4,12 @@ import yaml
 from dotenv import load_dotenv
 from pathlib import Path
 
-from shellarc_core.auth.access_database import AccessDB as DB
-from shellarc_core.auth.access_r2 import Cloudflare_R2_service_Access as R2Access
-from shellarc_core.auth.access_spread_sheet import AccessSpreadSheet as GS
-from shellarc_core.processor.load_spread_sheet import LoadSpreadSheet as LoadGS
-from shellarc_core.processor.request_r2 import Cloudflare_R2_service as R2Access
-from shellarc_core.utils.yaml_to_json_convertor import YamlJsonConvertor as YtoJ
+from ..auth.access_database import AccessDB as DB
+from ..auth.access_r2 import Cloudflare_R2_service_Access as R2Access
+from ..auth.access_spread_sheet import AccessSpreadSheet as GS
+from ..processor.load_spread_sheet import LoadSpreadSheet as LoadGS
+from ..processor.request_r2 import Cloudflare_R2_service as R2Access
+from ..utils.yaml_to_json_convertor import YamlJsonConvertor as YtoJ
 
 class CommonInitialisation():
     def __init__(self, 

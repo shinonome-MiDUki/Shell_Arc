@@ -1,3 +1,5 @@
+import sys
+
 import bpy
 
 from . import blender_ui as blender_ui
@@ -44,6 +46,9 @@ classes = [
 
 
 def register():
+    site_package = str(Path(__file__).resolve().parent / "site_package")
+    if site_package not in sys.path:
+        sys.path.append(site_package)
     for c in classes:
         bpy.utils.register_class(c)
     blender_ui.init_props()
