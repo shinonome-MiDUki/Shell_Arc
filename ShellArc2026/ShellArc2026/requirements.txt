@@ -5,4 +5,5 @@ boto3==1.41.1
 PyYAML==6.0.3
 platformdirs==4.5.0
 python-dotenv==1.2.1
+keyring==25.7.0
 

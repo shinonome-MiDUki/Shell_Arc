@@ -8,6 +8,8 @@ from dotenv import load_dotenv
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
+from ..keys.decoder import get_creds
+
 class AccessSpreadSheet:
     def __init__(self, 
                  spreadsheet_key: str
@@ -16,20 +18,11 @@ class AccessSpreadSheet:
         load_dotenv(verbose=True)
         dotenv_path = Path(dotenv_path).resolve().parents[3] / 'project_ctx/.env'
         load_dotenv(dotenv_path)
-        service_account_info = {
-            "type": os.environ.get("GCP_type"),
-            "project_id": os.environ.get("GCP_project_id"),
-            "private_key_id": os.environ.get("GCP_private_key_id"),
-            "private_key": os.environ.get("GCP_private_key").replace('\\n', '\n'),
-            "client_email": os.environ.get("GCP_client_email"),
-            "client_id": os.environ.get("GCP_client_id"),
-            "auth_uri": os.environ.get("GCP_auth_uri"),
-            "token_uri": os.environ.get("GCP_token_uri"),
-            "auth_provider_x509_cert_url": os.environ.get("GCP_auth_provider_x509_cert_url"),
-            "client_x509_cert_url": os.environ.get("GCP_client_x509_cert_url"),
-            "universe_domain": os.environ.get("GCP_universe_domain")   
-        }
-        SCOPE = ['https://spreadsheets.google.com/feeds','https://www.googleapis.com/auth/drive']
+        service_account_info = get_creds(service="GCP")
+        SCOPE = [
+            'https://spreadsheets.google.com/feeds',
+            'https://www.googleapis.com/auth/drive'
+            ]
         with open(API_CONFIG_PATH, mode="wt", encoding="utf-8") as f:
             json.dump(service_account_info, f, ensure_ascii=False)
         creds = ServiceAccountCredentials.from_json_keyfile_name(API_CONFIG_PATH, SCOPE)

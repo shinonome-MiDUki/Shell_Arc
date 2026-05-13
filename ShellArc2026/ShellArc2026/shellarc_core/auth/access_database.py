@@ -6,24 +6,14 @@ import firebase_admin
 from firebase_admin import credentials, firestore
 from dotenv import load_dotenv
 
+from ..keys.decoder import get_creds
+
 class AccessDB:
-    def __init__(self):
+    def __init__(self) -> None:
         load_dotenv(verbose=True)
         dotenv_path = Path(dotenv_path).resolve().parents[3] / 'project_ctx/.env'
         load_dotenv(dotenv_path)
-        service_account_info = {
-            "type": os.environ.get("firebase_type"),
-            "project_id": os.environ.get("firebase_project_id"),
-            "private_key_id": os.environ.get("firebase_private_key_id"),
-            "private_key": os.environ.get("firebase_private_key").replace('\\n', '\n'),
-            "client_email": os.environ.get("firebase_client_email"),
-            "client_id": os.environ.get("firebase_client_id"),
-            "auth_uri": os.environ.get("firebase_auth_uri"),
-            "token_uri": os.environ.get("firebase_token_uri"),
-            "auth_provider_x509_cert_url": os.environ.get("firebase_auth_provider_x509_cert_url"),
-            "client_x509_cert_url": os.environ.get("firebase_client_x509_cert_url"),
-            "universe_domain": os.environ.get("firebase_universe_domain")   
-        }
+        service_account_info = get_creds(service="Firebase")
         cred = credentials.Certificate(service_account_info)
         try:
             if not firebase_admin._apps:
