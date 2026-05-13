@@ -1,6 +1,7 @@
 **/.streamlit/secrets.toml
 .env
 project_ctx/**
+!project_ctx/.gitkeep
 **/.env
 **/.DS_Store
 **/__pycache__/**
