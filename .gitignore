@@ -1,4 +1,5 @@
 **/.streamlit/secrets.toml
+**/site_package/**
 .env
 project_ctx/**
 **/.env
