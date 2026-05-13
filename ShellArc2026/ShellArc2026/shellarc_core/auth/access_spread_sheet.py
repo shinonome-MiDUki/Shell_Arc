@@ -4,7 +4,6 @@ import tempfile
 import datetime
 from pathlib import Path
 
-from dotenv import load_dotenv
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
@@ -15,9 +14,6 @@ class AccessSpreadSheet:
                  spreadsheet_key: str
                  ) -> None:
         API_CONFIG_PATH = os.path.join(tempfile.gettempdir(), "api_config_secret.json")
-        load_dotenv(verbose=True)
-        dotenv_path = Path(dotenv_path).resolve().parents[3] / 'project_ctx/.env'
-        load_dotenv(dotenv_path)
         service_account_info = get_creds(service="GCP")
         SCOPE = [
             'https://spreadsheets.google.com/feeds',

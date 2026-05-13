@@ -14,7 +14,7 @@ class Cloudflare_R2_service:
                  s3_client: boto3.client
                  ) -> None:
         self.s3_client = s3_client
-        self.R2_BUCKET = "null_portal"
+        self.R2_BUCKET = "null-portal"
 
     def check_existence(self,
                         checking_file: str
@@ -48,9 +48,9 @@ class Cloudflare_R2_service:
                       download_dest: str,
                       file_naming: str
                       ) -> bool:
-        if not self.check_existence(to_download_file):
-            print("object not exist")
-            return False
+        # if not self.check_existence(to_download_file):
+        #     print("object not exist")
+        #     return False
         try:
             self.s3_client.download_file(
                 self.R2_BUCKET,

@@ -70,6 +70,13 @@ class BackendCommunication:
         """
         cg_asset_data = self.sa_common.ref_cg_obj.collection("assets").document("general_data").get().to_dict()
         return cg_asset_data
+    
+    def set_asset_metadata(self,
+                           asset_name: str,
+                           status: str
+                           ) -> None:
+        self.sa_common.ref_cg_obj.collection("assets").document("general_data").update({asset_name : status})
+        
 
     def get_cg_data(self,
                     asset_name: str
@@ -80,7 +87,7 @@ class BackendCommunication:
 
     def get_member_data(self,
                         mem_id: str
-                        ) -> list[str]:
+                        ) -> list:
         """
         This lists the accessibility to each assets of each registered member 
         It is a dict storing member_id: str - accessible_asset_list: str
@@ -92,6 +99,8 @@ class BackendCommunication:
         accessible_assets = member_accessible[mem_id]
         if accessible_assets == "ALL":
             return ["ALL"]
+        elif accessible_assets == "NIL":
+            return ["NIL"]
         accessible_assets_list = accessible_assets.split("*")
         return accessible_assets_list
     

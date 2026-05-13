@@ -1,26 +1,22 @@
 import os 
 
 import yaml
-from dotenv import load_dotenv
 from pathlib import Path
 
 from ..auth.access_database import AccessDB as DB
 from ..auth.access_r2 import Cloudflare_R2_service_Access as R2Access
 from ..auth.access_spread_sheet import AccessSpreadSheet as GS
 from ..processor.load_spread_sheet import LoadSpreadSheet as LoadGS
-from ..processor.request_r2 import Cloudflare_R2_service as R2Access
 from ..utils.yaml_to_json_convertor import YamlJsonConvertor as YtoJ
+from ..keys.decoder import get_creds
 
 class CommonInitialisation():
     def __init__(self) -> None:
 
         #access firebase database
-        load_dotenv(verbose=True)
-        dotenv_path = Path(dotenv_path).resolve().parents[3] / 'project_ctx/.env'
-        load_dotenv(dotenv_path)
-        collection_name = os.environ.get("init_collection_name")
+        service_account_info = get_creds(service="init")
+        collection_name = service_account_info["init_collection_name"]
         
-        #access Firebase DB
         db_instance = DB()
         db = db_instance.database
 
@@ -31,9 +27,9 @@ class CommonInitialisation():
 
         self._ref_cg_obj = db.collection(collection_name).document("cg")
         ref_cg_snapshot = db.collection(collection_name).document("cg").get()
-        self._ref_cg = ref_cg_snapshot.copy()
+        self._ref_cg = ref_cg_snapshot
         self.proj_cg_data_snapshot = ref_cg_snapshot.to_dict()
-        self._proj_cg_data = self.proj_cg_data_snapshot.copy()
+        self._proj_cg_data = self.proj_cg_data_snapshot
 
         #access R2 storage
         r2access = R2Access()

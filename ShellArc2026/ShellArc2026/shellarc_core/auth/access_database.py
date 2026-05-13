@@ -4,15 +4,11 @@ from pathlib import Path
 
 import firebase_admin
 from firebase_admin import credentials, firestore
-from dotenv import load_dotenv
 
 from ..keys.decoder import get_creds
 
 class AccessDB:
     def __init__(self) -> None:
-        load_dotenv(verbose=True)
-        dotenv_path = Path(dotenv_path).resolve().parents[3] / 'project_ctx/.env'
-        load_dotenv(dotenv_path)
         service_account_info = get_creds(service="Firebase")
         cred = credentials.Certificate(service_account_info)
         try:

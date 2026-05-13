@@ -3,11 +3,10 @@ from pathlib import Path
 
 import bpy
 
-import keyring
-
 from . import blender_ui as blender_ui
 from .blender_ui import (
     SHELLARC_getfile_Nop,
+    SHELLARC_reloadassetlist_Nop,
     SHELLARC_exclock_Nop,
     SHELLARC_commitfile_Nop,
     SHELLARC_submitfile_Nop,
@@ -16,7 +15,6 @@ from .blender_ui import (
     SHELLARC_BLENDER_CustomPanel,
 )
 from .blender_prefs import SHELLARC_AddonPreferences
-from .shellarc_action import BlenderOperation
 
 bl_info = {
     "name": "Shell Arc 2026.1",
@@ -36,12 +34,15 @@ bl_info = {
 def clear_props():
     scene = bpy.types.Scene
     del scene.shellarc_prop_enum
+    del scene.shellarc_prop_str_decodekey
+    del scene.shellarc_prop_str_savepath
     del scene.shellarc_prop_str_memid
 
 
 classes = [
     SHELLARC_AddonPreferences,
     SHELLARC_getfile_Nop,
+    SHELLARC_reloadassetlist_Nop,
     SHELLARC_exclock_Nop,
     SHELLARC_commitfile_Nop,
     SHELLARC_submitfile_Nop,
@@ -52,12 +53,14 @@ classes = [
 
 
 def register():
-    if keyring.get_password("shellarc", "shellarc") is None:
-        keyring.set_password("shellarc", "shellarc", "")
-    bpy.context.scene["under_progress"] = False
     site_package = str(Path(__file__).resolve().parent / "site_packages")
+    print(site_package)
     if site_package not in sys.path:
         sys.path.append(site_package)
+    import keyring
+    from .blender_ui import update_asset_list
+    if keyring.get_password("shellarc", "shellarc") is None:
+        keyring.set_password("shellarc", "shellarc", "")
     for c in classes:
         bpy.utils.register_class(c)
     blender_ui.init_props()
@@ -67,4 +70,5 @@ def unregister():
     clear_props()
     for c in classes:
         bpy.utils.unregister_class(c)
+    from .shellarc_action import BlenderOperation
     BlenderOperation().delete_snapshot_dir()
