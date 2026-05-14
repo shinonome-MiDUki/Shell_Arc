@@ -92,6 +92,8 @@ def register():
         bpy.utils.register_class(c)
     if blender_normal_exit_action not in bpy.app.handlers.exit_pre:
         bpy.app.handlers.exit_pre.append(blender_normal_exit_action)
+    if blender_normal_exit_action not in bpy.app.handlers.load_pre:
+        bpy.app.handlers.load_pre.append(blender_normal_exit_action)
     blender_ui.init_props()
 
 

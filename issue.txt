@@ -1,0 +1,3 @@
+Reflog logic 
+Auto commit before switch docs under processing mode
+
