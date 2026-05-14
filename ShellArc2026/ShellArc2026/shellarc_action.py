@@ -3,6 +3,7 @@ import shutil
 from pathlib import Path
 
 import bpy
+import send2trash
 
 from .shellarc_core.utils.common_initialisation import CommonInitialisation as Common
 from .shellarc_core.processor.request_r2 import Cloudflare_R2_service as R2Service
@@ -49,7 +50,7 @@ class BlenderOperation:
             or not Path(bpy.context.scene["snapshot_path"]).exists():
             return
         snapshot_path = bpy.context.scene["snapshot_path"]
-        shutil.rmtree(snapshot_path)
+        send2trash.send2trash(snapshot_path)
         bpy.context.scene["snapshot_path"] = ""
 
 class BackendCommunication:
