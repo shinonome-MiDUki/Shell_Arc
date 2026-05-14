@@ -1,7 +1,7 @@
-import tempfile
 import sys
 import datetime
 import os
+import pickle
 from pathlib import Path
 
 import bpy
@@ -34,8 +34,12 @@ class BlenderOperation:
         if not "snapshot_path" in bpy.context.scene \
             or bpy.context.scene["snapshot_path"] == ""\
             or not Path(bpy.context.scene["snapshot_path"]).exists():
+            if sys.platform == "win32":
+                snapshot_dir = Path(os.environ.get("APPDATA", home / "AppData" / "Roaming")) / "ShellArc2026" / "snapshot"
+            elif sys.platform == "darwin":
+                snapshot_dir = Path.home() / "Library" / "Application Support" / "ShellArc2026" / "snapshot"
+            snapshot_dir.mkdir(exist_ok=True, parents=True)
             current_file_path = bpy.data.filepath
-            snapshot_dir = Path(tempfile.mkdtemp())
             snapshot_path = snapshot_dir / f"{Path(current_file_path).stem}_snapshot.blend"
             bpy.context.scene["snapshot_path"] = str(snapshot_path)
         snapshot_path = bpy.context.scene["snapshot_path"]
@@ -62,8 +66,12 @@ class BlenderOperation:
         if not "snapshot_path" in bpy.context.scene \
             or bpy.context.scene["snapshot_path"] == ""\
             or not Path(bpy.context.scene["snapshot_path"]).exists():
+            if sys.platform == "win32":
+                snapshot_dir = Path(os.environ.get("APPDATA", home / "AppData" / "Roaming")) / "ShellArc2026" / "snapshot"
+            elif sys.platform == "darwin":
+                snapshot_dir = Path.home() / "Library" / "Application Support" / "ShellArc2026" / "snapshot"
+            snapshot_dir.mkdir(exist_ok=True, parents=True)
             current_file_path = bpy.data.filepath
-            snapshot_dir = Path(tempfile.mkdtemp())
             snapshot_path = snapshot_dir / f"{Path(current_file_path).stem}_snapshot.blend"
             bpy.context.scene["snapshot_path"] = str(snapshot_path)
         snapshot_path = bpy.context.scene["snapshot_path"]
@@ -85,11 +93,10 @@ class BlenderOperation:
             freeze_dir = Path(os.environ.get("APPDATA", home / "AppData" / "Roaming")) / "ShellArc2026"
         elif sys.platform == "darwin":
             freeze_dir = Path.home() / "Library" / "Application Support" / "ShellArc2026"
-        freeze_dir = Path(freeze_dir)
         if not freeze_dir.exists():
             freeze_dir.mkdir(parents=True)
         current_file_path = Path(bpy.data.filepath)
-        freeze_file_path = freeze_dir / f"{current_file_path.stem}_{datetime.now().strftime("%Y%m%d%H%M")}.blend"
+        freeze_file_path = freeze_dir / f"{current_file_path.stem}_{datetime.datetime.now().strftime("%y%m%d%H%M%S")}.blend"
         bpy.ops.wm.save_as_mainfile(filepath=str(freeze_file_path), 
                                     copy=True)
         freeze_dir_size = sum(f.stat().st_size for f in freeze_dir.rglob('*') if f.is_file()) / (1024 * 1024)
@@ -101,31 +108,65 @@ class BlenderOperation:
             freeze_dir = Path(os.environ.get("APPDATA", home / "AppData" / "Roaming")) / "ShellArc2026"
         elif sys.platform == "darwin":
             freeze_dir = Path.home() / "Library" / "Application Support" / "ShellArc2026"
-        freeze_dir = Path(freeze_dir)
         if freeze_dir.exists():
             send2trash.send2trash(str(freeze_dir))
         freeze_dir.mkdir(exist_ok=True, parents=True)
         bpy.context.scene.shellarc_prop_str_freezedirsize = "0MB"
 
     @staticmethod
-    @property
     def get_freeze_dir_size() -> int:
         if sys.platform == "win32":
             freeze_dir = Path(os.environ.get("APPDATA", home / "AppData" / "Roaming")) / "ShellArc2026"
         elif sys.platform == "darwin":
             freeze_dir = Path.home() / "Library" / "Application Support" / "ShellArc2026"
-        freeze_dir = Path(freeze_dir)
         freeze_dir_size = sum(f.stat().st_size for f in freeze_dir.rglob('*') if f.is_file()) / (1024 * 1024)
         return int(freeze_dir_size)
     
     @staticmethod
-    @property
-    def is_snapshot_exists() -> bool:
-        if not "snapshot_path" in bpy.context.scene \
-            or bpy.context.scene["snapshot_path"] == ""\
-            or not Path(bpy.context.scene["snapshot_path"]).exists():
-            return False
-        return True
+    def is_snapshot_exists(asset_name: str) -> bool:
+        if sys.platform == "win32":
+            snapshot_dir = Path(os.environ.get("APPDATA", home / "AppData" / "Roaming")) / "ShellArc2026" / "snapshot"
+        elif sys.platform == "darwin":
+            snapshot_dir = Path.home() / "Library" / "Application Support" / "ShellArc2026" / "snapshot"
+        snapshot_dir.mkdir(exist_ok=True, parents=True)
+        snapshot_path = snapshot_dir / f"{asset_name}_snapshot.blend"
+        if snapshot_path.exists():
+            bpy.context.scene["snapshot_path"] = str(snapshot_path)
+            return True
+        return False
+    
+    @staticmethod
+    def get_frozen_files() -> str:
+        rtn_list = []
+        asset_name = Path(bpy.data.filepath).stem
+        if sys.platform == "win32":
+            freeze_dir = Path(os.environ.get("APPDATA", home / "AppData" / "Roaming")) / "ShellArc2026"
+        elif sys.platform == "darwin":
+            freeze_dir = Path.home() / "Library" / "Application Support" / "ShellArc2026"
+        if freeze_dir.exists():
+            frozen_list = os.listdir(str(freeze_dir))
+            for f in frozen_list:
+                if f.startswith(asset_name):
+                    rtn_list.append(f"{str(freeze_dir)}/{f}")
+        if not rtn_list:
+            return ""
+        cache_path = Path(__file__).resolve().parent / "cache_reflogidx.pkl"
+        with open(cache_path, "wb") as f:
+            pickle.dump(rtn_list, f)
+        return str(cache_path)
+    
+    @staticmethod
+    def open_frozen_file(frozen_file_path: str) -> None:
+        if sys.platform == "win32":
+            freeze_dir = Path(os.environ.get("APPDATA", home / "AppData" / "Roaming")) / "ShellArc2026"
+        elif sys.platform == "darwin":
+            freeze_dir = Path.home() / "Library" / "Application Support" / "ShellArc2026"
+        if not freeze_dir.exists():
+            return
+        current_path = bpy.data.filepath
+        BlenderOperation.freeze_locally()
+        bpy.ops.wm.open_mainfile(filepath=frozen_file_path)
+        bpy.ops.wm.save_as_mainfile(filepath=current_path)
         
 
 class BackendCommunication:
@@ -214,7 +255,7 @@ class BackendCommunication:
             return "ERROR"
         
         BlenderOperation.freeze_locally()
-        if asset_status == "2":
+        if asset_status != "1":
             if not Path(saving_dir).exists():
                 Path(saving_dir).mkdir(parents=True)
             r2_service = R2Service(s3_client=self.sa_common.s3_client)
@@ -223,14 +264,14 @@ class BackendCommunication:
                 download_dest=saving_dir,
                 file_naming=f"{asset_name}.blend"
                 )
-            if download_status:
-                self.blender_ops.open_file(local_path=f"{saving_dir}/{asset_name}.blend")
-                return asset_name
-
-        self.blender_ops.make_new_file(
-            asset_name=asset_name,
-            saving_dir=saving_dir
-        )
+            if not download_status:
+                return "DOWNLOAD_ERROR"
+            self.blender_ops.open_file(local_path=f"{saving_dir}/{asset_name}.blend")
+        else:
+            self.blender_ops.make_new_file(
+                asset_name=asset_name,
+                saving_dir=saving_dir
+            )
         return asset_name
         
     def upload_asset(self,

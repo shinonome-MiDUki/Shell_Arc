@@ -9,11 +9,14 @@ from . import blender_ui as blender_ui
 from .blender_ui import (
     SHELLARC_modetoggle_Nop,
     SHELLARC_getfile_Nop,
+    SHELLARC_forcesubmit_Nop,
     SHELLARC_reloadassetlist_Nop,
     SHELLARC_exclock_Nop,
     SHELLARC_commitfile_Nop,
     SHELLARC_submitfile_Nop,
     SHELLARC_checkoutfile_Nop,
+    SHELLARC_reflog_Nop,
+    SHELLARC_reflogconfirm_Nop,
     SHELLARC_login_Nop,
     SHELLARC_logout_Nop,
     SHELLARC_clearcache_Nop,
@@ -44,17 +47,21 @@ def clear_props():
     del scene.shellarc_prop_str_memid
     del scene.shellarc_prop_str_exlocksta
     del scene.shellarc_prop_str_freezedirsize
+    del scene.shellarc_prop_int_reflogidx
 
 
 classes = [
     SHELLARC_modetoggle_Nop,
     SHELLARC_AddonPreferences,
     SHELLARC_getfile_Nop,
+    SHELLARC_forcesubmit_Nop,
     SHELLARC_reloadassetlist_Nop,
     SHELLARC_exclock_Nop,
     SHELLARC_commitfile_Nop,
     SHELLARC_submitfile_Nop,
     SHELLARC_checkoutfile_Nop,
+    SHELLARC_reflog_Nop,
+    SHELLARC_reflogconfirm_Nop,
     SHELLARC_login_Nop,
     SHELLARC_logout_Nop,
     SHELLARC_clearcache_Nop,
@@ -70,6 +77,7 @@ def blender_normal_exit_action():
             asset_name=str(Path(bpy.data.filepath).stem),
             status=["2", ""]
         )
+        bpy.context.scene["under_progress"] = False
 
 def register():
     site_package = str(Path(__file__).resolve().parent / "site_packages")

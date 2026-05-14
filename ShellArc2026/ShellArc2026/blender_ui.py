@@ -6,6 +6,7 @@ from pathlib import Path
 import bpy
 from bpy.types import Operator, Panel
 from bpy.props import (
+    IntProperty,
     EnumProperty,
     StringProperty,
     BoolProperty
@@ -56,9 +57,9 @@ class SHELLARC_getfile_Nop(Operator):
 
     def execute(self, context):
         asset_name = context.scene.shellarc_prop_enum
-        if BlenderOperation.is_snapshot_exists:
+        if BlenderOperation.is_snapshot_exists(asset_name=asset_name):
             BlenderOperation.open_snapshot()
-            self.report({'INFO'}, f"recoverd crashed blend file")
+            self.report({'INFO'}, f"recovered crashed blend file")
         else:
             backend_communication = BackendCommunication()
             addon_pref = bpy.context.preferences.addons[__package__].preferences
@@ -76,8 +77,40 @@ class SHELLARC_getfile_Nop(Operator):
                 self.report({'INFO'}, f"loaded blend file failed : {getfile_status}")
                 return {'CANCELLED'}
             self.report({'INFO'}, f"loaded blend file")
+        context.scene.shellarc_prop_int_reflogidx = 0
+        cache_path = Path(__file__).resolve().parent / "cache_reflogidx.pkl"
+        if cache_path.exists():
+            os.unlink(cache_path)
         bpy.context.scene["under_progress"] = True
         bpy.app.timers.register(BlenderOperation.shellarc_autosave)
+        return {'FINISHED'}
+    
+class SHELLARC_forcesubmit_Nop(Operator):
+
+    bl_idname = "object.shellarc_forcesubmit_nop"
+    bl_label = "NOP"
+    bl_description = "強制アップする"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        asset_name = context.scene.shellarc_prop_enum
+        if Path(bpy.data.filepath).stem != asset_name:
+            self.report({'INFO', f"Invalid file. Submit to the right file"})
+            return {'CANCELLED'}
+        BlenderOperation.freeze_locally()
+        bpy.ops.wm.save_as_mainfile(filepath=f"{context.scene.shellarc_prop_str_savepath}/{asset_name}.blend")
+        backend_communication = BackendCommunication()
+        submit_status = backend_communication.submit_action(
+            asset_name=asset_name,
+            status=["2", ""]
+        )
+        if submit_status != asset_name:
+            self.report({'INFO'}, f"error : {submit_status}")
+            return {'CANCELLED'}
+        bpy.context.scene["under_progress"] = False
+        context.scene.shellarc_prop_str_exlocksta = "Opening"
+        update_asset_list(backend_communication=backend_communication)
+        self.report({'INFO'}, f"submitted")
         return {'FINISHED'}
     
 class SHELLARC_exclock_Nop(Operator):
@@ -153,7 +186,7 @@ class SHELLARC_submitfile_Nop(Operator):
         bpy.context.scene["under_progress"] = False
         context.scene.shellarc_prop_str_exlocksta = "Opening"
         update_asset_list(backend_communication=backend_communication)
-        bpy.app.timers.register(BlenderOperation.shellarc_autosave)
+        bpy.app.timers.unregister(BlenderOperation.shellarc_autosave)
         self.report({'INFO'}, f"submitted")
         return {'FINISHED'}
     
@@ -176,7 +209,45 @@ class SHELLARC_checkoutfile_Nop(Operator):
         context.scene.shellarc_prop_str_exlocksta = "Opening"
         update_asset_list(backend_communication=backend_communication)
         BlenderOperation.delete_snapshot_dir()
-        bpy.app.timers.register(BlenderOperation.shellarc_autosave)
+        bpy.app.timers.unregister(BlenderOperation.shellarc_autosave)
+        return {'FINISHED'}
+    
+class SHELLARC_reflog_Nop(Operator):
+
+    bl_idname = "object.shellarc_reflog_nop"
+    bl_label = "NOP"
+    bl_description = "履歴を戻す"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        cache_path = Path(__file__).resolve().parent / "cache_reflogidx.pkl"
+        if not cache_path.exists():
+            BlenderOperation.freeze_locally()
+            frozen_files = BlenderOperation.get_frozen_files()
+            if not frozen_files:
+                return {'CANCELLED'}
+        with open(cache_path, "rb") as f:
+            frozen_files_list = pickle.load(f)
+        idx = context.scene.shellarc_prop_int_reflogidx
+        BlenderOperation.open_frozen_file(frozen_file_path=frozen_files_list[idx])
+        if idx < len(frozen_files_list):
+            context.scene.shellarc_prop_int_reflogidx = idx + 1
+        else:
+            context.scene.shellarc_prop_int_reflogidx = 0
+        return {'FINISHED'}
+
+class SHELLARC_reflogconfirm_Nop(Operator):
+
+    bl_idname = "object.shellarc_reflogconfirm_nop"
+    bl_label = "NOP"
+    bl_description = "選択中の履歴に固定"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        context.scene.shellarc_prop_int_reflogidx = 0
+        cache_path = Path(__file__).resolve().parent / "cache_reflogidx.pkl"
+        if cache_path.exists():
+            os.unlink(cache_path)
         return {'FINISHED'}
     
 class SHELLARC_login_Nop(Operator):
@@ -262,12 +333,14 @@ class SHELLARC_BLENDER_CustomPanel(Panel):
             if "under_progress" not in bpy.context.scene or bpy.context.scene["under_progress"] is False:
                 current_mode = "今 : モデリングモード" if scene.shellarc_prop_bool_ismodellingmode else "今 : レイアウトモード"
                 layout.operator(SHELLARC_modetoggle_Nop.bl_idname, text=current_mode)
+                layout.separator()
 
                 if scene.shellarc_prop_bool_ismodellingmode:
                     layout.prop(scene, "shellarc_prop_enum", text="アセット")
                     layout.prop(scene, "shellarc_prop_str_savepath", text="保存ディレクトリ")
                     layout.separator()
                     layout.operator(SHELLARC_getfile_Nop.bl_idname, text="ロード")
+                    layout.operator(SHELLARC_forcesubmit_Nop.bl_idname, text="強制アップ")
                     split = layout.split(factor=0.7)
                     column = split.column(align=True)
                     column.operator(SHELLARC_exclock_Nop.bl_idname, text="排他ロック")
@@ -279,6 +352,7 @@ class SHELLARC_BLENDER_CustomPanel(Panel):
                 else:
                     pass
 
+                layout.separator()
                 freeze_dir_size = scene.shellarc_prop_str_freezedirsize
                 layout.operator(SHELLARC_clearcache_Nop.bl_idname, text=f"キャッシュをクリア ({freeze_dir_size})")
                 layout.operator(SHELLARC_logout_Nop.bl_idname, text="ログアウト")
@@ -287,6 +361,12 @@ class SHELLARC_BLENDER_CustomPanel(Panel):
                 layout.operator(SHELLARC_commitfile_Nop.bl_idname, text="キャッシュ")
                 layout.operator(SHELLARC_submitfile_Nop.bl_idname, text="アップ")
                 layout.operator(SHELLARC_checkoutfile_Nop.bl_idname, text="チェックアウト")
+                split = layout.split(factor=0.8)
+                column = split.column(align=True)
+                column.operator(SHELLARC_reflog_Nop.bl_idname, text="過去履歴に戻す")
+                split = split.split(factor=1.0)
+                column = split.column(align=True)
+                column.operator(SHELLARC_reflogconfirm_Nop.bl_idname, text="固定")
 
 
 def read_asset_list(self, context) -> list[str]:
@@ -330,8 +410,13 @@ def init_props():
         description="排他ロックの状態",
         default="Opening"
     )
-    scene.shellarc_prop_str_freezedirsize =StringProperty(
+    scene.shellarc_prop_str_freezedirsize = StringProperty(
         name="キャッシュディレクトリサイズ",
         description="キャッシュディレクトリのサイズ（MB）",
-        default="N/A MB"
+        default=f"{BlenderOperation.get_freeze_dir_size()}MB"
+    )
+    scene.shellarc_prop_int_reflogidx = IntProperty(
+        name="履歴インデックス",
+        description="走査中の履歴のインデックス",
+        default=0
     )
