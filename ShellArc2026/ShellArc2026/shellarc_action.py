@@ -1,5 +1,7 @@
 import tempfile
-import shutil
+import sys
+import datetime
+import os
 from pathlib import Path
 
 import bpy
@@ -33,18 +35,20 @@ class BlenderOperation:
             or bpy.context.scene["snapshot_path"] == ""\
             or not Path(bpy.context.scene["snapshot_path"]).exists():
             current_file_path = bpy.data.filepath
-            snapshot_dir = Path(tempfile.mkdtemp)
+            snapshot_dir = Path(tempfile.mkdtemp())
             snapshot_path = snapshot_dir / f"{Path(current_file_path).stem}_snapshot.blend"
             bpy.context.scene["snapshot_path"] = str(snapshot_path)
         snapshot_path = bpy.context.scene["snapshot_path"]
-        bpy.ops.wm.save_as_mainfile(filepath=snapshot_path, copy=True)
+        bpy.ops.wm.save_as_mainfile(filepath=snapshot_path, 
+                                    copy=True)
 
     def save_file(self) -> str:
         current_file_path = bpy.data.filepath
         bpy.ops.wm.save_as_mainfile()
         return current_file_path
     
-    def delete_snapshot_dir(self) -> None:
+    @staticmethod
+    def delete_snapshot_dir() -> None:
         if not "snapshot_path" in bpy.context.scene \
             or bpy.context.scene["snapshot_path"] == ""\
             or not Path(bpy.context.scene["snapshot_path"]).exists():
@@ -52,6 +56,77 @@ class BlenderOperation:
         snapshot_path = bpy.context.scene["snapshot_path"]
         send2trash.send2trash(snapshot_path)
         bpy.context.scene["snapshot_path"] = ""
+
+    @staticmethod
+    def shellarc_autosave():
+        if not "snapshot_path" in bpy.context.scene \
+            or bpy.context.scene["snapshot_path"] == ""\
+            or not Path(bpy.context.scene["snapshot_path"]).exists():
+            current_file_path = bpy.data.filepath
+            snapshot_dir = Path(tempfile.mkdtemp())
+            snapshot_path = snapshot_dir / f"{Path(current_file_path).stem}_snapshot.blend"
+            bpy.context.scene["snapshot_path"] = str(snapshot_path)
+        snapshot_path = bpy.context.scene["snapshot_path"]
+        bpy.ops.wm.save_as_mainfile(filepath=snapshot_path, 
+                                    copy=True)
+        return 300.0
+    
+    @staticmethod
+    def open_snapshot() -> None:
+        if not "snapshot_path" in bpy.context.scene \
+            or bpy.context.scene["snapshot_path"] == ""\
+            or not Path(bpy.context.scene["snapshot_path"]).exists():
+            return
+        bpy.ops.wm.open_mainfile(filepath=bpy.context.scene["snapshot_path"])
+
+    @staticmethod
+    def freeze_locally():
+        if sys.platform == "win32":
+            freeze_dir = Path(os.environ.get("APPDATA", home / "AppData" / "Roaming")) / "ShellArc2026"
+        elif sys.platform == "darwin":
+            freeze_dir = Path.home() / "Library" / "Application Support" / "ShellArc2026"
+        freeze_dir = Path(freeze_dir)
+        if not freeze_dir.exists():
+            freeze_dir.mkdir(parents=True)
+        current_file_path = Path(bpy.data.filepath)
+        freeze_file_path = freeze_dir / f"{current_file_path.stem}_{datetime.now().strftime("%Y%m%d%H%M")}.blend"
+        bpy.ops.wm.save_as_mainfile(filepath=str(freeze_file_path), 
+                                    copy=True)
+        freeze_dir_size = sum(f.stat().st_size for f in freeze_dir.rglob('*') if f.is_file()) / (1024 * 1024)
+        bpy.context.scene.shellarc_prop_str_freezedirsize = f"{int(freeze_dir_size)}MB"
+        
+    @staticmethod
+    def delete_freeze_dir():
+        if sys.platform == "win32":
+            freeze_dir = Path(os.environ.get("APPDATA", home / "AppData" / "Roaming")) / "ShellArc2026"
+        elif sys.platform == "darwin":
+            freeze_dir = Path.home() / "Library" / "Application Support" / "ShellArc2026"
+        freeze_dir = Path(freeze_dir)
+        if freeze_dir.exists():
+            send2trash.send2trash(str(freeze_dir))
+        freeze_dir.mkdir(exist_ok=True, parents=True)
+        bpy.context.scene.shellarc_prop_str_freezedirsize = "0MB"
+
+    @staticmethod
+    @property
+    def get_freeze_dir_size() -> int:
+        if sys.platform == "win32":
+            freeze_dir = Path(os.environ.get("APPDATA", home / "AppData" / "Roaming")) / "ShellArc2026"
+        elif sys.platform == "darwin":
+            freeze_dir = Path.home() / "Library" / "Application Support" / "ShellArc2026"
+        freeze_dir = Path(freeze_dir)
+        freeze_dir_size = sum(f.stat().st_size for f in freeze_dir.rglob('*') if f.is_file()) / (1024 * 1024)
+        return int(freeze_dir_size)
+    
+    @staticmethod
+    @property
+    def is_snapshot_exists() -> bool:
+        if not "snapshot_path" in bpy.context.scene \
+            or bpy.context.scene["snapshot_path"] == ""\
+            or not Path(bpy.context.scene["snapshot_path"]).exists():
+            return False
+        return True
+        
 
 class BackendCommunication:
     def __init__(self):
@@ -74,7 +149,7 @@ class BackendCommunication:
     
     def set_asset_metadata(self,
                            asset_name: str,
-                           status: str
+                           status: list[str]
                            ) -> None:
         self.sa_common.ref_cg_obj.collection("assets").document("general_data").update({asset_name : status})
         
@@ -112,17 +187,20 @@ class BackendCommunication:
         if asset_name in current_cg_asset_data:
             return
         self.sa_common.ref_cg_obj.collection("assets").add(asset_name)
-        self.sa_common.ref_cg_obj.collection("assets").document("general_data").update({asset_name : "0"})
+        self.sa_common.ref_cg_obj.collection("assets").document("general_data").update({asset_name : ["0", ""]})
         
     
     def request_asset(self,
+                      mem_id: str,
                       asset_name: str,
                       saving_dir: str
                       ) -> str:
         asset_metadata = self.get_asset_metadata()
-        asset_status = asset_metadata[asset_name]
+        asset_status_info = asset_metadata[asset_name]
+        asset_status = asset_status_info[0]
+        asset_status_owner = asset_status_info[1]
 
-        if asset_status == "1" or asset_status == "2":
+        if asset_status == "1" or asset_status == "2" or asset_status_owner == mem_id:
             pass
         elif asset_status == "0":
             return "NOT_ASSIGNED"
@@ -135,13 +213,8 @@ class BackendCommunication:
         else:
             return "ERROR"
         
-        if asset_status == "1":
-            self.blender_ops.make_new_file(
-                asset_name=asset_name,
-                saving_dir=saving_dir
-            )
-            return asset_name
-        elif asset_status == "2":
+        BlenderOperation.freeze_locally()
+        if asset_status == "2":
             if not Path(saving_dir).exists():
                 Path(saving_dir).mkdir(parents=True)
             r2_service = R2Service(s3_client=self.sa_common.s3_client)
@@ -150,10 +223,15 @@ class BackendCommunication:
                 download_dest=saving_dir,
                 file_naming=f"{asset_name}.blend"
                 )
-            if not download_status:
-                return "NOT_EXIST"
-            self.blender_ops.open_file(local_path=f"{saving_dir}/{asset_name}.blend")
-            return asset_name
+            if download_status:
+                self.blender_ops.open_file(local_path=f"{saving_dir}/{asset_name}.blend")
+                return asset_name
+
+        self.blender_ops.make_new_file(
+            asset_name=asset_name,
+            saving_dir=saving_dir
+        )
+        return asset_name
         
     def upload_asset(self,
                      asset_name: str
@@ -166,8 +244,23 @@ class BackendCommunication:
         )
         if not upload_status:
             return "UPLOAD ERROR"
-        self.blender_ops.delete_snapshot_dir()
+        BlenderOperation.delete_snapshot_dir()
         return asset_name
+    
+    def submit_action(self,
+                      asset_name: str,
+                      status: list[str]
+                      ) -> str:
+        upload_status = self.upload_asset(
+            asset_name=asset_name
+        )
+        if upload_status != asset_name:
+            return upload_status
+        self.set_asset_metadata(
+            asset_name=asset_name,
+            status=status
+        )
+        return upload_status
 
 class DiscordCommunication:
     def __init__(self):

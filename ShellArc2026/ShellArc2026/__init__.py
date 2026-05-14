@@ -1,3 +1,5 @@
+print("run")
+
 import sys
 from pathlib import Path
 
@@ -5,13 +7,16 @@ import bpy
 
 from . import blender_ui as blender_ui
 from .blender_ui import (
+    SHELLARC_modetoggle_Nop,
     SHELLARC_getfile_Nop,
     SHELLARC_reloadassetlist_Nop,
     SHELLARC_exclock_Nop,
     SHELLARC_commitfile_Nop,
     SHELLARC_submitfile_Nop,
+    SHELLARC_checkoutfile_Nop,
     SHELLARC_login_Nop,
     SHELLARC_logout_Nop,
+    SHELLARC_clearcache_Nop,
     SHELLARC_BLENDER_CustomPanel,
 )
 from .blender_prefs import SHELLARC_AddonPreferences
@@ -37,20 +42,34 @@ def clear_props():
     del scene.shellarc_prop_str_decodekey
     del scene.shellarc_prop_str_savepath
     del scene.shellarc_prop_str_memid
+    del scene.shellarc_prop_str_exlocksta
+    del scene.shellarc_prop_str_freezedirsize
 
 
 classes = [
+    SHELLARC_modetoggle_Nop,
     SHELLARC_AddonPreferences,
     SHELLARC_getfile_Nop,
     SHELLARC_reloadassetlist_Nop,
     SHELLARC_exclock_Nop,
     SHELLARC_commitfile_Nop,
     SHELLARC_submitfile_Nop,
+    SHELLARC_checkoutfile_Nop,
     SHELLARC_login_Nop,
     SHELLARC_logout_Nop,
+    SHELLARC_clearcache_Nop,
     SHELLARC_BLENDER_CustomPanel
     ]
 
+@bpy.app.handlers.persistent
+def blender_normal_exit_action():
+    from .shellarc_action import BlenderOperation, BackendCommunication
+    BlenderOperation.delete_snapshot_dir()
+    if bpy.context.scene["under_progress"]:
+        BackendCommunication().submit_action(
+            asset_name=str(Path(bpy.data.filepath).stem),
+            status=["2", ""]
+        )
 
 def register():
     site_package = str(Path(__file__).resolve().parent / "site_packages")
@@ -63,6 +82,8 @@ def register():
         keyring.set_password("shellarc", "shellarc", "")
     for c in classes:
         bpy.utils.register_class(c)
+    if blender_normal_exit_action not in bpy.app.handlers.exit_pre:
+        bpy.app.handlers.exit_pre.append(blender_normal_exit_action)
     blender_ui.init_props()
 
 
@@ -71,4 +92,6 @@ def unregister():
     for c in classes:
         bpy.utils.unregister_class(c)
     from .shellarc_action import BlenderOperation
-    BlenderOperation().delete_snapshot_dir()
+    BlenderOperation.delete_snapshot_dir()
+    bpy.app.timers.unregister(BlenderOperation.shellarc_autosave)
+    blender_normal_exit_action()
