@@ -5,14 +5,21 @@ from pathlib import Path
 
 import bpy
 from bpy.types import Operator
+from bpy.props import StringProperty
 
-from .shellarc_blender_action import BlenderOperation, LocalOperation
+from .shellarc_blender_action import LocalOperation
 from .shellarc_core_action import BackendCommunication
 
-def update_asset_list(backend_communication: BackendCommunication | None=None) -> None:
+def update_asset_list(backend_communication: BackendCommunication | None=None,
+                      force_load_asset_list: bool=False
+                      ) -> None:
     asset_list = []
+    submission_type = "assets" if force_load_asset_list else ""
     if backend_communication is None:
-        backend_communication = BackendCommunication(ctx=bpy.context)
+        backend_communication = BackendCommunication(
+            ctx=bpy.context,
+            submission_type=submission_type
+            )
     pref = bpy.context.preferences
     addon_pref = pref.addons[__package__].preferences
     accessible_asset_set = backend_communication.get_member_data(mem_id=addon_pref.member_id)
@@ -26,7 +33,8 @@ def update_asset_list(backend_communication: BackendCommunication | None=None) -
             if asset not in accessible_asset_set:
                 continue
             asset_list.append((asset, asset, asset))
-    cache_path = Path(__file__).resolve().parent / "asset_list.pkl"
+    pkl_file_name = "tmp_asset_list.pkl" if force_load_asset_list else "asset_list.pkl"
+    cache_path = Path(__file__).resolve().parent / pkl_file_name
     with open(cache_path, "wb") as f:
         pickle.dump(asset_list, f)
 
@@ -53,6 +61,7 @@ class SHELLARC_getfile_Nop(Operator):
     def execute(self, context):
         asset_name = context.scene.shellarc_prop_enum
         saving_dir = context.scene.shellarc_prop_str_savepath
+        update_asset_list(force_load_asset_list=True)
         if LocalOperation.is_snapshot_exists(ctx=context,
                                              asset_name=asset_name
                                              ):
@@ -218,6 +227,34 @@ class SHELLARC_checkoutfile_Nop(Operator):
         update_asset_list(backend_communication=backend_communication)
         LocalOperation.delete_snapshot_dir(ctx=context)
         bpy.app.timers.unregister(LocalOperation.shellarc_autosave)
+        return {'FINISHED'}
+    
+
+class SHELLARC_appendasset_Nop(Operator):
+    bl_idname = "object.shellarc_appendasset_nop"
+    bl_label = "NOP"
+    bl_description = "アセットをシーンに統合"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    asset : StringProperty()
+
+    def execute(self, context):
+        backend_communication = BackendCommunication()
+        backend_communication.append_asset(
+            asset_name=self.asset,
+            current_dir=context.scene.shellarc_prop_str_savepath
+        )
+        return {'FINISHED'}
+    
+
+class SHELLARC_reloadtmpasset_Nop(Operator):
+    bl_idname = "object.shellarc_reloadtmpasset_nop"
+    bl_label = "NOP"
+    bl_description = "アセットリストをリロード"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        update_asset_list(force_load_asset_list=True)
         return {'FINISHED'}
     
 

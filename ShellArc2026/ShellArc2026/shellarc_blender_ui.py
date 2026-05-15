@@ -13,7 +13,7 @@ from bpy.props import (
 )
 
 from .shellarc_blender_action import LocalOperation
-from .ui_trigger import (
+from shellarc_ui_action import (
     SHELLARC_modetoggle_Nop,
     SHELLARC_getfile_Nop,
     SHELLARC_forcesubmit_Nop,
@@ -22,6 +22,8 @@ from .ui_trigger import (
     SHELLARC_commitfile_Nop,
     SHELLARC_submitfile_Nop,
     SHELLARC_checkoutfile_Nop,
+    SHELLARC_appendasset_Nop,
+    SHELLARC_reloadtmpasset_Nop,
     SHELLARC_reflog_Nop,
     SHELLARC_reflogconfirm_Nop,
     SHELLARC_login_Nop,
@@ -64,22 +66,18 @@ class SHELLARC_BLENDER_CustomPanel(Panel):
                 layout.operator(SHELLARC_modetoggle_Nop.bl_idname, text=current_mode)
                 layout.separator()
 
-                if scene.shellarc_prop_bool_ismodellingmode:
-                    layout.prop(scene, "shellarc_prop_enum", text="アセット")
-                    layout.prop(scene, "shellarc_prop_str_savepath", text="保存ディレクトリ")
-                    layout.separator()
-                    layout.operator(SHELLARC_getfile_Nop.bl_idname, text="ロード")
-                    layout.operator(SHELLARC_forcesubmit_Nop.bl_idname, text="強制アップ")
-                    split = layout.split(factor=0.7)
-                    column = split.column(align=True)
-                    column.operator(SHELLARC_exclock_Nop.bl_idname, text="排他ロック")
-                    split = split.split(factor=1.0)
-                    column = split.column(align=True)
-                    column.label(text=scene.shellarc_prop_str_exlocksta)
-                    layout.operator(SHELLARC_reloadassetlist_Nop.bl_idname, text="アセットリストをリロード")
-
-                else:
-                    pass
+                layout.prop(scene, "shellarc_prop_enum", text="アセット")
+                layout.prop(scene, "shellarc_prop_str_savepath", text="保存ディレクトリ")
+                layout.separator()
+                layout.operator(SHELLARC_getfile_Nop.bl_idname, text="ロード")
+                layout.operator(SHELLARC_forcesubmit_Nop.bl_idname, text="強制アップ")
+                split = layout.split(factor=0.7)
+                column = split.column(align=True)
+                column.operator(SHELLARC_exclock_Nop.bl_idname, text="排他ロック")
+                split = split.split(factor=1.0)
+                column = split.column(align=True)
+                column.label(text=scene.shellarc_prop_str_exlocksta)
+                layout.operator(SHELLARC_reloadassetlist_Nop.bl_idname, text="アセットリストをリロード")
 
                 layout.separator()
                 freeze_dir_size = scene.shellarc_prop_str_freezedirsize
@@ -90,6 +88,26 @@ class SHELLARC_BLENDER_CustomPanel(Panel):
                 layout.operator(SHELLARC_commitfile_Nop.bl_idname, text="キャッシュ")
                 layout.operator(SHELLARC_submitfile_Nop.bl_idname, text="アップ")
                 layout.operator(SHELLARC_checkoutfile_Nop.bl_idname, text="チェックアウト")
+
+                if scene.shellarc_prop_bool_ismodellingmode:
+                    layout.separator()
+                    split = layout.split(factor=0.3)
+                    column = split.column(align=True)
+                    column.label(text="アセット：")
+                    split = split.split(factor=0.4)
+                    column = split.column(align=True)
+                    column.operator(SHELLARC_reloadtmpasset_Nop.bl_idname, text="⟳")
+                    for asset_tuple in scene.shellarc_prop_enum_assets:
+                        asset = asset_tuple[0]
+                        split = layout.split(factor=0.3)
+                        column = split.column(align=True)
+                        column.label(text=asset)
+                        split = split.split(factor=1.0)
+                        column = split.column(align=True)
+                        merge_ope = column.operator(SHELLARC_appendasset_Nop.bl_idname, text="統合")
+                        merge_ope.asset = asset
+
+                layout.separator()    
                 split = layout.split(factor=0.8)
                 column = split.column(align=True)
                 column.operator(SHELLARC_reflog_Nop.bl_idname, text="過去履歴に戻す")
@@ -100,6 +118,14 @@ class SHELLARC_BLENDER_CustomPanel(Panel):
 
 def read_asset_list(self, context) -> list[str]:
     cache_path = Path(__file__).resolve().parent / "asset_list.pkl"
+    if not cache_path.exists():
+        return []
+    with open(cache_path, "rb") as f:
+        asset_list = pickle.load(f)
+    return asset_list
+
+def read_asset_list_f(self, context) -> list[str]:
+    cache_path = Path(__file__).resolve().parent / "tmp_asset_list.pkl"
     if not cache_path.exists():
         return []
     with open(cache_path, "rb") as f:
@@ -133,6 +159,11 @@ def init_props():
         name="アセット",
         description="アセットを選択してください",
         items=read_asset_list
+    )
+    scene.shellarc_prop_enum_assets = EnumProperty(
+        name="アセットリスト",
+        description="統合するアセットを選択してください",
+        items=read_asset_list_f
     )
     scene.shellarc_prop_str_exlocksta = StringProperty(
         name="排他ロック状態",

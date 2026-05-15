@@ -33,6 +33,23 @@ class BlenderOperation:
         bpy.ops.wm.save_as_mainfile()
         return current_file_path
     
+    @classmethod
+    def append_file(cls,
+                    blend_file_path: str) -> None:
+        if not Path(blend_file_path).exists:
+            return
+        inner_dir = os.path.join(blend_file_path, "Collection")
+        with bpy.data.libraries.load(blend_file_path) as (data_src, data_dst):
+            collection_names = data_src.collections
+        bpy.context.view_layer.active_layer_collection = bpy.context.view_layer.layer_collection
+        for collection_name in collection_names:
+            bpy.ops.wm.append(
+                filepath=blend_file_path,
+                directory=inner_dir,
+                filename=collection_name,
+                active_collection=True
+            )
+    
 class LocalOperation:
     @classmethod
     def get_shellarc_cache_dir(cls,

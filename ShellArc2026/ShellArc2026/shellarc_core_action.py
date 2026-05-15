@@ -1,6 +1,8 @@
 from pathlib import Path
+import datetime
 
 import bpy
+import send2trash
 
 from .shellarc_blender_action import BlenderOperation, LocalOperation
 from .shellarc_core.utils.common_initialisation import CommonInitialisation as Common
@@ -25,7 +27,6 @@ class BackendCommunicationLogic:
         "2" - assigned and file made but free now
         "3" - someone working on
         "4" - locked
-        "5" - under merging
         """
         cg_asset_data = self.sa_common.ref_cg_obj.collection(self.submission_type_name).document("general_data").get().to_dict()
         return cg_asset_data
@@ -91,8 +92,6 @@ class BackendCommunicationLogic:
             return "LOCKED_WORKING"
         elif asset_status == "4":
             return "LOCKED"
-        elif asset_status == "5":
-            return "LOCKED_MERGING"
         else:
             return "ERROR"
         
@@ -114,6 +113,39 @@ class BackendCommunicationLogic:
                 asset_name=asset_name,
                 saving_dir=saving_dir
             )
+        return asset_name
+    
+    def append_asset(self,
+                     asset_name: str,
+                     current_dir: str
+                     ) -> str:
+        asset_metadata = self.get_asset_metadata()
+        asset_status_info = asset_metadata[asset_name]
+        asset_status = asset_status_info[0]
+        asset_status_owner = asset_status_info[1]
+
+        if asset_status in ["2", "3", "4"]:
+            pass
+        elif asset_status == "0":
+            return "NOT_ASSIGNED"
+        elif asset_status == "1":
+            return "NOT CREATED YET"
+        else:
+            return "ERROR"
+        
+        saving_dir = Path(current_dir) / f"tmp_{datetime.datetime.now().strftime("%y%m%d%H%M%S")}"
+        saving_dir.mkdir(exist_ok=True, parents=True)
+        r2_service = R2Service(s3_client=self.sa_common.s3_client)
+        download_status = r2_service.download_file(
+            to_download_file=f"cg/assets/{asset_name}/{asset_name}.blend",
+            download_dest=str(saving_dir),
+            file_naming=f"{asset_name}.blend"
+            )
+        if not download_status:
+            return "DOWNLOAD_ERROR"
+        local_path = saving_dir / f"{asset_name}.blend"
+        BlenderOperation.append_file(blend_file_path=local_path)
+        send2trash.send2trash(str(saving_dir))
         return asset_name
         
     def upload_asset(self,
@@ -150,9 +182,11 @@ class BackendCommunicationLogic:
     
 class BackendCommunication(BackendCommunicationLogic):
     def __init__(self,
-                 ctx: bpy.context
+                 ctx: bpy.context,
+                 submission_type: str = ""
                  ):
-        submission_type = "assets" if ctx.scene.shellarc_prop_bool_ismodellingmode else "shots"
+        if not submission_type:
+            submission_type = "assets" if ctx.scene.shellarc_prop_bool_ismodellingmode else "shots"
         initial_value_dict = {
             "submission_type_name" : {
                 "assets" : "assets",
