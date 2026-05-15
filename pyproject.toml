@@ -15,7 +15,9 @@ dependencies = [
     "boto3",
     "PyYAML",
     "platformdirs",
-    "python-dotenv", 
+    "python-dotenv",
+    "cryptography",
+    "keyring", 
     "discord.py"
 ]
 requires-python = ">=3.9"
