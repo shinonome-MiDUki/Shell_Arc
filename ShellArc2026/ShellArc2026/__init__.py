@@ -6,7 +6,8 @@ from pathlib import Path
 import bpy
 
 from . import blender_ui as blender_ui
-from .blender_ui import (
+from .blender_ui import SHELLARC_BLENDER_CustomPanel
+from .ui_trigger import (
     SHELLARC_modetoggle_Nop,
     SHELLARC_getfile_Nop,
     SHELLARC_forcesubmit_Nop,
@@ -19,8 +20,7 @@ from .blender_ui import (
     SHELLARC_reflogconfirm_Nop,
     SHELLARC_login_Nop,
     SHELLARC_logout_Nop,
-    SHELLARC_clearcache_Nop,
-    SHELLARC_BLENDER_CustomPanel,
+    SHELLARC_clearcache_Nop
 )
 from .blender_prefs import SHELLARC_AddonPreferences
 
@@ -70,10 +70,13 @@ classes = [
 
 @bpy.app.handlers.persistent
 def blender_normal_exit_action():
-    from .shellarc_action import BlenderOperation, BackendCommunication
-    BlenderOperation.delete_snapshot_dir()
+    from .shellarc_blender_action import BlenderOperation, LocalOperation
+    from .shellarc_core_action import BackendCommunication
+    LocalOperation.delete_snapshot_dir(ctx=bpy.context)
     if bpy.context.scene["under_progress"]:
-        BackendCommunication().submit_action(
+        backend_communication = BackendCommunication(ctx=bpy.context)
+        backend_communication.submit_action(
+            ctx=bpy.context,
             asset_name=str(Path(bpy.data.filepath).stem),
             status=["2", ""]
         )
@@ -101,7 +104,7 @@ def unregister():
     clear_props()
     for c in classes:
         bpy.utils.unregister_class(c)
-    from .shellarc_action import BlenderOperation
-    BlenderOperation.delete_snapshot_dir()
-    bpy.app.timers.unregister(BlenderOperation.shellarc_autosave)
+    from .shellarc_blender_action import LocalOperation
+    LocalOperation.delete_snapshot_dir(ctx=bpy.context)
+    bpy.app.timers.unregister(LocalOperation.shellarc_autosave)
     blender_normal_exit_action()
