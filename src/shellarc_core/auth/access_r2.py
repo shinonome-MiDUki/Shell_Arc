@@ -9,7 +9,7 @@ import boto3
 class Cloudflare_R2_service_Access:
     def __init__(self):
         load_dotenv(verbose=True)
-        dotenv_path = Path(dotenv_path).resolve().parents[3] / 'project_ctx/.env'
+        dotenv_path = Path(__file__).resolve().parents[3] / 'project_ctx/.env'
         load_dotenv(dotenv_path)
         R2_ACCESS_KEY_ID = os.environ.get("CloudflareR2_access_key_id")
         R2_SECRET_ACCESS_KEY = os.environ.get("CloudflareR2_secret_access_key")

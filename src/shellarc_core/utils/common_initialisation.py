@@ -30,7 +30,7 @@ class CommonInitialisation():
 
         #access firebase database
         load_dotenv(verbose=True)
-        dotenv_path = Path(dotenv_path).resolve().parents[3] / 'project_ctx/.env'
+        dotenv_path = Path(__file__).resolve().parents[3] / 'project_ctx/.env'
         load_dotenv(dotenv_path)
         collection_name = os.environ.get("init_collection_name")
         

@@ -14,15 +14,11 @@ from discord import Webhook as Webhook
 from dotenv import load_dotenv
 import gspread
 
-proj_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if proj_root not in sys.path:
-    sys.path.append(proj_root)
-
-from backend.request_r2 import Cloudflare_R2_service as R2
-from backend.common_initialisation import CommonInitialisation as Common
-from backend.file_operation import FileOperation as FileOp
-from backend.linker_parser import LinkerParser as LinkP
-from discord_notice_webhook import DiscordNotice as Notice
+from shellarc_core.auth.access_r2 import Cloudflare_R2_service_Access as R2
+from shellarc_core.utils.common_initialisation import CommonInitialisation as Common
+from shellarc_core.utils.file_operation import FileOperation as FileOp
+from shellarc_core.utils.linker_parser import LinkerParser as LinkP
+from .discord_notice_webhook import DiscordNotice as Notice
 
 load_dotenv(verbose=True)
 dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
@@ -33,7 +29,7 @@ print(SERVER_ID)
 dc_client = discord.Client(intents=discord.Intents.all())
 
 #load config
-discord_config_file_path = Path(__file__).parent / "discord_config.json"
+discord_config_file_path = Path(__file__).resolve().parent / "discord_config.json"
 with open(discord_config_file_path, mode="r", encoding="utf-8") as config_file:
     discord_config_dict = json.load(config_file)
     config = discord_config_dict

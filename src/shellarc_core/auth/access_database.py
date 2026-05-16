@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 class AccessDB:
     def __init__(self):
         load_dotenv(verbose=True)
-        dotenv_path = Path(dotenv_path).resolve().parents[3] / 'project_ctx/.env'
+        dotenv_path = Path(__file__).resolve().parents[3] / 'project_ctx/.env'
         load_dotenv(dotenv_path)
         service_account_info = {
             "type": os.environ.get("firebase_type"),
