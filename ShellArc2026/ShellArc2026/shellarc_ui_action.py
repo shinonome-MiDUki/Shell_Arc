@@ -105,7 +105,7 @@ class SHELLARC_forcesubmit_Nop(Operator):
     def execute(self, context):
         asset_name = context.scene.shellarc_prop_enum
         if Path(bpy.data.filepath).stem != asset_name:
-            self.report({'INFO', f"Invalid file. Submit to the right file"})
+            self.report({'INFO'}, "Invalid file. Submit to the right file")
             return {'CANCELLED'}
         LocalOperation.freeze_locally(ctx=context)
         bpy.ops.wm.save_as_mainfile(filepath=f"{context.scene.shellarc_prop_str_savepath}/{asset_name}.blend")

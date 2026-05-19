@@ -57,7 +57,7 @@ class LocalOperation:
                                is_pathobj: bool=False
                                ) -> str:
         if sys.platform == "win32":
-            freeze_dir = Path(os.environ.get("APPDATA", home / "AppData" / "Roaming")) / "ShellArc2026"
+            freeze_dir = Path(os.environ.get("APPDATA", str(Path.home()) / "AppData" / "Roaming")) / "ShellArc2026"
         elif sys.platform == "darwin":
             freeze_dir = Path.home() / "Library" / "Application Support" / "ShellArc2026"
         if info == "dir":
