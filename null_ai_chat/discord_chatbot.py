@@ -15,7 +15,7 @@ DIFY_BASE_URL = os.environ.get("Dify_baseurl")
 DC_CHATBOT_TOKEN = os.environ.get("Discord_charbot_token")
 dc_client = discord.Client(intents=discord.Intents.all())
 
-discord_config_file_path = Path(__file__).resolve().parent / "discord_config.json"
+discord_config_file_path = Path(__file__).resolve().parents[1] / 'project_ctx/discord_config.json'
 with open(discord_config_file_path, mode="r", encoding="utf-8") as config_file:
     discord_config_dict = json.load(config_file)
     config = discord_config_dict
