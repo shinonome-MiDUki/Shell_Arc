@@ -7,4 +7,4 @@ PyYAML==6.0.3
 platformdirs==4.5.0
 python-dotenv==1.2.1
 discord.py==2.7.1
-
+requests==2.34.2
