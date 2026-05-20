@@ -51,7 +51,7 @@ async def nuru(ctx):
     message = ctx.message
     if message.author.bot:
         return
-    message_str = str(message)
+    message_str = str(message.content)
     message_str = message_str.lstrip("..nuru").strip()
     if not message_str:
         return
