@@ -55,6 +55,7 @@ async def nuru(ctx):
     message_str = message_str.lstrip("..nuru").strip()
     if not message_str:
         return
+    print(message_str)
     sender_name = str(message.author.display_name)
     server_id = str(message.guild.id)
     casual_server = config.get("casual_server", [])
