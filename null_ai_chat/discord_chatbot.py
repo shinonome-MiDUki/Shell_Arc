@@ -23,7 +23,8 @@ bot_command = config["bot_command"]
 shell_arc_chatbot = commands.Bot(command_prefix=bot_command, intents=discord.Intents.all())
 
 def response_user(q: str,
-                  asking_person: str
+                  asking_person: str,
+                  chat_mode: str
                   ) -> str:
     endpoint = f"{DIFY_BASE_URL}/chat-messages"
     headers = {
@@ -31,7 +32,9 @@ def response_user(q: str,
         'Content-Type': 'application/json',
     }
     payload = {
-        "inputs": {},        
+        "inputs": {
+            "chat_mode" : chat_mode
+        },        
         "query": q,
         "response_mode": "blocking", 
         "conversation_id": "",      
@@ -53,10 +56,14 @@ async def nuru(ctx):
     if not message_str:
         return
     sender_name = str(message.author.display_name)
+    server_id = str(message.guild.id)
+    casual_server = config.get("casual_server", [])
+    chat_mode = "casual" if server_id in casual_server else "technical"
     try:
         resp = response_user(
             q = message_str,
-            asking_person=sender_name
+            asking_person=sender_name,
+            chat_mode=chat_mode
         )
     except Exception as e:
         print(f"Dify error : {e}")
