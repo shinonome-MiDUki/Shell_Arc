@@ -1,3 +1,5 @@
+import tempfile
+
 class FileOperation:
     def __init__(self):
         pass
@@ -91,3 +93,5 @@ class FileOperation:
             structure["current_reject_count"] = current_reject_count + 1
 
         return structure
+    
+    def make_zip()
