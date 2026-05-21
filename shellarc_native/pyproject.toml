@@ -1,0 +1,27 @@
+[project]
+name = "shellarc-native"
+version = "0.1.0"
+description = "ShellArc Native"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+    { name = "shinonome-MiDUki", email = "shiinaayame3@gmail.com" }
+]
+dependencies = [
+    "flet>=0.85.1"
+]
+
+[dependency-groups]
+dev = [
+    "flet-cli>=0.85.1",
+    "flet-desktop>=0.85.1",
+    "flet-web>=0.85.1",
+]
+
+[tool.flet]
+org = "Kyushu univ. Miteiken"
+product = "shellarc-native"
+copyright = "Copyright (C) 2026 by ShellTech, MiDUki"
+
+[tool.flet.app]
+path = "src"
