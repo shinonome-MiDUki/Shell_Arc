@@ -1,4 +1,6 @@
 import tempfile
+import shutil
+from pathlib import Path
 
 class FileOperation:
     def __init__(self):
@@ -94,4 +96,11 @@ class FileOperation:
 
         return structure
     
-    def make_zip()
+    def make_zip(self,
+                 naming: str,
+                 files: list[str]
+                 ) -> str:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            for f in files:
+                shutil.move(f, tmpdir)
+
