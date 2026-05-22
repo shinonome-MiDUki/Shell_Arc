@@ -1,5 +1,6 @@
 import tempfile
-import shutil
+import zipfile
+import io
 from pathlib import Path
 
 class FileOperation:
@@ -96,11 +97,19 @@ class FileOperation:
 
         return structure
     
-    def make_zip(self,
-                 naming: str,
-                 files: list[str]
-                 ) -> str:
-        with tempfile.TemporaryDirectory() as tmpdir:
-            for f in files:
-                shutil.move(f, tmpdir)
+    @staticmethod
+    def make_zip(files: dict[str, io.BytesIO]) -> str:
+        tempzip_path = tempfile.NamedTemporaryFile(suffix=".zip", delete=False)
+        try:
+            with zipfile.ZipFile(tempzip_path.name, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+                for name, byte_data in files.items():
+                    zf.writestr(name, byte_data.getvalue())
+            return tempzip_path.name
+        except Exception as e:
+            if Path(tempzip_path).exists():
+                import os
+                os.unlink(tempzip_path)
+            print(f"make zip failed, error : {e}")
+            return ""
+                
 

@@ -6,6 +6,7 @@ import time
 import asyncio
 import json
 import random
+from enum import Enum
 from pathlib import Path
 
 import discord
@@ -46,6 +47,8 @@ submission_channel_catagory_name = config["submission_channel_catagory_name"]
 channel_name_divider = config["channel_name_divider"]
 bot_command = config["bot_command"]
 
+in_zip = ["png"]
+
 shell_arc_bot = commands.Bot(
     command_prefix=bot_command, 
     intents=discord.Intents.all()
@@ -57,14 +60,23 @@ def process_cut_num(cut_cluster):
         return str(match.group(1))
     return None
 
-class SubmissionSelectionView(discord.ui.View): 
-    def __init__(self, timeout=120, message=None):
+class ShellArcActions(Enum):
+    UP = 1
+    APPR = 2
+
+class ShellArcSelectionView(discord.ui.View): 
+    def __init__(self, 
+                 action: ShellArcActions,
+                 timeout: int=120, 
+                 message=None,
+                 ):
         super().__init__(timeout=timeout)
         self.message = message
+        self.action = action
 
     @discord.ui.select(
         cls=discord.ui.Select,
-        placeholder="提出する部分を選択してください",
+        placeholder="作業部分を選択してください",
         options=[discord.SelectOption(label=component) for component in component_index_reference_dict]
     )
     async def select(
@@ -77,22 +89,30 @@ class SubmissionSelectionView(discord.ui.View):
         message = self.message
         channel_name = str(message.channel.name.lower())
         try:
-            submitting_cut_cluster = str(channel_name.split(channel_name_divider)[0])
-            print(f"submitting_cut_cluster is {submitting_cut_cluster}")
-            submitting_cut = process_cut_num(submitting_cut_cluster)
-            print(f"submitting_cut is {submitting_cut}")
-            if submitting_cut is None:
+            processing_cut_cluster = str(channel_name.split(channel_name_divider)[0])
+            print(f"submitting_cut_cluster is {processing_cut_cluster}")
+            processing_cut = process_cut_num(processing_cut_cluster)
+            print(f"submitting_cut is {processing_cut}")
+            if processing_cut is None:
                 raise ValueError("カット番号の抽出に失敗しました")
-            print(f"抽出されたカット番号: {submitting_cut}")
-            submitting_cut = int(submitting_cut)
-            submitting_person = str(channel_name.split(channel_name_divider)[1])
-            submitting_component = str(select.values[0])
+            print(f"抽出されたカット番号: {processing_cut}")
+            processing_cut = re.sub(r"[^\d]", "", processing_cut)
+            processing_cut= int(processing_cut)
+            if self.action == ShellArcActions.UP:
+                processing_person = str(channel_name.split(channel_name_divider)[1])
+            elif self.action == ShellArcActions.APPR:
+                processing_person = str(message.author.display_name)
+            processing_component = str(select.values[0])
         except Exception as e:
             print("Error occurred while processing the submission selection")
             print(e)
             return
 
-        await interaction.channel.send(f"カット{submitting_cut}・{submitting_component} 提出しますか（はい・いいえ）")
+        if self.action == ShellArcActions.UP:
+            confirmation_msg = f"カット{processing_cut}・{processing_component} 提出しますか（はい・いいえ）"
+        elif self.action == ShellArcActions.APPR:
+            confirmation_msg = "アップを承認しますか（はい・いいえ）"
+        await interaction.channel.send(confirmation_msg)
         def check(m):
             return m.author == message.author and m.channel == message.channel
         try:
@@ -103,64 +123,27 @@ class SubmissionSelectionView(discord.ui.View):
         except:
             print("Error occurred while waiting for the submission confirmation")
         if reply_message.content == "はい":
-            shell_arc_bot.dispatch(
-                "push_action", 
-                message, 
-                submitting_cut, 
-                submitting_component, 
-                submitting_person
-                )
+            if self.action == ShellArcActions.UP:
+                shell_arc_bot.dispatch(
+                    "push_action", 
+                    message, 
+                    processing_cut, 
+                    processing_component, 
+                    processing_person
+                    )
+            elif self.action == ShellArcActions.APPR:
+                shell_arc_bot.dispatch(
+                    "reviewing_action", 
+                    message, 
+                    processing_cut, 
+                    processing_component, 
+                    processing_person
+                    )
         else:
-            await message.channel.send("提出が棄却されました")
-
-class ReviewSelectionView(discord.ui.View): 
-    def __init__(self, timeout=120, message=None):
-        super().__init__(timeout=timeout)
-        self.message = message
-
-    @discord.ui.select(
-        cls=discord.ui.Select,
-        placeholder="チェックする部分を選択してください",
-        options=[discord.SelectOption(label=component) for component in component_index_reference_dict]
-    )
-    async def select(
-        self, 
-        interaction: discord.Interaction, 
-        select: discord.ui.Select
-        ):
-        await interaction.response.defer()
-
-        message = self.message
-        channel_name = str(message.channel.name.lower())
-        try:
-            reviewing_cut_cluster = str(channel_name.split(channel_name_divider)[0])
-            reviewing_cut = process_cut_num(reviewing_cut_cluster)
-            if reviewing_cut is None:
-                raise ValueError("カット番号の抽出に失敗しました")
-            reviewing_cut = re.sub(r"[^\d]", "", reviewing_cut)
-            reviewing_cut = int(reviewing_cut)
-            reviewing_person = str(message.author.display_name)
-            reviewing_component = str(select.values[0])
-        except:
-            print("Error occurred while processing the review selection")
-            return
-        await message.channel.send("許可しますか（はい・いいえ）")
-        def check(m):
-            return m.author == message.author and m.channel == message.channel
-        try:
-            reply_message = await shell_arc_bot.wait_for('message', check=check, timeout=30.0)
-        except asyncio.TimeoutError:
-            await message.channel.send("時間超過です。やり直してください")
-        if reply_message.content == "はい":
-            shell_arc_bot.dispatch(
-                "reviewing_action", 
-                message, 
-                reviewing_cut, 
-                reviewing_component, 
-                reviewing_person
-                )
-        else:
-            await message.channel.send("許可コマンドが棄却されました")
+            if self.action == ShellArcActions.UP:
+                await message.channel.send("提出が棄却されました")
+            elif self.action == ShellArcActions.APPR:
+                await message.channel.send("承認プロセスが棄却されました")
         
 
 @shell_arc_bot.event
@@ -168,7 +151,7 @@ async def submit_file(message,
                       submitting_person, 
                       submitting_cut, 
                       submitting_component, 
-                      submission_raw
+                      submissions_raw: list[discord.Attachment]
                       ):
     common = Common(
         uninit=["setting_db"],
@@ -195,17 +178,35 @@ async def submit_file(message,
     ref_work = ref_work_obj.get()
     work_data = ref_work.to_dict()
     
-    submission_format_re = re.findall(f".[a-z]+\?", str(submission_raw.url))
-    submission_format = submission_format_re[0].lstrip(".").rstrip("?")
-    if submission_format not in required_format:
-        required_format_str = ""
-        for f in required_format:
-            required_format_str += f + " "
-        await message.channel.send(f"{required_format_str}形式で提出してください")
-        return
+    is_use_autozip = False
+    if "zip" not in required_format or len(submissions_raw) == 1:
+        submission_raw = submissions_raw[0]
+        submission_format_re = re.findall(f".[a-z]+\?", str(submission_raw.url))
+        submission_format = submission_format_re[0].lstrip(".").rstrip("?")
+        if submission_format not in required_format:
+            required_format_str = ""
+            for f in required_format:
+                required_format_str += f + " "
+            await message.channel.send(f"{required_format_str}形式で提出してください")
+            return
+        else:
+            submission_bytes = await submission_raw.read()
+            submission = io.BytesIO(submission_bytes)
     else:
-        submission_bytes = await submission_raw.read()
-        submission = io.BytesIO(submission_bytes)
+        submission_ls = {}
+        for submission_raw in submissions_raw:
+            submission_format_re = re.findall(f".[a-z]+\?", str(submission_raw.url))
+            submission_format = submission_format_re[0].lstrip(".").rstrip("?")
+            if submission_format not in in_zip:
+                required_format_str = " ".join(required_format)
+                await message.channel.send(f"{required_format_str}形式で提出してください")
+                return
+            file_name = submissions_raw.filename
+            submission_ls[file_name] = io.BytesIO(submission_raw.read())
+        auto_zip_file = FileOp.make_zip(submission_ls)
+        if not auto_zip_file:
+            return
+        is_use_autozip = True
 
     current_take = int(work_data["current_take"]) + 1
     renamed = fileop.renamed(proj_setting_data, working_index, submitting_cut, current_take)
@@ -243,6 +244,8 @@ async def submit_file(message,
 
     r2 = R2(common.s3_client)
     r2.upload_file(submission, f"{proj_setting_data['collection_name']}/cut{submitting_cut:02}/{working_component}/{renamed}.{required_format[0]}")
+    if is_use_autozip and isinstance(submission, str) and Path(submission).exists:
+        os.unlink(submission)
 
     loadGS.load_spreadsheet(
         cut_index=submitting_cut,
@@ -261,10 +264,18 @@ async def submit_file(message,
     mentioning_role = discord.utils.get(message.guild.roles, name=admin_roles["keyframe_qc"])
     await message.channel.send(f"カット{submitting_cut}・{submitting_component} にアップロードしました {mentioning_role.mention}")
     notice = Notice()
-    notice.discord_notice(submitting_cut, submitting_component, current_take, submitting_person)
+    notice.discord_notice(
+        submitting_cut, 
+        submitting_component, 
+        current_take, 
+        submitting_person
+        )
 
 @shell_arc_bot.event
-async def approve_file(message, reviewing_person, reviewing_cut, reviewing_component):
+async def approve_file(message, 
+                       reviewing_person, 
+                       reviewing_cut, 
+                       reviewing_component):
     common = Common()
     fileop = FileOp()
 
@@ -331,15 +342,34 @@ async def on_ready():
     print("ログインしました")
 
 @shell_arc_bot.event
-async def on_push_action(message, submitting_cut, submitting_component, submitting_person):
+async def on_push_action(message, 
+                         submitting_cut, 
+                         submitting_component, 
+                         submitting_person
+                         ):
     submitting_component = component_reference_dict[submitting_component]
-    submission_raw = message.attachments[0]
-    await submit_file(message, submitting_person, submitting_cut, submitting_component, submission_raw)
+    submissions_raw = message.attachments
+    await submit_file(
+        message, 
+        submitting_person, 
+        submitting_cut, 
+        submitting_component, 
+        submissions_raw
+        )
 
 @shell_arc_bot.event
-async def on_reviewing_action(message, reviewing_cut, reviewing_component_raw, reviewing_person):
+async def on_reviewing_action(message, 
+                              reviewing_cut, 
+                              reviewing_component_raw, 
+                              reviewing_person
+                              ):
     reviewing_component = component_reference_dict[reviewing_component_raw]
-    await approve_file(message, reviewing_person, reviewing_cut, reviewing_component)
+    await approve_file(
+        message, 
+        reviewing_person, 
+        reviewing_cut, 
+        reviewing_component
+        )
 
 @shell_arc_bot.command()
 async def up(ctx):
@@ -351,7 +381,7 @@ async def up(ctx):
     if not message.attachments:
         await message.channel.send("ファイルを添付してから提出してください")
         return
-    view = SubmissionSelectionView(timeout=None, message=message)
+    view = ShellArcSelectionView(action=ShellArcActions.UP, timeout=None, message=message)
     await ctx.send(view=view)
 
 @shell_arc_bot.command()
@@ -361,7 +391,7 @@ async def appr(ctx):
         return
     if channel_name_divider not in message.channel.name:
         return
-    view = ReviewSelectionView(timeout=None, message=message)
+    view = ShellArcSelectionView(action=ShellArcActions.APPR, timeout=None, message=message)
     await ctx.send(view=view)
 
 @shell_arc_bot.command()
@@ -527,29 +557,11 @@ async def on_message(message):
     cut_channel = discord.utils.find(
         lambda c: (m := re_pattern.search(c.name)) and m.group(1) == str(cut_num),
         message.guild.text_channels)
-    # print(cut_num)
-    # print(cut_channel)
-    # print("****")
     mentioning_role = discord.utils.get(message.guild.roles, name=admin_roles["keyframe_qc"])
     if mentioning_role:
         await cut_channel.send(f"{mentioning_role.mention} {notice_content}")
     await shell_arc_bot.process_commands(message)
 
-    
-
-#テスト用コード
-"""
-@shell_arc_bot.event
-async def test_action(ctx):
-    view = SubmissionSelectionView(timeout=None)
-    await ctx.send(view=view)
-
-@shell_arc_bot.command()
-async def test(ctx):
-    message = ctx.message
-    await message.channel.send("テストです")
-    await test_action(ctx)
-"""
 @shell_arc_bot.command()
 async def testarc(ctx):
     message = ctx.message
