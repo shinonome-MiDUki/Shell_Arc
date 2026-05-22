@@ -8,7 +8,9 @@ authors = [
     { name = "shinonome-MiDUki", email = "shiinaayame3@gmail.com" }
 ]
 dependencies = [
-    "flet>=0.85.1"
+    "flet>=0.85.1",
+    "flet-datatable2>=0.85.1",
+    "requests"
 ]
 
 [dependency-groups]
@@ -19,7 +21,7 @@ dev = [
 ]
 
 [tool.flet]
-org = "Kyushu univ. Miteiken"
+org = "jp.kyushu-u.miteiken"
 product = "shellarc-native"
 copyright = "Copyright (C) 2026 by ShellTech, MiDUki"
 

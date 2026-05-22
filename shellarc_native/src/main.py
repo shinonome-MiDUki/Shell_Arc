@@ -32,6 +32,7 @@ class MakeTable:
                    is_launch: bool=True
                    ) -> ft.DataTable:
         table = fdt.DataTable2(
+                    expand=True,
                     heading_row_height=50,
                     columns=[
                         fdt.DataColumn2(label=ft.Text("カット"), fixed_width=80),
