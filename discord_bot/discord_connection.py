@@ -15,7 +15,7 @@ from discord import Webhook as Webhook
 from dotenv import load_dotenv
 import gspread
 
-from shellarc_core.auth.access_r2 import Cloudflare_R2_service_Access as R2
+from shellarc_core.processor.request_r2 import Cloudflare_R2_service as ReqR2
 from shellarc_core.utils.common_initialisation import CommonInitialisation as Common
 from shellarc_core.utils.file_operation import FileOperation as FileOp
 from shellarc_core.utils.linker_parser import LinkerParser as LinkP
@@ -46,6 +46,7 @@ notice_message_cut_extraction_regex = config["notice_message_cut_extraction_rege
 submission_channel_catagory_name = config["submission_channel_catagory_name"]
 channel_name_divider = config["channel_name_divider"]
 bot_command = config["bot_command"]
+bucket_name = config["bucket_name"]
 
 in_zip = ["png"]
 
@@ -63,6 +64,7 @@ def process_cut_num(cut_cluster):
 class ShellArcActions(Enum):
     UP = 1
     APPR = 2
+    DL = 3
 
 class ShellArcSelectionView(discord.ui.View): 
     def __init__(self, 
@@ -100,14 +102,20 @@ class ShellArcSelectionView(discord.ui.View):
             processing_cut= int(processing_cut)
             if self.action == ShellArcActions.UP:
                 processing_person = str(channel_name.split(channel_name_divider)[1])
-            elif self.action == ShellArcActions.APPR:
+            elif self.action == ShellArcActions.APPR or self.action == ShellArcActions.DL:
                 processing_person = str(message.author.display_name)
             processing_component = str(select.values[0])
         except Exception as e:
             print("Error occurred while processing the submission selection")
             print(e)
             return
-
+        
+        if self.action == ShellArcActions.DL:
+            shell_arc_bot.dispatch(
+                "download_action",
+                #.....
+            )
+            return
         if self.action == ShellArcActions.UP:
             confirmation_msg = f"カット{processing_cut}・{processing_component} 提出しますか（はい・いいえ）"
         elif self.action == ShellArcActions.APPR:
@@ -242,7 +250,10 @@ async def submit_file(message,
             )
     ref_work_obj.update(structure)
 
-    r2 = R2(common.s3_client)
+    r2 = ReqR2(
+        s3_client=common.s3_client,
+        bucket_name=bucket_name
+    )
     r2.upload_file(submission, f"{proj_setting_data['collection_name']}/cut{submitting_cut:02}/{working_component}/{renamed}.{required_format[0]}")
     if is_use_autozip and isinstance(submission, str) and Path(submission).exists:
         os.unlink(submission)
@@ -337,9 +348,62 @@ async def approve_file(message,
     await message.channel.send(f"カット{reviewing_cut}・{reviewing_component}は確定されました")
 
 
-@shell_arc_bot.event
-async def on_ready():
-    print("ログインしました")
+async def request_file(message,
+                       requesting_cut,
+                       requesting_component: str,
+                       revert: str="latest"
+                       ):
+    common = Common()
+    fileop = FileOp()
+
+    proj_setting_data = common.proj_setting_data
+    ref_collection = common.ref_collection
+
+    ref_work = ref_collection.collection(f"cut{requesting_cut}").document(requesting_component).get()
+    work_data = ref_work.to_dict()
+
+    current_take = int(work_data["current_take"])
+    if current_take == 0:
+        await message.channel.send(f"未着手のため該当のファイルが見つかりません")
+        return
+    
+    if revert <= 0:
+        revert = "latest"
+    try:
+        revert_int = int(revert)
+        requesting_take = current_take - revert_int
+        if requesting_take <= 0:
+            await message.channel.send(f"存在しないテイクです（今最新版はテイク{current_take}です）")
+            return
+        requesting_data = work_data[f"non_active_{requesting_take}"]
+        if requesting_data is None:
+            await message.channel.send(f"テイク{requesting_take}が見つかりません")
+            return
+    except:
+        if revert == "latest":
+            requesting_data = work_data["active"] if work_data["active"]["naming"] != None else work_data["temporary"]
+            if requesting_data is None:
+                await message.channel.send("最新データは見つかりません")
+                return
+        elif revert == "working":
+            requesting_data = work_data["temporary"]
+            if requesting_data is None:
+                await message.channel.send("作業中データは存在しません")
+                return
+        else:
+            await message.channel.send("無効入力です")
+            return
+    if requesting_data["naming"] is None:
+        await message.channel.send("未着手のため該当のファイルが見つかりません")
+        return
+    renamed = requesting_data["naming"]
+    r2 = ReqR2(
+        s3_client=common.s3_client,
+        bucket_name=bucket_name
+    )
+    try:
+        
+
 
 @shell_arc_bot.event
 async def on_push_action(message, 
@@ -350,11 +414,11 @@ async def on_push_action(message,
     submitting_component = component_reference_dict[submitting_component]
     submissions_raw = message.attachments
     await submit_file(
-        message, 
-        submitting_person, 
-        submitting_cut, 
-        submitting_component, 
-        submissions_raw
+        message=message, 
+        submitting_person=submitting_person, 
+        submitting_cut=submitting_cut, 
+        submitting_component=submitting_component, 
+        submissions_raw=submissions_raw
         )
 
 @shell_arc_bot.event
@@ -365,11 +429,27 @@ async def on_reviewing_action(message,
                               ):
     reviewing_component = component_reference_dict[reviewing_component_raw]
     await approve_file(
-        message, 
-        reviewing_person, 
-        reviewing_cut, 
-        reviewing_component
+        message=message, 
+        reviewing_person=reviewing_person, 
+        reviewing_cut=reviewing_cut, 
+        reviewing_component=reviewing_component
         )
+    
+@shell_arc_bot.event
+async def on_download_action(message,
+                             requesting_cut,
+                             requesting_component):
+    requesting_component = component_reference_dict[requesting_component]
+    try:
+        revert_idx = str(message.content.split(" ")[1]).strip()
+    except:
+        revert_idx = "latest"
+    await request_file(
+        message=message,
+        requesting_cut=requesting_cut,
+        requesting_component=requesting_component,
+        revert=revert_idx
+    )
 
 @shell_arc_bot.command()
 async def up(ctx):
@@ -381,7 +461,11 @@ async def up(ctx):
     if not message.attachments:
         await message.channel.send("ファイルを添付してから提出してください")
         return
-    view = ShellArcSelectionView(action=ShellArcActions.UP, timeout=None, message=message)
+    view = ShellArcSelectionView(
+        action=ShellArcActions.UP, 
+        timeout=60, 
+        message=message
+        )
     await ctx.send(view=view)
 
 @shell_arc_bot.command()
@@ -391,8 +475,25 @@ async def appr(ctx):
         return
     if channel_name_divider not in message.channel.name:
         return
-    view = ShellArcSelectionView(action=ShellArcActions.APPR, timeout=None, message=message)
+    view = ShellArcSelectionView(
+        action=ShellArcActions.APPR, 
+        timeout=60, 
+        message=message
+        )
     await ctx.send(view=view)
+
+@shell_arc_bot.command()
+async def dl(ctx):
+    message = ctx.message
+    if message.author.bot:
+        return
+    if channel_name_divider not in message.channel.name:
+        return
+    view = ShellArcSelectionView(
+        action=ShellArcActions.DL,
+        timeout=60,
+        message=message
+    )
 
 @shell_arc_bot.command()
 async def ask(ctx):
@@ -561,6 +662,10 @@ async def on_message(message):
     if mentioning_role:
         await cut_channel.send(f"{mentioning_role.mention} {notice_content}")
     await shell_arc_bot.process_commands(message)
+
+@shell_arc_bot.event
+async def on_ready():
+    print("ログインしました")
 
 @shell_arc_bot.command()
 async def testarc(ctx):

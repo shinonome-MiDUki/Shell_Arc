@@ -4,6 +4,7 @@
     "notice_message_cut_extraction_regex": "カット(\\d+?)・",
     "submission_channel_catagory_name" : "アニメーション",
     "channel_name_divider" : "_",
+    "bucket_name" : "null-proj",
     "bot_command" : "..",
     "component_reference" : {
         "sakuga" : "作画",
