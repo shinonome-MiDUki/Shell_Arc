@@ -6,10 +6,13 @@ from pathlib import Path
 from dotenv import load_dotenv
 import boto3
 
+from shellarc_core.exception.structure_error import SA_AuthError, SA_ErrorCode
+
 class Cloudflare_R2_service_Access:
     def __init__(self):
         load_dotenv(verbose=True)
-        dotenv_path = Path(__file__).resolve().parents[3] / 'project_ctx/.env'
+        project_ctx_dir = Path(os.environ.get("SHELLARC_PROJECT_CTX", None))
+        dotenv_path = project_ctx_dir / ".env"
         load_dotenv(dotenv_path)
         R2_ACCESS_KEY_ID = os.environ.get("CloudflareR2_access_key_id")
         R2_SECRET_ACCESS_KEY = os.environ.get("CloudflareR2_secret_access_key")
@@ -24,8 +27,11 @@ class Cloudflare_R2_service_Access:
                 region_name="auto"
             )
         except Exception as e:
-            print(f"Cloudflare R2 access error, datetime : {datetime.datetime.now()}, error: {e}")
             self._s3_client = None
+            raise SA_AuthError(
+                error_log=f"Auth error in CloudflareR2 [{e}]",
+                error_code=SA_ErrorCode.SA_9000
+            )
 
     @property
     def s3_client(self):

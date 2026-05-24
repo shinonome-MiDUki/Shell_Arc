@@ -361,6 +361,7 @@ async def request_file(message,
 
     ref_work = ref_collection.collection(f"cut{requesting_cut}").document(requesting_component).get()
     work_data = ref_work.to_dict()
+    required_format = proj_setting_data[]
 
     current_take = int(work_data["current_take"])
     if current_take == 0:
@@ -402,6 +403,9 @@ async def request_file(message,
         bucket_name=bucket_name
     )
     try:
+        r2.download_file(
+            f"{renamed}.{required_format[0]}",
+        )
         
 
 

@@ -8,13 +8,16 @@ from dotenv import load_dotenv
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
+from shellarc_core.exception.structure_error import SA_AuthError, SA_ErrorCode
+
 class AccessSpreadSheet:
     def __init__(self, 
                  spreadsheet_key: str
                  ) -> None:
         API_CONFIG_PATH = os.path.join(tempfile.gettempdir(), "api_config_secret.json")
         load_dotenv(verbose=True)
-        dotenv_path = Path(__file__).resolve().parents[3] / 'project_ctx/.env'
+        project_ctx_dir = Path(os.environ.get("SHELLARC_PROJECT_CTX", None))
+        dotenv_path = project_ctx_dir / ".env"
         load_dotenv(dotenv_path)
         service_account_info = {
             "type": os.environ.get("GCP_type"),
@@ -41,8 +44,11 @@ class AccessSpreadSheet:
             spreadsheet_index = 0
             self._spreadsheet = masterspreadsheet.get_worksheet(spreadsheet_index)
         except Exception as e:
-            print(f"Spreadsheet access error, datetime : {datetime.datetime.now()}, error: {e}")
             self._spreadsheet = None
+            raise SA_AuthError(
+                error_log=f"Auth error in Firebase [{e}]",
+                error_code=SA_ErrorCode.SA_9000
+            )
 
     @property
     def spreadsheet_obj(self):

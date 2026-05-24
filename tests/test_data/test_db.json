@@ -1,0 +1,638 @@
+{
+  "cut1": {
+
+    "keyframe": {
+      "__case__": "【正常】active確定済み・temporaryクリア・non_active_1,2あり",
+      "active": {
+        "naming": "cut1_take3_keyframe",
+        "cut": "1",
+        "take": "3",
+        "creator": "Hanako",
+        "reviewer": "Matsuko"
+      },
+      "temporary": {
+        "naming": null,
+        "cut": null,
+        "take": null,
+        "creator": null,
+        "reviewer": null
+      },
+      "non_active_1": {
+        "naming": "cut1_take1_keyframe",
+        "cut": "1",
+        "take": "1",
+        "creator": "Hanako",
+        "reviewer": "Matsuko"
+      },
+      "non_active_2": {
+        "naming": "cut1_take2_keyframe",
+        "cut": "1",
+        "take": "2",
+        "creator": "Taro",
+        "reviewer": "Matsuko"
+      }
+    },
+
+    "animation": {
+      "__case__": "【正常】activeあり・temporaryに審査待ちあり・non_active_1あり",
+      "active": {
+        "naming": "cut1_take2_animation",
+        "cut": "1",
+        "take": "2",
+        "creator": "Taro",
+        "reviewer": "Matsuko"
+      },
+      "temporary": {
+        "naming": "cut1_take3_animation",
+        "cut": "1",
+        "take": "3",
+        "creator": "Hanako",
+        "reviewer": "Matsuko"
+      },
+      "non_active_1": {
+        "naming": "cut1_take1_animation",
+        "cut": "1",
+        "take": "1",
+        "creator": "Taro",
+        "reviewer": "Matsuko"
+      }
+    },
+
+    "bg": {
+      "__case__": "【エッジ】初回提出：activeなし(null)・temporaryにデータあり・non_activeなし",
+      "active": {
+        "naming": null,
+        "cut": null,
+        "take": null,
+        "creator": null,
+        "reviewer": null
+      },
+      "temporary": {
+        "naming": "cut1_take1_bg",
+        "cut": "1",
+        "take": "1",
+        "creator": "Kenji",
+        "reviewer": "Matsuko"
+      }
+    },
+
+    "compo": {
+      "__case__": "【エッジ】non_activeが非連続：take2がactiveのためnon_active_2が存在せずnon_active_1,3のみ",
+      "active": {
+        "naming": "cut1_take2_compo",
+        "cut": "1",
+        "take": "2",
+        "creator": "Hanako",
+        "reviewer": "Matsuko"
+      },
+      "temporary": {
+        "naming": "cut1_take4_compo",
+        "cut": "1",
+        "take": "4",
+        "creator": "Hanako",
+        "reviewer": "Matsuko"
+      },
+      "non_active_1": {
+        "naming": "cut1_take1_compo",
+        "cut": "1",
+        "take": "1",
+        "creator": "Hanako",
+        "reviewer": "Matsuko"
+      },
+      "non_active_3": {
+        "naming": "cut1_take3_compo",
+        "cut": "1",
+        "take": "3",
+        "creator": "Taro",
+        "reviewer": "Matsuko"
+      }
+    },
+
+    "editing": {
+      "__case__": "【異常】namingフィールドのcut番号が実際のcut番号(1)と不一致(cut2と記載)",
+      "active": {
+        "naming": "cut2_take1_editing",
+        "cut": "1",
+        "take": "1",
+        "creator": "Kenji",
+        "reviewer": "Matsuko"
+      },
+      "temporary": {
+        "naming": null,
+        "cut": null,
+        "take": null,
+        "creator": null,
+        "reviewer": null
+      }
+    }
+
+  },
+
+  "cut2": {
+
+    "keyframe": {
+      "__case__": "【正常】activeあり・temporaryクリア・non_active_1~4あり",
+      "active": {
+        "naming": "cut2_take5_keyframe",
+        "cut": "2",
+        "take": "5",
+        "creator": "Hanako",
+        "reviewer": "Matsuko"
+      },
+      "temporary": {
+        "naming": null,
+        "cut": null,
+        "take": null,
+        "creator": null,
+        "reviewer": null
+      },
+      "non_active_1": {
+        "naming": "cut2_take1_keyframe",
+        "cut": "2",
+        "take": "1",
+        "creator": "Taro",
+        "reviewer": "Matsuko"
+      },
+      "non_active_2": {
+        "naming": "cut2_take2_keyframe",
+        "cut": "2",
+        "take": "2",
+        "creator": "Hanako",
+        "reviewer": "Matsuko"
+      },
+      "non_active_3": {
+        "naming": "cut2_take3_keyframe",
+        "cut": "2",
+        "take": "3",
+        "creator": "Taro",
+        "reviewer": "Matsuko"
+      },
+      "non_active_4": {
+        "naming": "cut2_take4_keyframe",
+        "cut": "2",
+        "take": "4",
+        "creator": "Kenji",
+        "reviewer": "Matsuko"
+      }
+    },
+
+    "animation": {
+      "__case__": "【エッジ】仕様書の例：take7がactive・non_active_7なし・take8却下でnon_active_8あり",
+      "active": {
+        "naming": "cut2_take7_animation",
+        "cut": "2",
+        "take": "7",
+        "creator": "Hanako",
+        "reviewer": "Matsuko"
+      },
+      "temporary": {
+        "naming": null,
+        "cut": null,
+        "take": null,
+        "creator": null,
+        "reviewer": null
+      },
+      "non_active_1": {
+        "naming": "cut2_take1_animation",
+        "cut": "2",
+        "take": "1",
+        "creator": "Taro",
+        "reviewer": "Matsuko"
+      },
+      "non_active_2": {
+        "naming": "cut2_take2_animation",
+        "cut": "2",
+        "take": "2",
+        "creator": "Hanako",
+        "reviewer": "Matsuko"
+      },
+      "non_active_3": {
+        "naming": "cut2_take3_animation",
+        "cut": "2",
+        "take": "3",
+        "creator": "Taro",
+        "reviewer": "Matsuko"
+      },
+      "non_active_4": {
+        "naming": "cut2_take4_animation",
+        "cut": "2",
+        "take": "4",
+        "creator": "Kenji",
+        "reviewer": "Matsuko"
+      },
+      "non_active_5": {
+        "naming": "cut2_take5_animation",
+        "cut": "2",
+        "take": "5",
+        "creator": "Hanako",
+        "reviewer": "Matsuko"
+      },
+      "non_active_6": {
+        "naming": "cut2_take6_animation",
+        "cut": "2",
+        "take": "6",
+        "creator": "Taro",
+        "reviewer": "Matsuko"
+      },
+      "non_active_8": {
+        "naming": "cut2_take8_animation",
+        "cut": "2",
+        "take": "8",
+        "creator": "Yuki",
+        "reviewer": "Matsuko"
+      }
+    },
+
+    "bg": {
+      "__case__": "【異常】reviewerが空文字列（全エントリに波及）",
+      "active": {
+        "naming": "cut2_take2_bg",
+        "cut": "2",
+        "take": "2",
+        "creator": "Kenji",
+        "reviewer": ""
+      },
+      "temporary": {
+        "naming": "cut2_take3_bg",
+        "cut": "2",
+        "take": "3",
+        "creator": "Kenji",
+        "reviewer": ""
+      },
+      "non_active_1": {
+        "naming": "cut2_take1_bg",
+        "cut": "2",
+        "take": "1",
+        "creator": "Kenji",
+        "reviewer": ""
+      }
+    },
+
+    "compo": {
+      "__case__": "【正常】仕様書の例そのまま：cut2/compo/take10がactive・non_active_1~9が全て存在",
+      "active": {
+        "naming": "cut2_take10_compo",
+        "cut": "2",
+        "take": "10",
+        "creator": "Hanako",
+        "reviewer": "Matsuko"
+      },
+      "temporary": {
+        "naming": null,
+        "cut": null,
+        "take": null,
+        "creator": null,
+        "reviewer": null
+      },
+      "non_active_1": {
+        "naming": "cut2_take1_compo",
+        "cut": "2",
+        "take": "1",
+        "creator": "Taro",
+        "reviewer": "Matsuko"
+      },
+      "non_active_2": {
+        "naming": "cut2_take2_compo",
+        "cut": "2",
+        "take": "2",
+        "creator": "Hanako",
+        "reviewer": "Matsuko"
+      },
+      "non_active_3": {
+        "naming": "cut2_take3_compo",
+        "cut": "2",
+        "take": "3",
+        "creator": "Taro",
+        "reviewer": "Matsuko"
+      },
+      "non_active_4": {
+        "naming": "cut2_take4_compo",
+        "cut": "2",
+        "take": "4",
+        "creator": "Kenji",
+        "reviewer": "Matsuko"
+      },
+      "non_active_5": {
+        "naming": "cut2_take5_compo",
+        "cut": "2",
+        "take": "5",
+        "creator": "Hanako",
+        "reviewer": "Matsuko"
+      },
+      "non_active_6": {
+        "naming": "cut2_take6_compo",
+        "cut": "2",
+        "take": "6",
+        "creator": "Taro",
+        "reviewer": "Matsuko"
+      },
+      "non_active_7": {
+        "naming": "cut2_take7_compo",
+        "cut": "2",
+        "take": "7",
+        "creator": "Hanako",
+        "reviewer": "Matsuko"
+      },
+      "non_active_8": {
+        "naming": "cut2_take8_compo",
+        "cut": "2",
+        "take": "8",
+        "creator": "Kenji",
+        "reviewer": "Matsuko"
+      },
+      "non_active_9": {
+        "naming": "cut2_take9_compo",
+        "cut": "2",
+        "take": "9",
+        "creator": "Taro",
+        "reviewer": "Matsuko"
+      }
+    },
+
+    "editing": {
+      "__case__": "【異常】namingフィールドのwork種別が実際のwork（editing）ではなくkeyframeと記載",
+      "active": {
+        "naming": "cut2_take1_keyframe",
+        "cut": "2",
+        "take": "1",
+        "creator": "Taro",
+        "reviewer": "Matsuko"
+      },
+      "temporary": {
+        "naming": null,
+        "cut": null,
+        "take": null,
+        "creator": null,
+        "reviewer": null
+      }
+    }
+
+  },
+
+  "cut3": {
+
+    "keyframe": {
+      "__case__": "【正常】activeあり・temporaryクリア・non_active_1~3あり",
+      "active": {
+        "naming": "cut3_take4_keyframe",
+        "cut": "3",
+        "take": "4",
+        "creator": "Yuki",
+        "reviewer": "Matsuko"
+      },
+      "temporary": {
+        "naming": null,
+        "cut": null,
+        "take": null,
+        "creator": null,
+        "reviewer": null
+      },
+      "non_active_1": {
+        "naming": "cut3_take1_keyframe",
+        "cut": "3",
+        "take": "1",
+        "creator": "Hanako",
+        "reviewer": "Matsuko"
+      },
+      "non_active_2": {
+        "naming": "cut3_take2_keyframe",
+        "cut": "3",
+        "take": "2",
+        "creator": "Taro",
+        "reviewer": "Matsuko"
+      },
+      "non_active_3": {
+        "naming": "cut3_take3_keyframe",
+        "cut": "3",
+        "take": "3",
+        "creator": "Yuki",
+        "reviewer": "Matsuko"
+      }
+    },
+
+    "animation": {
+      "__case__": "【異常】takeフィールドが\"0\"（無効なテイク番号）",
+      "active": {
+        "naming": "cut3_take0_animation",
+        "cut": "3",
+        "take": "0",
+        "creator": "Taro",
+        "reviewer": "Matsuko"
+      },
+      "temporary": {
+        "naming": null,
+        "cut": null,
+        "take": null,
+        "creator": null,
+        "reviewer": null
+      }
+    },
+
+    "bg": {
+      "__case__": "【エッジ】temporaryの上書き：take2が審査前にtake3の提出でnon_active_2へ蹴られた状態（non_active_2は未審査）",
+      "active": {
+        "naming": "cut3_take1_bg",
+        "cut": "3",
+        "take": "1",
+        "creator": "Kenji",
+        "reviewer": "Matsuko"
+      },
+      "temporary": {
+        "naming": "cut3_take3_bg",
+        "cut": "3",
+        "take": "3",
+        "creator": "Yuki",
+        "reviewer": "Matsuko"
+      },
+      "non_active_2": {
+        "naming": "cut3_take2_bg",
+        "cut": "3",
+        "take": "2",
+        "creator": "Kenji",
+        "reviewer": "Matsuko"
+      }
+    },
+
+    "compo": {
+      "__case__": "【エッジ】non_activeが大量蓄積：take1~5がnon_active、take6がactive（non_active_6なし）",
+      "active": {
+        "naming": "cut3_take6_compo",
+        "cut": "3",
+        "take": "6",
+        "creator": "Hanako",
+        "reviewer": "Matsuko"
+      },
+      "temporary": {
+        "naming": null,
+        "cut": null,
+        "take": null,
+        "creator": null,
+        "reviewer": null
+      },
+      "non_active_1": {
+        "naming": "cut3_take1_compo",
+        "cut": "3",
+        "take": "1",
+        "creator": "Taro",
+        "reviewer": "Matsuko"
+      },
+      "non_active_2": {
+        "naming": "cut3_take2_compo",
+        "cut": "3",
+        "take": "2",
+        "creator": "Hanako",
+        "reviewer": "Matsuko"
+      },
+      "non_active_3": {
+        "naming": "cut3_take3_compo",
+        "cut": "3",
+        "take": "3",
+        "creator": "Kenji",
+        "reviewer": "Matsuko"
+      },
+      "non_active_4": {
+        "naming": "cut3_take4_compo",
+        "cut": "3",
+        "take": "4",
+        "creator": "Yuki",
+        "reviewer": "Matsuko"
+      },
+      "non_active_5": {
+        "naming": "cut3_take5_compo",
+        "cut": "3",
+        "take": "5",
+        "creator": "Taro",
+        "reviewer": "Matsuko"
+      }
+    },
+
+    "editing": {
+      "__case__": "【異常】creatorが空文字列（全エントリに波及）",
+      "active": {
+        "naming": "cut3_take2_editing",
+        "cut": "3",
+        "take": "2",
+        "creator": "",
+        "reviewer": "Matsuko"
+      },
+      "temporary": {
+        "naming": "cut3_take3_editing",
+        "cut": "3",
+        "take": "3",
+        "creator": "",
+        "reviewer": "Matsuko"
+      },
+      "non_active_1": {
+        "naming": "cut3_take1_editing",
+        "cut": "3",
+        "take": "1",
+        "creator": "",
+        "reviewer": "Matsuko"
+      }
+    }
+
+  },
+
+  "cut4": {
+
+    "keyframe": {
+      "__case__": "【エッジ】一度も提出なし：active=null・temporary=null・non_activeなし",
+      "active": null,
+      "temporary": null
+    },
+
+    "animation": {
+      "__case__": "【正常】activeあり・temporaryクリア・non_active_1あり",
+      "active": {
+        "naming": "cut4_take2_animation",
+        "cut": "4",
+        "take": "2",
+        "creator": "Yuki",
+        "reviewer": "Matsuko"
+      },
+      "temporary": {
+        "naming": null,
+        "cut": null,
+        "take": null,
+        "creator": null,
+        "reviewer": null
+      },
+      "non_active_1": {
+        "naming": "cut4_take1_animation",
+        "cut": "4",
+        "take": "1",
+        "creator": "Taro",
+        "reviewer": "Matsuko"
+      }
+    },
+
+    "bg": {
+      "__case__": "【エッジ】take1が初回提出で即承認：non_activeなし・temporaryクリア済み",
+      "active": {
+        "naming": "cut4_take1_bg",
+        "cut": "4",
+        "take": "1",
+        "creator": "Hanako",
+        "reviewer": "Matsuko"
+      },
+      "temporary": {
+        "naming": null,
+        "cut": null,
+        "take": null,
+        "creator": null,
+        "reviewer": null
+      }
+    },
+
+    "compo": {
+      "__case__": "【異常】takeフィールドが\"-1\"（負のテイク番号）",
+      "active": {
+        "naming": "cut4_take-1_compo",
+        "cut": "4",
+        "take": "1",
+        "creator": "Kenji",
+        "reviewer": "Matsuko"
+      },
+      "temporary": {
+        "naming": null,
+        "cut": null,
+        "take": null,
+        "creator": null,
+        "reviewer": null
+      }
+    },
+
+    "editing": {
+      "__case__": "【異常】creatorとreviewerが同一人物（業務分掌違反の可能性）",
+      "active": {
+        "naming": "cut4_take3_editing",
+        "cut": "4",
+        "take": "3",
+        "creator": "Hanako",
+        "reviewer": "Hanako"
+      },
+      "temporary": {
+        "naming": "cut4_take4_editing",
+        "cut": "4",
+        "take": "4",
+        "creator": "Hanako",
+        "reviewer": "Hanako"
+      },
+      "non_active_1": {
+        "naming": "cut4_take1_editing",
+        "cut": "4",
+        "take": "1",
+        "creator": "Hanako",
+        "reviewer": "Hanako"
+      },
+      "non_active_2": {
+        "naming": "cut4_take2_editing",
+        "cut": "4",
+        "take": "2",
+        "creator": "Hanako",
+        "reviewer": "Hanako"
+      }
+    }
+
+  }
+}

@@ -6,10 +6,13 @@ import firebase_admin
 from firebase_admin import credentials, firestore
 from dotenv import load_dotenv
 
+from shellarc_core.exception.structure_error import SA_AuthError, SA_ErrorCode
+
 class AccessDB:
     def __init__(self):
         load_dotenv(verbose=True)
-        dotenv_path = Path(__file__).resolve().parents[3] / 'project_ctx/.env'
+        project_ctx_dir = Path(os.environ.get("SHELLARC_PROJECT_CTX", None))
+        dotenv_path = project_ctx_dir / ".env"
         load_dotenv(dotenv_path)
         service_account_info = {
             "type": os.environ.get("firebase_type"),
@@ -30,8 +33,11 @@ class AccessDB:
                 firebase_admin.initialize_app(cred)
             self._database = firestore.client()
         except Exception as e:
-            print(f"Firestore access error, datetime : {datetime.datetime.now()}, error: {e}")
             self._database = None
+            raise SA_AuthError(
+                error_log=f"Auth error in Firebase [{e}]",
+                error_code=SA_ErrorCode.SA_9000
+            )
 
     @property
     def database(self):
