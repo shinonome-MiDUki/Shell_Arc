@@ -13,6 +13,11 @@ class AccessDB:
         load_dotenv(verbose=True)
         project_ctx_dir = Path(os.environ.get("SHELLARC_PROJECT_CTX", None))
         dotenv_path = project_ctx_dir / ".env"
+        if not dotenv_path.exists():
+            raise SA_AuthError(
+                error_log=f"dotenv_path {dotenv_path} not exist",
+                error_code=SA_ErrorCode.SA_9001
+            )
         load_dotenv(dotenv_path)
         service_account_info = {
             "type": os.environ.get("firebase_type"),

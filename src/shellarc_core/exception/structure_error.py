@@ -13,11 +13,13 @@ class SA_ErrorCode(Enum):
     SA_5003 = "Requsted status info dict not exist"
     SA_5101 = "None file uploaded unexpectedly"
     SA_5201 = "Spreadsheet index is non natural num"
+    SA_7000 = "Incorrect parameter"
     SA_8000 = "Server local IO error"
     SA_8001 = "Communication error"
     SA_9000 = "Auth error"
+    SA_9001 = "Expected .env file missing"
         
-class ShellArcErrorException(Exception):
+class ShellArcError(Exception):
     def __init__(self,
                  error_log: str,
                  error_type: SA_ExceptionType,
@@ -31,7 +33,7 @@ class ShellArcErrorException(Exception):
         super().__init__(error_log)
         self.frontend_msg = f"技術班にご連絡ください : {error_code.name}"
 
-class SA_ProjStructError(ShellArcErrorException):
+class SA_ProjStructError(ShellArcError):
     def __init__(self, 
                  error_log: str, 
                  error_code: SA_ErrorCode
@@ -43,7 +45,7 @@ class SA_ProjStructError(ShellArcErrorException):
             is_fatal=True
             )
         
-class SA_RequestItemError(ShellArcErrorException):
+class SA_RequestItemError(ShellArcError):
     def __init__(self, 
                  error_log: str, 
                  error_code: SA_ErrorCode
@@ -56,7 +58,7 @@ class SA_RequestItemError(ShellArcErrorException):
             )
         
 
-class SA_CommunicationError(ShellArcErrorException):
+class SA_CommunicationError(ShellArcError):
     def __init__(self,
                  error_log: str, 
                  error_code: SA_ErrorCode
@@ -68,7 +70,7 @@ class SA_CommunicationError(ShellArcErrorException):
             is_fatal=True
             )
 
-class SA_AuthError(ShellArcErrorException):
+class SA_AuthError(ShellArcError):
     def __init__(self, 
                  error_log: str, 
                  error_code: SA_ErrorCode
@@ -80,7 +82,7 @@ class SA_AuthError(ShellArcErrorException):
             is_fatal=True
             )
         
-class SA_LocalIOError(ShellArcErrorException):
+class SA_LocalIOError(ShellArcError):
     def __init__(self, 
                  error_log, 
                  error_code
@@ -88,6 +90,18 @@ class SA_LocalIOError(ShellArcErrorException):
         super().__init__(
             error_log=error_log, 
             error_type=SA_ExceptionType.LOCAL_IO_ERROR, 
+            error_code=error_code, 
+            is_fatal=True
+            )
+        
+class SA_InternalSyntaxError(ShellArcError):
+    def __init__(self, 
+                 error_log, 
+                 error_code
+                 ):
+        super().__init__(
+            error_log=error_log, 
+            error_type=SA_ExceptionType.INT_SYNTAX_EREOR, 
             error_code=error_code, 
             is_fatal=True
             )

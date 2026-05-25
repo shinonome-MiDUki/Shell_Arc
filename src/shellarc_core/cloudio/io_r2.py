@@ -22,7 +22,7 @@ class R2_IO:
         self.bucket_name = cfg_io.get_cfg_setting(Cfg_item.BUCKET_NAME)
 
     def upload_file(self,
-                    uploading_file: Any,
+                    uploading_file: bytes | str | Path,
                     file_path: str | Path
                     ) -> None:
         if isinstance(file_path, Path):
@@ -32,9 +32,14 @@ class R2_IO:
                 error_log="Uploading file to R2 storage is None",
                 error_code=SA_ErrorCode.SA_5101
             )
-        with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
-            tmp_file.write(uploading_file.read())
-            tmp_file_path = tmp_file.name
+        if isinstance(uploading_file, bytes):
+            with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
+                tmp_file.write(uploading_file)
+                tmp_file_path = tmp_file.name
+        else:
+            if isinstance(uploading_file, Path):
+                uploading_file = str(uploading_file)
+            tmp_file_path = uploading_file
         try:
             self.s3_client.upload_file(
                 tmp_file_path,

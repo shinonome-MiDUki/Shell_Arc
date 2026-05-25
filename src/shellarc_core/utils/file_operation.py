@@ -1,9 +1,11 @@
 import tempfile
 import zipfile
-import io
+import os
 from pathlib import Path
 
 from shellarc_core.cfg.cfg_io import Cfg_IO, Cfg_item
+from shellarc_core.exception.structure_error import SA_LocalIOError, SA_ErrorCode
+from shellarc_core.exception.user_exception import SA_InvalidUserQuery
 
 class FileOperation:
     @staticmethod
@@ -26,18 +28,28 @@ class FileOperation:
         return naming
 
     @staticmethod
-    def make_zip(files: dict[str, io.BytesIO]) -> str:
+    async def make_zip(files: dict[str, bytes],
+                       required_format: str
+                       ) -> str:
         tempzip_path = tempfile.NamedTemporaryFile(suffix=".zip", delete=False)
         try:
             with zipfile.ZipFile(tempzip_path.name, "w", compression=zipfile.ZIP_DEFLATED) as zf:
                 for name, byte_data in files.items():
-                    zf.writestr(name, byte_data.getvalue())
+                    if Path(name).suffix.lstrip(".") != required_format:
+                        raise SA_InvalidUserQuery(
+                            error_log=f"file with invalid extension format uploaded detected during auto zipping",
+                            frontend_msg=f"{required_format}形式でご提出ください"
+                        )
+                    zf.writestr(name, byte_data)
             return tempzip_path.name
         except Exception as e:
+            raise SA_LocalIOError(
+                error_log="Make zip file failed",
+                error_code=SA_ErrorCode.SA_8000
+            )
+        finally:
             if Path(tempzip_path).exists():
-                import os
                 os.unlink(tempzip_path)
-            print(f"make zip failed, error : {e}")
-            return ""
+
                 
 

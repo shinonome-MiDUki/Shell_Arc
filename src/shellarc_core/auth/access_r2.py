@@ -13,6 +13,11 @@ class Cloudflare_R2_service_Access:
         load_dotenv(verbose=True)
         project_ctx_dir = Path(os.environ.get("SHELLARC_PROJECT_CTX", None))
         dotenv_path = project_ctx_dir / ".env"
+        if not dotenv_path.exists():
+            raise SA_AuthError(
+                error_log=f"dotenv_path {dotenv_path} not exist",
+                error_code=SA_ErrorCode.SA_9001
+            )
         load_dotenv(dotenv_path)
         R2_ACCESS_KEY_ID = os.environ.get("CloudflareR2_access_key_id")
         R2_SECRET_ACCESS_KEY = os.environ.get("CloudflareR2_secret_access_key")

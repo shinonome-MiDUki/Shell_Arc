@@ -39,9 +39,9 @@ class ShellArc_Request:
                 frontend_msg=f"テイク{requesting_take}はまだ存在しません\n （現在のテイク数は{current_total_take_num}です）"
             )
 
-    def download_material(self,
+    async def download_material(self,
                          requesting_take: int
-                         ) -> str:
+                         ) -> tuple[str]:
         self._validate_request_take(requesting_take=requesting_take)
         # take = 0 : latest ; take = -1 : working
         frontend_msg_whenerror = ""
@@ -85,4 +85,4 @@ class ShellArc_Request:
                     f"c{self.cut_num}{self.working_component}, but temp file disappear",
                 error_code=SA_ErrorCode.SA_8000
             )
-        return full_temp_path
+        return (full_temp_path, name_with_ext)

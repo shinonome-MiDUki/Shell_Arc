@@ -11,4 +11,5 @@ class SA_ExceptionType(Enum):
     COMMUN_ERROR = "Communication error with external services"
     AUTH_ERROR = "Auth error with external service"
     LOCAL_IO_ERROR = "Local server file IO error"
+    INT_SYNTAX_EREOR = "Internal system syntax error"
 

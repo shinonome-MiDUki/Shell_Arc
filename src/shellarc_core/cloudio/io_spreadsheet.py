@@ -2,7 +2,7 @@ from shellarc_core.auth.access_spread_sheet import AccessSpreadSheet as A_GCP
 from shellarc_core.cfg.cfg_io import Cfg_IO as Cfg_IO
 from shellarc_core.cfg.cfg_io import Cfg_item
 from shellarc_core.cfg.spreadsheet_map_io import SpreadsheetMap_IO as SMap_IO
-from shellarc_core.exception.structure_error import SA_ProjStructError, SA_ErrorCode
+
 
 class GCP_IO:
     def __init__(self):
@@ -45,19 +45,5 @@ class GCP_IO:
     def spreadsheet_cache(self):
         _spreadsheet_cache = self.spreadsheet.get_all_values()
         return _spreadsheet_cache
-    
-    def efficient_get_spreadsheet(self, 
-                                  current_spreadsheet_cache: dict, 
-                                  cut_num: int, 
-                                  info_type: str):
-        cell_coord = self.smap_io.get_cell_coord(
-            cut_num=cut_num,
-            item=info_type
-        )
-        if cell_coord[0] <= 0 or cell_coord[1] <= 0:
-            raise SA_ProjStructError(
-                error_log=f"Spreadsheet coordinated found is smaller than 0(={cell_coord[0]}, {cell_coord[1]})",
-                error_code=SA_ErrorCode.SA_5201
-            )
-        info_requested = current_spreadsheet_cache[cell_coord[0]-1][cell_coord[1]-1]
-        return info_requested
+
+

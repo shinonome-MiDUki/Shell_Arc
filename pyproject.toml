@@ -18,7 +18,8 @@ dependencies = [
     "python-dotenv",
     "cryptography",
     "keyring", 
-    "discord.py"
+    "discord.py",
+    "requests"
 ]
 requires-python = ">=3.9"
 authors = [

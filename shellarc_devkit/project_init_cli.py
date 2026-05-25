@@ -55,35 +55,12 @@ def build_main_proj_db(db, dict_from_yaml_data, proj_collection, spreadsheet_key
     }
     for i in range(1,dict_from_yaml_data["cut_number"]+1):
         for work in process_list_eng:
-            ref_collection.collection(f"cut{i:02}").document(work).set(structure, merge=True)
+            ref_collection.collection(f"cut{i}").document(work).set(structure, merge=True)
 
     if linker is not None:
         db.collection(proj_collection).document("linker").set(linker, merge=True)
     else:
         db.collection(proj_collection).document("linker").set({"linker" : "0"}, merge=True)
-
-def build_main_proj_spread_sheet(spreadsheet, dict_from_yaml_data, proj_collection):
-    cut_number = int(dict_from_yaml_data["cut_number"])
-    parts_info = dict_from_yaml_data["parts"]
-    spreadsheet.update_acell("B4", "パート")
-    for part in parts_info:
-        part_range = parts_info[part]
-        starting_cut = part_range[0]
-        spreadsheet.update_acell(f"B{4+starting_cut}", part)
-    spreadsheet.update_acell("C4", "カット")
-    spreadsheet.update(f"C5:C{4+cut_number}", [[cut_index] for cut_index in range(1, cut_number+1)])
-    spreadsheet.update_acell("D4", "難易度")
-    component_number = int(dict_from_yaml_data["component_number"])
-    component_info = dict_from_yaml_data["component"]
-    for work_index in range(1, component_number+1):
-        work_info = component_info[work_index]
-        work_name = work_info["display"]
-        alphabets = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-        starting_column_index = (3+(work_index*2))-1
-        spreadsheet.update_acell(f"{alphabets[starting_column_index]}3", work_name)
-        spreadsheet.update_acell(f"{alphabets[starting_column_index]}4", "担当")
-        spreadsheet.update_acell(f"{alphabets[starting_column_index+1]}4", "状態")
-        spreadsheet.update_acell(f"{alphabets[starting_column_index]}{cut_number+6}", 0.0)
 
 def inilialize_project():
     proj_setting_yaml = str(input("Input path to project setting yaml file : ")).strip()
@@ -153,15 +130,6 @@ def inilialize_project():
         print("Firebase DB access failed")
         print("Process abolished")
         return
-
-    if not custom_spreadsheet:
-        try:
-            build_main_proj_spread_sheet(spreadsheet, dict_from_yaml_data, proj_collection)
-            print("Spreadsheet build successful")
-        except:
-            print("Spreadsheet build failed")
-            print("Process abolished")
-            return
         
     try:
         build_main_proj_db(db, dict_from_yaml_data, proj_collection, spreadsheet_key, linker=linker_doc_dict)

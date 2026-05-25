@@ -1,8 +1,10 @@
+from pathlib import Path
+
 from shellarc_core.cloudio.io_r2 import R2_IO
 from shellarc_core.cloudio.io_firebase import DB_info, DB_meta, DB_movemode, DB_status
 from shellarc_core.cloudio.io_firebase import DB_IO
 from shellarc_core.cloudio.io_spreadsheet import GCP_IO
-from shellarc_core.utils.file_operation import FileOperation as FileOp
+from shellarc_core.utils.file_operation import FileOperation
 from shellarc_core.cfg.cfg_io import Cfg_IO, Cfg_item
 from shellarc_core.exception.user_exception import SA_InvalidUserQuery
 
@@ -21,21 +23,32 @@ class ShellArc_Upload:
         self.cut_num = cut_num
         self.cfg_io = Cfg_IO()
 
-    def upload_file(self,
-                    file,
-                    format: str,
+    async def upload_file(self,
+                    file: dict[str, bytes],
                     submitter_name: str
                     ) -> None:
+        required_format = self.cfg_io.get_cfg_setting(Cfg_item.COMPONENT, self.working_component, "format")
+        if len(file) > 1:
+            fileobj = await FileOperation.make_zip(
+                files=file,
+                required_format=required_format
+                )
+            filename = Path(fileobj).name
+        elif len(file) == 1:
+            filename, fileobj= file.popitem()
+        else:
+            raise Exception
+        submission_format = Path(filename).suffix.lstrip(".")
         current_take_num = int(self.db_io.get_meta_info(request_info=DB_meta.CURRENT_TAKE)) + 1
-        naming = FileOp.renamed(
+        naming = FileOperation.renamed(
             cut_num=self.cut_num,
             take=current_take_num,
             component=self.working_component
         )
-        required_format = self.cfg_io.get_cfg_setting(Cfg_item.COMPONENT, self.working_component, "format")
-        if format != required_format:
+        if submission_format != required_format:
             raise SA_InvalidUserQuery(
-                error_log=f"file with invalid extension format uploaded by {submitter_name}"
+                error_log=f"file with invalid extension format uploaded by {submitter_name}",
+                frontend_msg=f"{required_format}形式でご提出ください"
             )
         collection_name = self.cfg_io.get_cfg_setting(Cfg_item.COLL_NAME)
         new_temp_data = self.db_io.make_data_block(
@@ -56,7 +69,7 @@ class ShellArc_Upload:
         self.db_io.update_remote(structure=structure)
 
         self.r2_io.upload_file(
-            uploading_file=file,
+            uploading_file=fileobj,
             file=f"{collection_name}/cut{self.cut_num}/{self.working_component}/{naming}.{required_format}"
         )
 

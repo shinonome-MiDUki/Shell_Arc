@@ -1,13 +1,13 @@
 version: '3.8'
 services:
-  # bot:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile.dc
-  #   restart: always
-  #   tty: true
-  #   stdin_open: true
-  #   env_file: project_ctx/.env
+  bot:
+    build:
+      context: .
+      dockerfile: Dockerfile.dc
+    restart: always
+    tty: true
+    stdin_open: true
+    env_file: project_ctx/.env
 
   ai_chat:
     build:

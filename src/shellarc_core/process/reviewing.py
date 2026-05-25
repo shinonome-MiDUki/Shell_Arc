@@ -34,7 +34,7 @@ class ShellArc_Review:
                 frontend_msg="確認待ちのカットはありません"
             )
 
-    def approve_action(self,
+    async def approve_action(self,
                        reviewer_name: str
                        ) -> None:
         self._existence_check(reviewer_name=reviewer_name)
@@ -53,7 +53,7 @@ class ShellArc_Review:
             new_value="完了"
         )
 
-    def decline_action(self,
+    async def decline_action(self,
                       reviewer_name: str
                       ) -> None:
         self._existence_check(reviewer_name=reviewer_name)

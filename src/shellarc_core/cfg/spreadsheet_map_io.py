@@ -34,4 +34,13 @@ class SpreadsheetMap_IO:
                 error_code=SA_ErrorCode.SA_4102
             )
         return (row_idx, col_idx)
+    
+    def get_vert_offset(self) -> int:
+        vert_offset = self.spreadsheet_map.get("vert_offset", None)
+        if not isinstance(vert_offset, int):
+            raise SA_ProjStructError(
+                error_log="vert_offset not configured properly in spreadsheet map",
+                error_code=SA_ErrorCode.SA_4102
+            )
+        return vert_offset
         
