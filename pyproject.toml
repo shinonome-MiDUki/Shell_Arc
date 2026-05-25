@@ -36,6 +36,12 @@ classifiers = [
   "Programming Language :: Python"
 ]
 
+[tool.pytest.ini_options]
+pythonpath = [
+  ".",
+  "tests"
+]
+
 [project.urls]
 Documentation = "https://github.com/shinonome-MiDUki/Shell_Arc"
 Repository = "https://github.com/shinonome-MiDUki/Shell_Arc.git"

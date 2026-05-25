@@ -2,7 +2,8 @@
   "cut1": {
 
     "keyframe": {
-      "__case__": "【正常】active確定済み・temporaryクリア・non_active_1,2あり",
+      "current_take": "3",
+      "current_reject_count": "2",
       "active": {
         "naming": "cut1_take3_keyframe",
         "cut": "1",
@@ -34,7 +35,8 @@
     },
 
     "animation": {
-      "__case__": "【正常】activeあり・temporaryに審査待ちあり・non_active_1あり",
+      "current_take": "3",
+      "current_reject_count": "1",
       "active": {
         "naming": "cut1_take2_animation",
         "cut": "1",
@@ -59,7 +61,8 @@
     },
 
     "bg": {
-      "__case__": "【エッジ】初回提出：activeなし(null)・temporaryにデータあり・non_activeなし",
+      "current_take": "1",
+      "current_reject_count": "0",
       "active": {
         "naming": null,
         "cut": null,
@@ -77,7 +80,8 @@
     },
 
     "compo": {
-      "__case__": "【エッジ】non_activeが非連続：take2がactiveのためnon_active_2が存在せずnon_active_1,3のみ",
+      "current_take": "4",
+      "current_reject_count": "2",
       "active": {
         "naming": "cut1_take2_compo",
         "cut": "1",
@@ -109,13 +113,14 @@
     },
 
     "editing": {
-      "__case__": "【異常】namingフィールドのcut番号が実際のcut番号(1)と不一致(cut2と記載)",
+      "current_take": "0",
+      "current_reject_count": "0",
       "active": {
-        "naming": "cut2_take1_editing",
-        "cut": "1",
-        "take": "1",
-        "creator": "Kenji",
-        "reviewer": "Matsuko"
+        "naming": null,
+        "cut": null,
+        "take": null,
+        "creator": null,
+        "reviewer": null
       },
       "temporary": {
         "naming": null,
@@ -131,7 +136,8 @@
   "cut2": {
 
     "keyframe": {
-      "__case__": "【正常】activeあり・temporaryクリア・non_active_1~4あり",
+      "current_take": "5",
+      "current_reject_count": "4",
       "active": {
         "naming": "cut2_take5_keyframe",
         "cut": "2",
@@ -177,7 +183,8 @@
     },
 
     "animation": {
-      "__case__": "【エッジ】仕様書の例：take7がactive・non_active_7なし・take8却下でnon_active_8あり",
+      "current_take": "8",
+      "current_reject_count": "7",
       "active": {
         "naming": "cut2_take7_animation",
         "cut": "2",
@@ -244,11 +251,12 @@
     },
 
     "bg": {
-      "__case__": "【異常】reviewerが空文字列（全エントリに波及）",
+      "current_take": "3",
+      "current_reject_count": "1",
       "active": {
         "naming": "cut2_take2_bg",
         "cut": "2",
-        "take": "2",
+        "take": "1",
         "creator": "Kenji",
         "reviewer": ""
       },
@@ -259,17 +267,18 @@
         "creator": "Kenji",
         "reviewer": ""
       },
-      "non_active_1": {
-        "naming": "cut2_take1_bg",
+      "non_active_2": {
+        "naming": "cut2_take2_bg",
         "cut": "2",
-        "take": "1",
+        "take": "2",
         "creator": "Kenji",
         "reviewer": ""
       }
     },
 
     "compo": {
-      "__case__": "【正常】仕様書の例そのまま：cut2/compo/take10がactive・non_active_1~9が全て存在",
+      "current_take": "10",
+      "current_reject_count": "9",
       "active": {
         "naming": "cut2_take10_compo",
         "cut": "2",
@@ -350,16 +359,16 @@
     },
 
     "editing": {
-      "__case__": "【異常】namingフィールドのwork種別が実際のwork（editing）ではなくkeyframeと記載",
+      "current_take": "1",
+      "current_reject_count": "0",
       "active": {
-        "naming": "cut2_take1_keyframe",
+        "naming": "cut2_take1_editing",
         "cut": "2",
         "take": "1",
         "creator": "Taro",
         "reviewer": "Matsuko"
       },
       "temporary": {
-        "naming": null,
         "cut": null,
         "take": null,
         "creator": null,
@@ -372,7 +381,8 @@
   "cut3": {
 
     "keyframe": {
-      "__case__": "【正常】activeあり・temporaryクリア・non_active_1~3あり",
+      "current_take": "4",
+      "current_reject_count": "3",
       "active": {
         "naming": "cut3_take4_keyframe",
         "cut": "3",
@@ -411,11 +421,12 @@
     },
 
     "animation": {
-      "__case__": "【異常】takeフィールドが\"0\"（無効なテイク番号）",
+      "current_take": "1",
+      "current_reject_count": "0",
       "active": {
-        "naming": "cut3_take0_animation",
+        "naming": "cut3_take1_animation",
         "cut": "3",
-        "take": "0",
+        "take": "1",
         "creator": "Taro",
         "reviewer": "Matsuko"
       },
@@ -429,7 +440,8 @@
     },
 
     "bg": {
-      "__case__": "【エッジ】temporaryの上書き：take2が審査前にtake3の提出でnon_active_2へ蹴られた状態（non_active_2は未審査）",
+      "current_take": "3",
+      "current_reject_count": "1",
       "active": {
         "naming": "cut3_take1_bg",
         "cut": "3",
@@ -585,7 +597,6 @@
     },
 
     "compo": {
-      "__case__": "【異常】takeフィールドが\"-1\"（負のテイク番号）",
       "active": {
         "naming": "cut4_take-1_compo",
         "cut": "4",
@@ -603,7 +614,8 @@
     },
 
     "editing": {
-      "__case__": "【異常】creatorとreviewerが同一人物（業務分掌違反の可能性）",
+      "current_take": "4",
+      "current_reject_count": "2",
       "active": {
         "naming": "cut4_take3_editing",
         "cut": "4",

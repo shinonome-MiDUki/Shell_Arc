@@ -44,7 +44,7 @@ class R2_IO:
         except Exception as e:
             raise SA_CommunicationError(
                 error_log=f"Communication error with R2 when uploading [{e}]",
-                error_code=SA_ErrorCode.SA_5102
+                error_code=SA_ErrorCode.SA_8001
             )
         finally:
             os.unlink(tmp_file_path)
@@ -64,7 +64,7 @@ class R2_IO:
         except Exception as e:
             raise SA_CommunicationError(
                 error_log=f"Communication error with R2 when downloading [{e}]",
-                error_code=SA_ErrorCode.SA_5102
+                error_code=SA_ErrorCode.SA_8001
             )
 
     
