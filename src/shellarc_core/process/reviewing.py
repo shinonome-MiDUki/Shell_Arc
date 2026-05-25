@@ -37,7 +37,7 @@ class ShellArc_Review:
     def approve_action(self,
                        reviewer_name: str
                        ) -> None:
-        self._existence_check()
+        self._existence_check(reviewer_name=reviewer_name)
         structure = self.db_io.move_data_block(move_mode=DB_movemode.TEMP2ACTIVE)
         structure = self.db_io.set_info(
             structure=structure,
@@ -56,7 +56,7 @@ class ShellArc_Review:
     def decline_action(self,
                       reviewer_name: str
                       ) -> None:
-        self._existence_check()
+        self._existence_check(reviewer_name=reviewer_name)
         current_temp_data = self.db_io.get_status_dict(request_status=DB_status.TEMP)
         structure = self.db_io.set_info(
             structure={DB_status.TEMP : current_temp_data},

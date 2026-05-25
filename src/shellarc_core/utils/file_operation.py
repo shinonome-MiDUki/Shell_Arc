@@ -7,8 +7,7 @@ from shellarc_core.cfg.cfg_io import Cfg_IO, Cfg_item
 
 class FileOperation:
     @staticmethod
-    def renamed(self, 
-                cut_num: int,
+    def renamed(cut_num: int,
                 take: int,
                 component: str, 
                 ) -> str:

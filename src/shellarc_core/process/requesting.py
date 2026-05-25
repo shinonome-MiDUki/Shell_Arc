@@ -42,7 +42,7 @@ class ShellArc_Request:
     def download_material(self,
                          requesting_take: int
                          ) -> str:
-        self._validate_request_take()
+        self._validate_request_take(requesting_take=requesting_take)
         # take = 0 : latest ; take = -1 : working
         frontend_msg_whenerror = ""
         if requesting_take == 0:
@@ -70,7 +70,7 @@ class ShellArc_Request:
                 frontend_msg=frontend_msg_whenerror
             )
         
-        name_with_ext = f"{naming}.{self.cfg_io.get_cfg_setting(Cfg_item.COMPONENT, self.working_component, "format")}"
+        name_with_ext = f"{naming}.{self.cfg_io.get_cfg_setting(Cfg_item.COMPONENT, self.working_component, 'format')}"
         temp_dir = tempfile.mkdtemp()
         self.r2_io.download_file(
             to_download_file=f"{self.cfg_io.get_cfg_setting(Cfg_item.COLL_NAME)}" \

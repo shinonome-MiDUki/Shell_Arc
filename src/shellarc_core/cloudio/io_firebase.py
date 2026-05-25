@@ -51,8 +51,8 @@ class DB_IO:
                            ) -> dict:
         from_dict = self.get_status_dict(request_status=from_status)
         if to_status == DB_status.NONACTIVE:
-            current_take = from_dict.get(DB_info.TAKE.value, None)
-            if current_take is None:
+            current_take = from_dict.get(DB_info.TAKE.value, "")
+            if current_take == "":
                 raise SA_ProjStructError(
                     error_log=f"info {DB_info.TAKE.value} is not found from " \
                         f"{from_status.value} in c{self.cut_num}{self.processing_component}",
@@ -81,8 +81,11 @@ class DB_IO:
             "reviewer": None
             }
         if move_mode == DB_movemode.TEMP2NONACTIVE:
-            current_temp = self.get_status_dict(request_status=DB_status.TEMP)
-            if current_temp is not None: 
+            current_temp_name = self.get_info(
+                request_status=DB_status.TEMP,
+                request_info=DB_info.NAMING
+            )
+            if current_temp_name is not None: 
                 structure = self._move_to_empty_status(
                     structure=structure,
                     from_status=DB_status.TEMP,
@@ -90,8 +93,11 @@ class DB_IO:
                     )
             structure[DB_status.TEMP.value] = clr if new_info is None else new_info
         elif move_mode == DB_movemode.TEMP2ACTIVE:
-            current_active = self.get_status_dict(request_status=DB_status.ACTIVE)
-            if current_active is not None:
+            current_active_name = self.get_info(
+                request_status=DB_status.ACTIVE,
+                request_info=DB_info.NAMING
+            )
+            if current_active_name is not None:
                 structure = self._move_to_empty_status(
                     structure=structure,
                     from_status=DB_status.ACTIVE,
@@ -106,20 +112,18 @@ class DB_IO:
         return structure
 
     def make_data_block(self,
-                        target_status: DB_status,
                         naming: str | None = None,
                         cut: str | None = None,
                         take: str | None = None,
                         creator: str | None = None,
                         reviewer: str | None = None
                         ) -> dict:
-        current_data = self.get_status_dict(request_status=target_status)
-        current_data = current_data if current_data is not None else {}
-        current_data[DB_info.NAMING.value] = str(naming) if naming is not None else current_data[DB_info.NAMING.value]
-        current_data[DB_info.CUT.value] = str(cut) if cut is not None else current_data[DB_info.CUT.value]
-        current_data[DB_info.TAKE.value] = str(take) if take is not None else current_data[DB_info.TAKE.value]
-        current_data[DB_info.CREATOR.value] = str(creator) if creator is not None else current_data[DB_info.CREATOR.value]
-        current_data[DB_info.REVIEWER.value] = str(reviewer) if reviewer is not None else current_data[DB_info.REVIEWER.value]
+        current_data = {}
+        current_data[DB_info.NAMING.value] = str(naming) if naming is not None else None
+        current_data[DB_info.CUT.value] = str(cut) if cut is not None else None
+        current_data[DB_info.TAKE.value] = str(take) if take is not None else None
+        current_data[DB_info.CREATOR.value] = str(creator) if creator is not None else None
+        current_data[DB_info.REVIEWER.value] = str(reviewer) if reviewer is not None else None
         return current_data
 
     def get_info(self,
@@ -148,7 +152,7 @@ class DB_IO:
     def get_meta_info(self,
                       request_info: DB_meta
                       ) -> str:
-        if request_info.value not in self.ref_requested_data:
+        if request_info.value not in self.requested_data:
             raise SA_RequestItemError(
                 error_log=f"requested metadata {request_info.value} c{self.cut_num}{self.processing_component} not exist",
                 error_code=SA_ErrorCode.SA_5003

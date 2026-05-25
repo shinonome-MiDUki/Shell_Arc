@@ -39,7 +39,6 @@ class ShellArc_Upload:
             )
         collection_name = self.cfg_io.get_cfg_setting(Cfg_item.COLL_NAME)
         new_temp_data = self.db_io.make_data_block(
-            target_status=DB_status.TEMP,
             naming=naming,
             cut=str(self.cut_num),
             take=current_take_num,

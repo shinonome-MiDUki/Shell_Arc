@@ -8,7 +8,7 @@ class ShellArcException(Exception):
                  error_type: SA_ExceptionType,
                  frontend_msg: str | None=None
                  ):
-        now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         error_log = f"{now} : {error_type.value} - {error_log}"
         super().__init__(error_log)
         self.frontend_msg = frontend_msg if frontend_msg is not None else error_log

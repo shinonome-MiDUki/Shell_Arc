@@ -24,7 +24,7 @@ class ShellArcErrorException(Exception):
                  error_code: SA_ErrorCode,
                  is_fatal: bool
                  ):
-        now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         error_log = f"{now} : {error_type.value} - {error_code.name}({error_code.value}) - {error_log}"
         if is_fatal:
             error_log = "FATAL " + error_log
