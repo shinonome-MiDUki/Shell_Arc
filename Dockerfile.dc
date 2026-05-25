@@ -3,7 +3,9 @@ FROM python:3.11-slim
 WORKDIR /usr/src/app
 
 COPY pyproject.toml ./
-RUN mkdir -p src/shellarc_core && touch src/shellarc_core/__init__.py
+RUN mkdir -p src/shellarc_core && \
+    touch src/shellarc_core/__init__.py && \
+    touch README.md
 RUN pip install --no-cache-dir .
 
 COPY . .
