@@ -30,9 +30,6 @@ from .discord_notice_webhook import DiscordNotice as Notice
 
 
 
-
-
-
 load_dotenv(verbose=True)
 project_ctx_dir = Path(os.environ.get("SHELLARC_PROJECT_CTX", None))
 dotenv_path = project_ctx_dir / ".env"
@@ -48,25 +45,23 @@ print(SERVER_ID)
 dc_client = discord.Client(intents=discord.Intents.all())
 
 #load config
-discord_config_file_path = Path(__file__).resolve().parents[1] / 'project_ctx/discord_config.json'
+discord_config_file_path = project_ctx_dir / 'project_ctx/discord_config.json'
 with open(discord_config_file_path, mode="r", encoding="utf-8") as config_file:
     discord_config_dict = json.load(config_file)
     config = discord_config_dict
 
 TOTAL_CUT_COUNT = config["total_cut_count"]
-component_reference_dict = config["component_reference"]
-component_index_reference_dict = config["component_index_reference"]
-rev_component_index_reference_dict = {v: k for k, v in component_index_reference_dict.items()}
-admin_roles = config["admin_roles"]
-center_channel_names = config["center_channel_names"]
 webhook_bot_name = config["webhook_bot_name"]
 notice_message_cut_extraction_regex = config["notice_message_cut_extraction_regex"]
 submission_channel_catagory_name = config["submission_channel_catagory_name"]
-channel_name_divider = config["channel_name_divider"]
-bot_command = config["bot_command"]
-bucket_name = config["bucket_name"]
+channel_name_divider = config.get("channel_name_divider", "_")
+bot_command = config.get("bot_command", "..")
+component_name_e2j = config["component_reference"]
+component_name_j2e = {v : k for k, v in component_name_e2j.items()}
+admin_roles = config["admin_roles"]
+shellarc_center = config["center_channel_names"]
 
-in_zip = ["png"]
+
 
 shell_arc_bot = commands.Bot(
     command_prefix=bot_command, 
@@ -86,37 +81,104 @@ class ShellArcActions(Enum):
     REG = 4
     CAPPR = 5
 
+class ShellArcEvents(Enum):
+    DL_Event = "download_action"
+    REG_Event = "register_action"
+    UP_Event = "push_action"
+    APPR_Event = "reviewing_action"
 
 
 
 
 
-#SelectionUI
 
-class ShellArcSelectionView(discord.ui.View): 
+class ShellArcButton(discord.ui.Button):
     def __init__(self, 
-                 action: ShellArcActions,
-                 timeout: int=120, 
-                 message=None,
+                 label: str,
+                 style: discord.ButtonStyle,
+                 sa_action: ShellArcActions,
+                 info: dict,
+                 message: discord.Message
+                 ):
+        super().__init__(
+            label=label,
+            style=style
+            )
+        self.sa_action = sa_action
+        self.info = info
+        self.message = message
+        
+    async def callback(self, 
+                       interaction: discord.Interaction
+                       ):
+        await interaction.response.defer(ephemeral=True)
+        if self.sa_action == ShellArcActions.UP:
+            if self.label == "はい":
+                shell_arc_bot.dispatch(
+                    ShellArcEvents.UP_Event.value,
+                    interaction,
+                    self.message,
+                    self.info["processing_cut"],
+                    self.info["processing_component"],
+                    self.info["processing_person"]
+                )
+            else:
+                await interaction.edit_original_response(content="提出プロセスが棄却されました", view=None)
+        elif self.sa_action == ShellArcActions.APPR:
+            if self.label == "確定":
+                shell_arc_bot.dispatch(
+                    ShellArcEvents.APPR_Event.value,
+                    interaction,
+                    self.info["processing_cut"],
+                    self.info["processing_component"],
+                    self.info["processing_person"],
+                    True
+                )
+            elif self.label == "要修正":
+                shell_arc_bot.dispatch(
+                    ShellArcEvents.APPR_Event.value,
+                    interaction,
+                    self.info["processing_cut"],
+                    self.info["processing_component"],
+                    self.info["processing_person"],
+                    False
+                )
+            else:
+                await interaction.edit_original_response(content="承認プロセスが棄却されました", view=None)
+
+
+class ShellArcButtonView(discord.ui.View):
+    def __init__(self,
+                 options: dict[str, discord.ButtonStyle], 
+                 sa_action: ShellArcActions,
+                 info: dict,
+                 message: discord.Message,
+                 timeout: int=30
                  ):
         super().__init__(timeout=timeout)
+        for option, style in options.items():
+            self.add_item(ShellArcButton(label=option, style=style, sa_action=sa_action, info=info, message=message))
+
+
+class ShellArcDropdown(discord.ui.Select):
+    def __init__(self,
+                 options,
+                 sa_action: ShellArcActions,
+                 message: discord.Message
+                 ):
+        super().__init__(
+            placeholder="作業工程を選択してください", 
+            min_values=1, 
+            max_values=1, 
+            options=options
+            )
+        self.sa_action = sa_action
         self.message = message
-        self.action = action
 
-    @discord.ui.select(
-        cls=discord.ui.Select,
-        placeholder="作業部分を選択してください",
-        options=[discord.SelectOption(label=component) for component in component_index_reference_dict]
-    )
-    async def select(
-        self, 
-        interaction: discord.Interaction, 
-        select: discord.ui.Select
-        ):
-        await interaction.response.defer()
-
-        message = self.message
-        channel_name = str(message.channel.name.lower())
+    async def callback(self, 
+                       interaction: discord.Interaction
+                       ):
+        channel_name = str(interaction.channel.name.lower())
         try:
             processing_cut_cluster = str(channel_name.split(channel_name_divider)[0])
             print(f"submitting_cut_cluster is {processing_cut_cluster}")
@@ -127,89 +189,74 @@ class ShellArcSelectionView(discord.ui.View):
             print(f"抽出されたカット番号: {processing_cut}")
             processing_cut = re.sub(r"[^\d]", "", processing_cut)
             processing_cut= int(processing_cut)
-            processing_person = str(message.author.display_name)
-            processing_component = str(select.values[0])
+            processing_person = str(interaction.user.display_name)
+            processing_component = str(self.values[0])
         except Exception as e:
             print("Error occurred while processing the submission selection")
             print(e)
             return
         
-        if self.action == ShellArcActions.DL or self.action == ShellArcActions.CAPPR:
-            if self.action == ShellArcActions.CAPPR:
-                processing_take = -1
-            else:
-                try:
-                    designated_take = int(message.content.split(" ")[1])
-                except:
-                    designated_take = 0
-                processing_take = designated_take
-            shell_arc_bot.dispatch(
-                "download_action",
-                message,
-                processing_cut,
-                processing_component,
-                processing_take
-            )
-            return
-        elif self.action == ShellArcActions.REG:
-            message_cmd = message.content.split(" ")
-            force = len(message_cmd) > 1 and message_cmd[1] == "f"
-            shell_arc_bot.dispatch(
-                "register_action",
-                message,
-                processing_cut,
-                processing_component,
-                processing_person,
-                force
-            )
-            return
-        if self.action == ShellArcActions.UP:
-            confirmation_msg = f"カット{processing_cut}・{processing_component} 提出しますか（はい・いいえ）"
-        elif self.action == ShellArcActions.APPR:
-            confirmation_msg = "アップを確定しますか（確定c・修正必要d・キャンセル）"
-        await interaction.channel.send(confirmation_msg)
-        def check(m):
-            return m.author == message.author and m.channel == message.channel
-        try:
-            reply_message = await shell_arc_bot.wait_for('message', check=check, timeout=30.0)
-        except asyncio.TimeoutError:
-            await message.channel.send("時間超過です。やり直してください")
-            return
-        except:
-            print("Error occurred while waiting for the submission confirmation")
+        await interaction.response.defer(ephemeral=True)
+        if self.sa_action in [ShellArcActions.DL, ShellArcActions.CAPPR, ShellArcActions.REG]:
+            if self.sa_action == ShellArcActions.CAPPR or self.sa_action == ShellArcActions.DL:
+                if self.sa_action == ShellArcActions.CAPPR:
+                    processing_take = -1
+                elif self.sa_action == ShellArcActions.DL:
+                    try:
+                        processing_take = int(self.message.content.split(" ")[1])
+                    except:
+                        processing_take = 0
+                shell_arc_bot.dispatch(
+                    ShellArcEvents.DL_Event.value,
+                    interaction,
+                    processing_cut,
+                    processing_component,
+                    processing_take
+                )
+            elif self.sa_action == ShellArcActions.REG:
+                is_force = len(self.message.content.split(" ")) > 1 and self.message.content.split(" ")[1] == "f"
+                shell_arc_bot.dispatch(
+                    ShellArcEvents.REG_Event.value,
+                    interaction,
+                    processing_cut,
+                    processing_component,
+                    processing_person,
+                    is_force
+                )
+        elif self.sa_action in [ShellArcActions.UP, ShellArcActions.APPR]:
+            if self.sa_action == ShellArcActions.UP:
+                confirmation_kw = "提出" 
+                confirmation_options = {
+                    "はい" : discord.ButtonStyle.success,
+                    "いいえ": discord.ButtonStyle.red
+                    }
+            elif self.sa_action == ShellArcActions.APPR:
+                confirmation_kw = "確定" 
+                confirmation_options = {
+                    "確定" : discord.ButtonStyle.success, 
+                    "要修正" : discord.ButtonStyle.red, 
+                    "キャンセル" : discord.ButtonStyle.gray
+                    }
+            info = {
+                "processing_cut" : processing_cut,
+                "processing_component" : processing_component,
+                "processing_person" : processing_person
+            }
+            await interaction.edit_original_response(
+                content=f"カット{processing_cut}・{processing_component} を{confirmation_kw}しますか",
+                view=ShellArcButtonView(options=confirmation_options, sa_action=self.sa_action, info=info, message=self.message)
+                )
 
-        if self.action == ShellArcActions.UP:
-            if reply_message.content == "はい":
-                shell_arc_bot.dispatch(
-                    "push_action", 
-                    message, 
-                    processing_cut, 
-                    processing_component, 
-                    processing_person
-                    )
-            else:
-                await message.channel.send("提出が棄却されました")
-        elif self.action == ShellArcActions.APPR:
-            if reply_message.content in ["確定", "c", "C"]:
-                shell_arc_bot.dispatch(
-                    "reviewing_action", 
-                    message, 
-                    processing_cut, 
-                    processing_component, 
-                    processing_person,
-                    True
-                    )
-            elif reply_message.content in ["修正必要", "d", "D"]:
-                shell_arc_bot.dispatch(
-                    "reviewing_action", 
-                    message, 
-                    processing_cut, 
-                    processing_component, 
-                    processing_person,
-                    False
-                    )
-            else:
-                await message.channel.send("承認プロセスが棄却されました")
+
+class ShellArcDropdownView(discord.ui.View):
+    def __init__(self,
+                 sa_action: ShellArcActions,
+                 message: discord.Message
+                 ):
+        super().__init__()
+        options=[discord.SelectOption(label=component) for component in component_name_j2e]
+        self.add_item(ShellArcDropdown(options=options, sa_action=sa_action, message=message))
+
 
 
 
@@ -219,12 +266,13 @@ class ShellArcSelectionView(discord.ui.View):
 #ACTIONS
 
 @shell_arc_bot.event
-async def on_push_action(message, 
+async def on_push_action(interaction: discord.Interaction, 
+                         message: discord.Message,
                          submitting_cut, 
                          submitting_component, 
                          submitting_person
                          ):
-    submitting_component_en = component_reference_dict[submitting_component]
+    submitting_component_en = component_name_j2e[submitting_component]
     submissions_raw = message.attachments
     try:
         shellarc_upload = ShellArc_Upload(
@@ -239,23 +287,29 @@ async def on_push_action(message,
             submitter_name=submitting_person
         )
     except ShellArcException as e:
-        await message.channel.send(e.frontend_msg)
+        await interaction.edit_original_response(content=e.frontend_msg, view=None)
+        return
     except ShellArcError as e:
-        await message.channel.send(e.frontend_msg)
+        await interaction.edit_original_response(content=e.frontend_msg, view=None)
+        return
     except Exception as e:
-        await message.channel.send(f"UNEXPECTED PYTHON EXCEPTION : {e}")
-    mentioning_role = discord.utils.get(message.guild.roles, name=admin_roles["keyframe_qc"])
-    await message.channel.send(f"カット{submitting_cut} {submitting_component} が提出されました {mentioning_role.mention}")
-
+        await interaction.edit_original_response(content=f"UNEXPECTED PYTHON EXCEPTION : {e}", view=None)
+        return
+    
+    confirm_msg = f"カット{submitting_cut} {submitting_component} が提出されました"
+    for keyframe_qc in admin_roles.get("keyframe_qc", []):
+        mentioning_role = discord.utils.get(message.guild.roles, name=keyframe_qc)
+        confirm_msg += f" {mentioning_role.mention}"
+    await interaction.edit_original_response(content=confirm_msg, view=None)
 
 @shell_arc_bot.event
-async def on_reviewing_action(message, 
+async def on_reviewing_action(interaction: discord.Interaction, 
                               reviewing_cut, 
                               reviewing_component, 
                               reviewing_person,
                               is_approve
                               ):
-    reviewing_component_en = component_reference_dict[reviewing_component]
+    reviewing_component_en = component_name_j2e[reviewing_component]
     try:
         shellarc_review = ShellArc_Review(
             cut_num=int(reviewing_cut),
@@ -263,26 +317,29 @@ async def on_reviewing_action(message,
         )
         if is_approve:
             await shellarc_review.approve_action(reviewer_name=reviewing_person)
-            await message.channel.send(f"カット{reviewing_cut} {reviewing_component} が確定されました")
+            await interaction.edit_original_response(content=f"カット{reviewing_cut} {reviewing_component} が確定されました", view=None)
         else:
             await shellarc_review.decline_action(reviewer_name=reviewing_person)
-            await message.channel.send(f"カット{reviewing_cut} {reviewing_component} がアーカイブされました")
+            await interaction.edit_original_response(content=f"カット{reviewing_cut} {reviewing_component} がアーカイブされました", view=None)
     except ShellArcException as e:
-        await message.channel.send(e.frontend_msg)
+        await interaction.edit_original_response(content=e.frontend_msg, view=None)
+        return
     except ShellArcError as e:
-        await message.channel.send(e.frontend_msg)
+        await interaction.edit_original_response(content=e.frontend_msg, view=None)
+        return
     except Exception as e:
-        await message.channel.send(f"UNEXPECTED PYTHON EXCEPTION : {e}")
+        await interaction.edit_original_response(content=f"UNEXPECTED PYTHON EXCEPTION : {e}", view=None)
+        return
         
     
 @shell_arc_bot.event
-async def on_download_action(message,
+async def on_download_action(interaction: discord.Interaction,
                              requesting_cut,
                              requesting_component,
                              requesting_take
                              ):
     downloaded_path = ""
-    requesting_component_en = component_reference_dict[requesting_component]
+    requesting_component_en = component_name_j2e[requesting_component]
     try:
         shellarc_request = ShellArc_Request(
             cut_num=int(requesting_cut),
@@ -300,52 +357,60 @@ async def on_download_action(message,
             take_name = f"テイク{requesting_take}"
         else:
             take_name = "最新テイク" if requesting_take == 0 else "作業中テイク"
-        await message.channel.send(
+        await interaction.edit_original_response(content=f"カット{requesting_cut} {take_name} {requesting_component} を取得中", view=None)
+        await interaction.channel.send(
             f"カット{requesting_cut} {take_name} {requesting_component} が取得されました",
             file=discord.File(downloaded_path), 
             filename=downloaded_filename
             )
     except ShellArcException as e:
-        await message.channel.send(e.frontend_msg)
+        await interaction.edit_original_response(content=e.frontend_msg, view=None)
+        return
     except ShellArcError as e:
-        await message.channel.send(e.frontend_msg)
+        await interaction.edit_original_response(content=e.frontend_msg, view=None)
+        return
     except Exception as e:
-        await message.channel.send(f"UNEXPECTED PYTHON EXCEPTION : {e}")
+        await interaction.edit_original_response(content=f"UNEXPECTED PYTHON EXCEPTION : {e}", view=None)
+        return
     finally:
         if Path(downloaded_path).exists():
             os.unlink(downloaded_path)
 
     
 @shell_arc_bot.event
-async def on_register_action(message,
+async def on_register_action(interaction: discord.Interaction,
                              registering_cut,
                              registering_component,
                              registering_person,
                              force
                              ):
-    rregistering_component_en = component_reference_dict[registering_component]
+    registering_component_en = component_name_j2e[registering_component]
     try:
         shellarc_register = ShellArc_Register()
         await shellarc_register.register_work(
             registering_person=registering_person,
-            registering_component=rregistering_component_en,
+            registering_component=registering_component_en,
             registering_cut=registering_cut,
             force=force
         )
     except ShellArcException as e:
-        await message.channel.send(e.frontend_msg)
+        await interaction.edit_original_response(content=e.frontend_msg, view=None)
+        return
     except ShellArcError as e:
-        await message.channel.send(e.frontend_msg)
+        await interaction.edit_original_response(content=e.frontend_msg, view=None)
+        return
     except Exception as e:
-        await message.channel.send(f"UNEXPECTED PYTHON EXCEPTION : {e}")
-    current_channel_name = message.channel.name.split(channel_name_divider)
+        await interaction.edit_original_response(content=f"UNEXPECTED PYTHON EXCEPTION : {e}", view=None)
+        return
+
+    current_channel_name = interaction.channel.name.split(channel_name_divider)
     if len(current_channel_name) > 1:
         current_channel_name[1] = registering_person
     else:
         current_channel_name.append(registering_person)
     new_channel_name = channel_name_divider.join(current_channel_name)
-    await message.channel.edit(name=new_channel_name)
-    await message.channel.send(f"{registering_person}をカット{registering_cut} {registering_component}に登録しました")
+    await interaction.channel.edit(name=new_channel_name)
+    await interaction.edit_original_response(content=f"{registering_person}をカット{registering_cut} {registering_component}に登録しました", view=None)
     
 
 
@@ -364,11 +429,10 @@ async def up(ctx):
     if not message.attachments:
         await message.channel.send("ファイルを添付してから提出してください")
         return
-    view = ShellArcSelectionView(
-        action=ShellArcActions.UP, 
-        timeout=60, 
+    view = ShellArcDropdownView(
+        sa_action=ShellArcActions.UP,
         message=message
-        )
+    )
     await ctx.send(view=view)
 
 
@@ -379,11 +443,10 @@ async def appr(ctx):
         return
     if channel_name_divider not in message.channel.name:
         return
-    view = ShellArcSelectionView(
-        action=ShellArcActions.APPR, 
-        timeout=60, 
+    view = ShellArcDropdownView(
+        sa_action=ShellArcActions.APPR,
         message=message
-        )
+    )
     await ctx.send(view=view)
 
 
@@ -394,9 +457,8 @@ async def dl(ctx):
         return
     if channel_name_divider not in message.channel.name:
         return
-    view = ShellArcSelectionView(
-        action=ShellArcActions.DL,
-        timeout=60,
+    view = ShellArcDropdownView(
+        sa_action=ShellArcActions.DL,
         message=message
     )
     await ctx.send(view=view)
@@ -409,9 +471,8 @@ async def check(ctx):
         return
     if channel_name_divider not in message.channel.name:
         return
-    view = ShellArcSelectionView(
-        action=ShellArcActions.CAPPR,
-        timeout=60,
+    view = ShellArcDropdownView(
+        sa_action=ShellArcActions.CAPPR,
         message=message
     )
     await ctx.send(view=view)
@@ -423,9 +484,8 @@ async def reg(ctx):
     message = ctx.message
     if message.author.bot:
         return
-    view = ShellArcSelectionView(
-        action=ShellArcActions.REG,
-        timeout=60,
+    view = ShellArcDropdownView(
+        sa_action=ShellArcActions.REG,
         message=message
     )
     await ctx.send(view=view)
@@ -436,7 +496,7 @@ async def ask(ctx):
     message = ctx.message
     if message.author.bot:
         return
-    if message.channel.name != center_channel_names["schedule_query_center"]:
+    if message.channel.name != shellarc_center["schedule_query_center"]:
         return
     try:
         asking_person = str(message.content.split(" ")[1])
@@ -446,7 +506,7 @@ async def ask(ctx):
     shellarc_query = ShellArc_Query()
     query_result = shellarc_query.efficient_get_spreadsheet_info(
         target_index_value=asking_person,
-        index_info_types=[f"{c}_PIC" for c, _ in component_index_reference_dict.items()],
+        index_info_types=[f"{c}_PIC" for c in component_name_e2j],
         target_info_types=["cut_num", "cut_num", "cut_num", "cut_num", "cut_num"],
         search_range=[1, TOTAL_CUT_COUNT]
     )
