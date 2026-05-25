@@ -452,7 +452,7 @@ async def ask(ctx):
     )
     output_msg = asking_person
     for k, v in query_result.items():
-        output_msg += f"\nカット{v} {k.split("_")[0]}"
+        output_msg += f"\nカット{v} {k.split('_')[0]}"
     await message.reply(output_msg)
 
 
