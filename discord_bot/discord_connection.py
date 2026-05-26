@@ -533,11 +533,18 @@ async def history(ctx):
             max_length = int(message_command[2])
         except:
             max_length = None
-    history_dict = ShellArc_Query.get_history(
-        cut_num=quering_cut,
-        component=quering_component,
-        max_length=max_length
-    )
+    if len(message_command) == 4 and message_command[3] == "-appr":
+        history_dict = ShellArc_Query.get_approve_history(
+            cut_num=quering_cut,
+            component=quering_component,
+            max_length=max_length
+        )
+    else:
+        history_dict = ShellArc_Query.get_history(
+            cut_num=quering_cut,
+            component=quering_component,
+            max_length=max_length
+        )
     reply_text = ""
     for commit_id, commit_content in history_dict:
         reply_text += f"{commit_id} - {commit_content}\n"
@@ -568,6 +575,23 @@ async def ask(ctx):
         output_msg += f"\nカット{v} {k.split('_')[0]}"
     await message.reply(output_msg)
 
+@shell_arc_bot.command()
+async def sync(ctx):
+    message = ctx.message
+    if message.author.bot:
+        return
+    await ShellArc_Upload.sync_vps_with_remote()
+
+@shell_arc_bot.command()
+async def sapyc(ctx):
+    message = ctx.message
+    if message.author.bot:
+        return
+    cmd_auth_role = discord.utils.get(message.guild.roles, name=admin_roles.get("admin_cmd"))
+    if message.channel.name != shellarc_center["admin_cmd_center"] \
+        or cmd_auth_role not in message.author.roles:
+        return
+    cmd = message.content.lstrip("..sapyc").strip()
 
 
 # @shell_arc_bot.command()

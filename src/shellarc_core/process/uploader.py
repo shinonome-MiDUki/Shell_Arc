@@ -67,3 +67,7 @@ class ShellArc_Upload:
             cut_num=self.cut_num,
             new_value="作業中"
         )
+
+    @staticmethod
+    async def sync_vps_with_remote() -> None:
+        await Git_IO().sync_remote()

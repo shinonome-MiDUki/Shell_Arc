@@ -1,5 +1,5 @@
 from shellarc_core.cloudio.io_spreadsheet import GCP_IO
-from shellarc_core.cloudio.io_git import Git_IO, SA_GitLogFilter, SA_CommitType
+from shellarc_core.cloudio.io_git import Git_IO, SA_GitLogFilter, SA_CommitType, ShellArcGitBranch
 from shellarc_core.cfg.spreadsheet_map_io import SpreadsheetMap_IO
 
 from shellarc_core.exception.structure_error import SA_InternalSyntaxError, SA_ErrorCode
@@ -82,6 +82,25 @@ class ShellArc_Query:
             output_format=[5, 3, 4],
             log_filter=log_filter,
             limit_scope=json_file_path
+        )
+        return hist_dict
+    
+    @staticmethod
+    def get_approve_history(cut_num: int,
+                            component: str,
+                            max_length: int | None=None
+                            ) -> dict[str, str]:
+        git_io = Git_IO()
+        json_file_path = f"stage/cut{cut_num}/{component}.json"
+        log_filter = SA_GitLogFilter(
+            commit_type=SA_CommitType.APPROVE,
+            log_length=max_length
+        )
+        hist_dict = git_io.get_log(
+            output_format=[5, 3, 4],
+            log_filter=log_filter,
+            limit_scope=json_file_path,
+            branch=ShellArcGitBranch.MAIN
         )
         return hist_dict
 
