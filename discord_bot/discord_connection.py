@@ -52,7 +52,7 @@ with open(discord_config_file_path, mode="r", encoding="utf-8") as config_file:
 
 TOTAL_CUT_COUNT = config["total_cut_count"]
 webhook_bot_name = config["webhook_bot_name"]
-notice_message_cut_extraction_regex = config["notice_message_cut_extraction_regex"]
+cut_extraction_regex = config["notice_message_cut_extraction_regex"]
 submission_channel_catagory_name = config["submission_channel_catagory_name"]
 channel_name_divider = config.get("channel_name_divider", "_")
 bot_command = config.get("bot_command", "..")
@@ -69,7 +69,7 @@ shell_arc_bot = commands.Bot(
     )
 
 def process_cut_num(cut_cluster):
-    match = re.search(r'カット(\d+)、?', cut_cluster)
+    match = re.search(cut_extraction_regex, cut_cluster)
     if match:
         return str(match.group(1))
     return None
@@ -579,5 +579,6 @@ async def testarc(ctx):
     if message.author.bot:
         return
     await message.reply("MyReply")
+
 
 shell_arc_bot.run(TOKEN)

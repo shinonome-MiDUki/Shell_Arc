@@ -13,9 +13,12 @@ class SA_ErrorCode(Enum):
     SA_5003 = "Requsted status info dict not exist"
     SA_5101 = "None file uploaded unexpectedly"
     SA_5201 = "Spreadsheet index is non natural num"
+    SA_6000 = "Git remote comminication error"
+    SA_6001 = "Project index files missing essential data"
     SA_7000 = "Incorrect parameter"
     SA_8000 = "Server local IO error"
     SA_8001 = "Communication error"
+    SA_8002 = "Git error"
     SA_9000 = "Auth error"
     SA_9001 = "Expected .env file missing"
         

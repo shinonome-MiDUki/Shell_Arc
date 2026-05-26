@@ -13,6 +13,7 @@ class Cfg_item(Enum):
     SPREADSHEET_KEY = "spreadsheet_key"
     CUTNUM = "cut_num"
     COMPONENT = "components"
+    GIT_LREPO = "git_repo_local"
 
 
 class Cfg_IO:
