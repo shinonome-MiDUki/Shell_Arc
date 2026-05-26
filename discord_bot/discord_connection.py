@@ -129,6 +129,7 @@ class ShellArcButton(discord.ui.Button):
                 shell_arc_bot.dispatch(
                     ShellArcEvents.APPR_Event.value,
                     interaction,
+                    self.message,
                     self.info["processing_cut"],
                     self.info["processing_component"],
                     self.info["processing_person"],
@@ -138,6 +139,7 @@ class ShellArcButton(discord.ui.Button):
                 shell_arc_bot.dispatch(
                     ShellArcEvents.APPR_Event.value,
                     interaction,
+                    self.message,
                     self.info["processing_cut"],
                     self.info["processing_component"],
                     self.info["processing_person"],
@@ -200,12 +202,12 @@ class ShellArcDropdown(discord.ui.Select):
         if self.sa_action in [ShellArcActions.DL, ShellArcActions.CAPPR, ShellArcActions.REG]:
             if self.sa_action == ShellArcActions.CAPPR or self.sa_action == ShellArcActions.DL:
                 if self.sa_action == ShellArcActions.CAPPR:
-                    processing_take = -1
+                    processing_take = "-1"
                 elif self.sa_action == ShellArcActions.DL:
                     try:
-                        processing_take = int(self.message.content.split(" ")[1])
+                        processing_take = str(self.message.content.split(" ")[1])
                     except:
-                        processing_take = 0
+                        processing_take = "0"
                 shell_arc_bot.dispatch(
                     ShellArcEvents.DL_Event.value,
                     interaction,
@@ -254,7 +256,16 @@ class ShellArcDropdownView(discord.ui.View):
                  message: discord.Message
                  ):
         super().__init__()
-        options=[discord.SelectOption(label=component) for component in component_name_j2e]
+        channel_name = str(message.channel.name.lower())
+        try:
+            processing_cut_cluster = str(channel_name.split(channel_name_divider)[0])
+            processing_cut = process_cut_num(processing_cut_cluster)
+            print(f"submitting_cut is {processing_cut}")
+        except Exception as e:
+            print(f"Error occurred while processing the submission selection : {e}")
+            return
+        component_enname_ls = ShellArc_Query.get_components_enname(cut_num=int(processing_cut))
+        options=[discord.SelectOption(label=component_name_e2j.get(component_en, component_en)) for component_en in component_enname_ls]
         self.add_item(ShellArcDropdown(options=options, sa_action=sa_action, message=message))
 
 
@@ -272,8 +283,9 @@ async def on_push_action(interaction: discord.Interaction,
                          submitting_component, 
                          submitting_person
                          ):
-    submitting_component_en = component_name_j2e[submitting_component]
+    submitting_component_en = component_name_j2e.get(submitting_component, submitting_component)
     submissions_raw = message.attachments
+    git_message = message.content.split(" ")[1] if len(message.content.split(" ")) > 1 else ""
     try:
         shellarc_upload = ShellArc_Upload(
             cut_num=int(submitting_cut),
@@ -284,7 +296,8 @@ async def on_push_action(interaction: discord.Interaction,
         files = {file.filename : file_bytes for file, file_bytes in zip(submissions_raw, file_data_list)}
         await shellarc_upload.upload_file(
             file=files,
-            submitter_name=submitting_person
+            submitter_name=submitting_person,
+            message=git_message
         )
     except ShellArcException as e:
         await interaction.edit_original_response(content=e.frontend_msg, view=None)
@@ -302,24 +315,30 @@ async def on_push_action(interaction: discord.Interaction,
         confirm_msg += f" {mentioning_role.mention}"
     await interaction.edit_original_response(content=confirm_msg, view=None)
 
+
 @shell_arc_bot.event
 async def on_reviewing_action(interaction: discord.Interaction, 
+                              message: discord.Message,
                               reviewing_cut, 
                               reviewing_component, 
                               reviewing_person,
                               is_approve
                               ):
-    reviewing_component_en = component_name_j2e[reviewing_component]
+    reviewing_component_en = component_name_j2e.get(reviewing_component, reviewing_component)
+    git_message = message.content.split(" ")[1] if len(message.content.split(" ")) > 1 else ""
     try:
         shellarc_review = ShellArc_Review(
             cut_num=int(reviewing_cut),
             reviewing_component=reviewing_component_en
         )
+        await shellarc_review.pending_action(
+            reviewer_name=reviewing_person,
+            is_approve=is_approve,
+            message=git_message
+        )
         if is_approve:
-            await shellarc_review.approve_action(reviewer_name=reviewing_person)
             await interaction.edit_original_response(content=f"カット{reviewing_cut} {reviewing_component} が確定されました", view=None)
         else:
-            await shellarc_review.decline_action(reviewer_name=reviewing_person)
             await interaction.edit_original_response(content=f"カット{reviewing_cut} {reviewing_component} がアーカイブされました", view=None)
     except ShellArcException as e:
         await interaction.edit_original_response(content=e.frontend_msg, view=None)
@@ -339,7 +358,7 @@ async def on_download_action(interaction: discord.Interaction,
                              requesting_take
                              ):
     downloaded_path = ""
-    requesting_component_en = component_name_j2e[requesting_component]
+    requesting_component_en = component_name_j2e.get(requesting_component, requesting_component)
     try:
         shellarc_request = ShellArc_Request(
             cut_num=int(requesting_cut),
@@ -384,7 +403,7 @@ async def on_register_action(interaction: discord.Interaction,
                              registering_person,
                              force
                              ):
-    registering_component_en = component_name_j2e[registering_component]
+    registering_component_en = component_name_j2e.get(registering_component, registering_component)
     try:
         shellarc_register = ShellArc_Register()
         await shellarc_register.register_work(
@@ -480,7 +499,6 @@ async def check(ctx):
 
 @shell_arc_bot.command()
 async def reg(ctx):
-    print("regコマンドが実行されました")
     message = ctx.message
     if message.author.bot:
         return
@@ -489,6 +507,41 @@ async def reg(ctx):
         message=message
     )
     await ctx.send(view=view)
+
+
+@shell_arc_bot.command()
+async def history(ctx):
+    message = ctx.message
+    if message.author.bot:
+        return
+    channel_name = str(message.channel.name.lower())
+    message_command = message.content.split(" ")
+    if len(message_command) < 2:
+        await message.channel.send("作業工程を指定してください")
+        return
+    quering_component = message_command[1]
+    quering_component = component_name_j2e.get(quering_component, quering_component)
+    try:
+        quering_cut_cluster = str(channel_name.split(channel_name_divider)[0])
+        quering_cut = int(process_cut_num(quering_cut_cluster))
+        print(f"submitting_cut is {quering_cut}")
+    except Exception as e:
+        print(f"Error occurred while processing the submission selection : {e}")
+        return
+    if len(message_command) == 3:
+        try:
+            max_length = int(message_command[2])
+        except:
+            max_length = None
+    history_dict = ShellArc_Query.get_history(
+        cut_num=quering_cut,
+        component=quering_component,
+        max_length=max_length
+    )
+    reply_text = ""
+    for commit_id, commit_content in history_dict:
+        reply_text += f"{commit_id} - {commit_content}\n"
+    await message.channel.send(reply_text)
 
 
 @shell_arc_bot.command()

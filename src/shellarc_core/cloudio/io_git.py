@@ -2,13 +2,14 @@ import asyncio
 import json
 import datetime
 from enum import StrEnum
+from dataclasses import dataclass
 from pathlib import Path
 
 from shellarc_core.cfg.cfg_io import Cfg_IO, Cfg_item
 from shellarc_core.exception.structure_error import (
-    SA_ProjStructError, SA_LocalIOError, SA_ErrorCode
+    SA_ProjStructError, SA_LocalIOError, SA_ErrorCode,
+    SA_InternalSyntaxError
 )
-from shellarc_core.exception.user_exception import SA_DataNotExist
 
 class GitCommands(StrEnum):
     SHOW = "show"
@@ -18,6 +19,25 @@ class GitCommands(StrEnum):
     PUSH = "push"
     ADD = "add"
     INIT = "init"
+    LOG = "log"
+
+class SA_CommitType(StrEnum):
+    DECLINE = "DECLINE"
+    APPROVE = "APPROVE"
+    SUBMIT = "SUBMIT"
+
+class ShellArcGitBranch(StrEnum):
+    PENDING = "pending"
+    MAIN = "main"
+
+
+@dataclass
+class SA_GitLogFilter:
+    commit_type: SA_CommitType | None = None
+    cut_num: int | None = None
+    component: str | None = None
+    log_length: int | None = None
+
 
 class Git_IO:
     def __init__(self):
@@ -93,51 +113,110 @@ class Git_IO:
         with open(self.git_repo_local_dir / "project_main.json", "w", encoding="utf-8") as f:
             json.dump(proj_main_dict, f, ensure_ascii=False, indent=3)
         for c in range(1, int(proj_settings["cut_num"]) + 1):
-            with open(stage_dir / f"cut{c}.json", "w", encoding="utf-8") as f:
-                json.dump({}, f, ensure_ascii=False)
+            cut_dir = stage_dir / f"cut{c}"
+            cut_dir.mkdir(parents=True, exist_ok=True)
         git_commands = [
             [GitCommands.INIT],
             [GitCommands.ADD, "."],
-            [GitCommands.COMMIT, "-m", f"Initialize project ({self._get_timemark})"]
+            [GitCommands.COMMIT, "-m", f"Initialized project ({self._get_timemark})"],
+            [GitCommands.CHECKOUT, "-b", ShellArcGitBranch.PENDING],
+            [GitCommands.ADD, "."],
+            [GitCommands.COMMIT, "-m", f"Initialized pending branch ({self._get_timemark})"],
+            [GitCommands.CHECKOUT, "main"]
         ]
         await self._continuous_git_command(git_commands=git_commands)
         print(f"Project repo built ({self._get_timemark})")
         
 
     async def get_component_info(self,
-                                 branch: str,
+                                 branch: ShellArcGitBranch,
                                  cut_num: int,
-                                 component: str
+                                 component: str,
+                                 commit_id: str | None=None
                                  ) -> dict[str, str]:
-        git_proc = await self._git_command(GitCommands.SHOW, f"{branch}:stage/{cut_num}.json")
-        stdout, stderr = await git_proc.communicate()
-        if git_proc.returncode == 0:
-            cut_info_str = stdout.decode("utf-8")
-            cut_info = json.loads(cut_info_str)
+        await self._continuous_git_command([[GitCommands.CHECKOUT, branch]])
+        component_json_path = self.git_repo_local_dir / f"stage/cut{cut_num}/{component}.json"
+        if component_json_path.exists():
+            commit_id = commit_id if commit_id is not None else branch
+            git_proc = await self._git_command(GitCommands.SHOW, f"{commit_id}:stage/cut{cut_num}/{component}.json")
+            stdout, stderr = await git_proc.communicate()
+            if git_proc.returncode == 0:
+                requested_info_str = stdout.decode("utf-8")
+                requested_info = json.loads(requested_info_str)
+            else:
+                requested_info = {}
         else:
+            requested_info = {}
+        return requested_info
+    
+
+    async def get_log(self,
+                      output_format: list[int],
+                      log_filter: SA_GitLogFilter | None=None,
+                      limit_scope: str | None=None,
+                      branch: ShellArcGitBranch=ShellArcGitBranch.PENDING
+                      ) -> dict[str, str]:
+        if log_filter is None:
+            log_filter = SA_GitLogFilter()
+        if limit_scope is None:
+            git_log_proc = await self._git_command(GitCommands.LOG, branch, f"--format='%h=&=%s'")
+        else:
+            git_log_proc = await self._git_command(GitCommands.LOG, branch, f"--format='%h=&=%s'", "--", limit_scope)
+        stdout, stderr = await git_log_proc.communicate()
+        if git_log_proc.returncode != 0:
             raise SA_LocalIOError(
                 error_log=f"A git command error : {stderr.decode('utf-8')}",
                 error_code=SA_ErrorCode.SA_8002
             )
-        requested_info = cut_info.get(component, {})
-        return requested_info
+        log_list = stdout.decode("utf-8").split("\n")
+        rtn = {}
+        for log_piece in log_list:
+            breakdown_log = log_piece.split("=&=")
+            breakdown_commit_record_ls = breakdown_log[1].split("*")
+            if max(output_format) >= len(breakdown_commit_record_ls):
+                raise SA_InternalSyntaxError(
+                    error_code="Git log filter index overflow",
+                    error_log=SA_ErrorCode.SA_7000
+                )
+            # "commit_type" : breakdown_commit_record_ls[0],
+            # "cut_num" : breakdown_commit_record_ls[1],
+            # "component" : breakdown_commit_record_ls[2],
+            # "creator_name" : breakdown_commit_record_ls[3],
+            # "commit_message" : breakdown_commit_record_ls[4],
+            # "timemark" : breakdown_commit_record_ls[5],
+            # "file_index_name" : breakdown_commit_record_ls[6]
+            if log_filter.commit_type is not None and log_filter.commit_type != breakdown_commit_record_ls[0]:
+                continue
+            elif log_filter.cut_num is not None and log_filter.cut_num != breakdown_commit_record_ls[1]:
+                continue
+            elif log_filter.component is not None and log_filter.commit_type != breakdown_commit_record_ls[2]:
+                continue
+            filtered_record_ls = [breakdown_commit_record_ls[i] for i in output_format]
+            filtered_record = " ".join(filtered_record_ls)
+            rtn[breakdown_log[0]] = filtered_record
+            if log_filter.log_length is not None and len(rtn) >= log_filter.log_length:
+                break
+        return rtn
+        
+    
     
     async def pend_data(self,
                         cut_num: int,
+                        component: str,
                         processing_person: str,
                         is_approve: bool,
                         message: str=""
                         ) -> None:
         git_commands_approve = [
-            [GitCommands.CHECKOUT, "main"],
-            [GitCommands.CHECKOUT, "pending", "--", f"stage/{cut_num}.json"],
-            [GitCommands.ADD, f"stage/{cut_num}.json"],
-            [GitCommands.COMMIT, "-m", f"APPROVED by {processing_person} : {message} ({self._get_timemark})"]
+            [GitCommands.CHECKOUT, ShellArcGitBranch.MAIN],
+            [GitCommands.CHECKOUT, ShellArcGitBranch.PENDING, "--", f"stage/cut{cut_num}/{component}.json"],
+            [GitCommands.ADD, f"stage/cut{cut_num}/{component}.json"],
+            [GitCommands.COMMIT, "-m", f"{SA_CommitType.APPROVE} * {cut_num} * {component} * {processing_person} * {message} * {self._get_timemark}"]
         ]
         git_commands_decline = [
-            [GitCommands.CHECKOUT, "pending"],
-            [GitCommands.ADD, f"stage/{cut_num}.json"],
-            [GitCommands.COMMIT, "--allow-empty", "-m", f"DECLINED by {processing_person} : {message} ({self._get_timemark})"]
+            [GitCommands.CHECKOUT, ShellArcGitBranch.PENDING],
+            [GitCommands.ADD, f"stage/cut{cut_num}/{component}.json"],
+            [GitCommands.COMMIT, "--allow-empty", "-m", f"{SA_CommitType.DECLINE} * {cut_num} * {component} * {processing_person} * {message} * {self._get_timemark}"]
         ]
         git_commands = git_commands_approve if is_approve else git_commands_decline
         await self._continuous_git_command(git_commands=git_commands)
@@ -154,33 +233,17 @@ class Git_IO:
             component=component,
             creator_name=creator_name
         )
-        git_show_proc = await self._git_command(GitCommands.SHOW, f"pending:stage/{cut_num}.json")
-        stdout, stderr = await git_show_proc.communicate()
-        if git_show_proc.returncode == 0:
-            current_cut_info_str = stdout.decode("utf-8")
-            current_cut_info = json.loads(current_cut_info_str)
-        else:
-            raise SA_LocalIOError(
-                error_log=f"A git command error : {stderr.decode('utf-8')}",
-                error_code=SA_ErrorCode.SA_8002
-            )
-        current_cut_info[component] = {
+        await self._continuous_git_command([[GitCommands.CHECKOUT, ShellArcGitBranch.PENDING]])
+        current_component_info = {
             "creator" : creator_name,
             "fileindex" : file_index_name
         }
-        git_checkout_proc = await self._git_command(GitCommands.CHECKOUT, "pending")
-        stdout, stderr = await git_checkout_proc.communicate()
-        if git_checkout_proc.returncode != 0:
-            raise SA_LocalIOError(
-                error_log=f"A git command error : {stderr.decode('utf-8')}",
-                error_code=SA_ErrorCode.SA_8002
-            )
-        with open(self.git_repo_local_dir / "stage" / f"{cut_num}.json", "w", encoding="utf-8") as f:
-            json.dump(current_cut_info, f, ensure_ascii=False, indent=3)
+        with open(self.git_repo_local_dir / f"stage/cut{cut_num}/{component}.json", "w", encoding="utf-8") as f:
+            json.dump(current_component_info, f, ensure_ascii=False, indent=3)
         git_commands = [
-            [GitCommands.CHECKOUT, "pending"],
-            [GitCommands.ADD, f"stage/{cut_num}.json"],
-            [GitCommands.COMMIT, "-m", f"SUBMITTED by {creator_name} : {message} ({self._get_timemark}) @{file_index_name}"]
+            [GitCommands.CHECKOUT, ShellArcGitBranch.PENDING],
+            [GitCommands.ADD, f"stage/cut{cut_num}/{component}.json"],
+            [GitCommands.COMMIT, "-m", f"{SA_CommitType.SUBMIT} * {creator_name} * {message} * {self._get_timemark} * {file_index_name}"]
         ]
         await self._continuous_git_command(git_commands=git_commands)
         return file_index_name
@@ -188,8 +251,8 @@ class Git_IO:
 
     async def sync_remote(self) -> None:
         git_commands = [
-            [GitCommands.PUSH, "origin", "main"],
-            [GitCommands.PUSH, "origin", "pending"]
+            [GitCommands.PUSH, "origin", ShellArcGitBranch.MAIN],
+            [GitCommands.PUSH, "origin", ShellArcGitBranch.PENDING]
         ]
         await self._continuous_git_command(git_commands=git_commands)
         
