@@ -21,6 +21,35 @@ class R2_IO:
         cfg_io = Cfg_IO()
         self.bucket_name = cfg_io.get_cfg_setting(Cfg_item.BUCKET_NAME)
 
+    def get_s3obj_size(self,
+                       target_s3_file: str
+                       ) -> int:
+        s3_obj = self.s3_client.get_object(
+            Bucket=self.bucket_name,
+            Key=target_s3_file,
+        )
+        size_bytes = float(s3_obj.get('Size'))
+        size_mb = size_bytes / 1024 / 1024
+        return int(size_mb)
+
+    def issue_presigned_url(self,
+                            target_s3_file: str,
+                            url_client_method: str,
+                            http_method: str,
+                            time_limit: int=180
+                            ) -> str:
+        presigned_url = self.s3_client.generate_presigned_url(
+            ClientMethod=url_client_method,
+            Params={
+                "Bucket" : self.bucket_name,
+                "Key" : target_s3_file
+            },
+            ExpiresIn=time_limit,
+            HttpMethod=http_method
+        )
+        return presigned_url
+        
+
     def upload_file(self,
                     uploading_file: bytes | str | Path,
                     file_path: str | Path

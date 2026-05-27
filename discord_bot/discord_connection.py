@@ -284,21 +284,28 @@ async def on_push_action(interaction: discord.Interaction,
                          submitting_person
                          ):
     submitting_component_en = component_name_j2e.get(submitting_component, submitting_component)
-    submissions_raw = message.attachments
     git_message = message.content.split(" ")[1] if len(message.content.split(" ")) > 1 else ""
     try:
         shellarc_upload = ShellArc_Upload(
             cut_num=int(submitting_cut),
             working_component=submitting_component_en,
         )
-        read_file_coros = [file.read() for file in submissions_raw] 
-        file_data_list = await asyncio.gather(*read_file_coros)
-        files = {file.filename : file_bytes for file, file_bytes in zip(submissions_raw, file_data_list)}
-        await shellarc_upload.upload_file(
-            file=files,
-            submitter_name=submitting_person,
-            message=git_message
-        )
+        submissions_raw = message.attachments
+        if submissions_raw:
+            read_file_coros = [file.read() for file in submissions_raw] 
+            file_data_list = await asyncio.gather(*read_file_coros)
+            files = {file.filename : file_bytes for file, file_bytes in zip(submissions_raw, file_data_list)}
+            await shellarc_upload.upload_file(
+                file=files,
+                submitter_name=submitting_person,
+                message=git_message
+            )
+        else:
+            presigned_url = await shellarc_upload.get_upload_url(
+                submitter_name=submitting_person,
+                message=git_message,
+            )
+            await interaction.channel.send(f"180秒以内、このからファイルをアップロードしてください : {presigned_url}")
     except ShellArcException as e:
         await interaction.edit_original_response(content=e.frontend_msg, view=None)
         return
@@ -367,21 +374,26 @@ async def on_download_action(interaction: discord.Interaction,
         downloaded_material = await shellarc_request.download_material(requesting_take=requesting_take)
         downloaded_path = downloaded_material[0]
         downloaded_filename = downloaded_material[1]
-        if not Path(downloaded_path).exists():
-            raise SA_LocalIOError(
-                error_log="generated temp download path not exist",
-                error_code=SA_ErrorCode.SA_8000
-            )
-        if requesting_take > 1:
-            take_name = f"テイク{requesting_take}"
-        else:
-            take_name = "最新テイク" if requesting_take == 0 else "作業中テイク"
-        await interaction.edit_original_response(content=f"カット{requesting_cut} {take_name} {requesting_component} を取得中", view=None)
-        await interaction.channel.send(
-            f"カット{requesting_cut} {take_name} {requesting_component} が取得されました",
-            file=discord.File(downloaded_path), 
-            filename=downloaded_filename
-            )
+        downloaded_method = downloaded_material[2]
+        if downloaded_method == "path":
+            if not Path(downloaded_path).exists():
+                raise SA_LocalIOError(
+                    error_log="generated temp download path not exist",
+                    error_code=SA_ErrorCode.SA_8000
+                )
+            if requesting_take > 1:
+                take_name = f"テイク{requesting_take}"
+            else:
+                take_name = "最新テイク" if requesting_take == 0 else "作業中テイク"
+            await interaction.edit_original_response(content=f"カット{requesting_cut} {take_name} {requesting_component} を取得中", view=None)
+            await interaction.channel.send(
+                f"カット{requesting_cut} {take_name} {requesting_component} が取得されました",
+                file=discord.File(downloaded_path), 
+                filename=downloaded_filename
+                )
+        elif downloaded_method == "url":
+            await interaction.edit_original_response(content=f"カット{requesting_cut} {take_name} {requesting_component} のファイルが大きすぎるため、URLでお渡しします", view=None)
+            await interaction.channel.send(f"URL : {downloaded_path}\n180秒以内でダウンロードしてください")
     except ShellArcException as e:
         await interaction.edit_original_response(content=e.frontend_msg, view=None)
         return
@@ -448,6 +460,21 @@ async def up(ctx):
     if not message.attachments:
         await message.channel.send("ファイルを添付してから提出してください")
         return
+    view = ShellArcDropdownView(
+        sa_action=ShellArcActions.UP,
+        message=message
+    )
+    await ctx.send(view=view)
+
+
+@shell_arc_bot.command()
+async def upbig(ctx):
+    message = ctx.message
+    if message.author.bot:
+        return
+    if channel_name_divider not in message.channel.name:
+        return
+
     view = ShellArcDropdownView(
         sa_action=ShellArcActions.UP,
         message=message

@@ -1,4 +1,5 @@
 import asyncio
+import os
 import json
 import datetime
 from enum import StrEnum
@@ -10,6 +11,9 @@ from shellarc_core.exception.structure_error import (
     SA_ProjStructError, SA_LocalIOError, SA_ErrorCode,
     SA_InternalSyntaxError
 )
+from shellarc_core.exception.user_exception import SA_InvalidRequestObj
+
+
 
 class GitCommands(StrEnum):
     SHOW = "show"
@@ -20,6 +24,7 @@ class GitCommands(StrEnum):
     ADD = "add"
     INIT = "init"
     LOG = "log"
+    STATUS = "status"
 
 class SA_CommitType(StrEnum):
     DECLINE = "DECLINE"
@@ -30,7 +35,6 @@ class ShellArcGitBranch(StrEnum):
     PENDING = "pending"
     MAIN = "main"
 
-
 @dataclass
 class SA_GitLogFilter:
     commit_type: SA_CommitType | None = None
@@ -39,10 +43,14 @@ class SA_GitLogFilter:
     log_length: int | None = None
 
 
+
 class Git_IO:
-    def __init__(self):
+    def __init__(self,
+                 git_repo_local_dir: str | None=None):
         cfg_io = Cfg_IO()
-        self.git_repo_local_dir = Path(cfg_io.get_cfg_setting(Cfg_item.GIT_LREPO))
+        self.git_repo_local_dir = Path(cfg_io.get_cfg_setting(Cfg_item.GIT_LREPO)) \
+            if git_repo_local_dir is None else git_repo_local_dir
+
 
     def get_components(self,
                        cut_num: int
@@ -58,7 +66,7 @@ class Git_IO:
             components = pj_main.get(f"cut{cut_num}", components)
         return [component for component in components]
     
-    
+
     @property
     def _get_timemark(self) -> str:
         t_delta = datetime.timedelta(hours=9)
@@ -66,6 +74,7 @@ class Git_IO:
         time_mark = now.strftime('%Y%m%d%H%M%S')
         return time_mark
     
+
     def _make_index_name(self,
                         cut_num: int,
                         component: str,
@@ -75,6 +84,7 @@ class Git_IO:
         creator_name = creator_name.replace("_", "-")
         index_name = f"cut{cut_num}_{component}_{creator_name}_{self._get_timemark}"
         return index_name
+
 
     async def _git_command(self,
                           *git_cmds_param
@@ -88,6 +98,7 @@ class Git_IO:
             )
         return git_proc
     
+
     async def _continuous_git_command(self,
                                       git_commands: list
                                       ) -> None:
@@ -99,10 +110,11 @@ class Git_IO:
                     error_log=f"A git command error : {stderr.decode('utf-8')}",
                     error_code=SA_ErrorCode.SA_8002
                 )
-            
+
+
     async def make_proj_repo(self,
-                       proj_settings: dict
-                       ) -> None:
+                             proj_settings: dict 
+                             ) -> None:
         self.git_repo_local_dir.mkdir(parents=True, exist_ok=True)
         stage_dir = self.git_repo_local_dir / "stage"
         stage_dir.mkdir(parents=True, exist_ok=True)
@@ -187,7 +199,7 @@ class Git_IO:
             # "creator_name" : breakdown_commit_record_ls[3],
             # "commit_message" : breakdown_commit_record_ls[4],
             # "timemark" : breakdown_commit_record_ls[5],
-            # "file_index_name" : breakdown_commit_record_ls[6]
+            # "file_index_name" : breakdown_commit_record_ls[6]?
             if log_filter.commit_type is not None and log_filter.commit_type != breakdown_commit_record_ls[0]:
                 continue
             elif log_filter.cut_num is not None and str(log_filter.cut_num) != breakdown_commit_record_ls[1]:
@@ -202,7 +214,6 @@ class Git_IO:
         return rtn
         
     
-    
     async def pend_data(self,
                         cut_num: int,
                         component: str,
@@ -211,7 +222,24 @@ class Git_IO:
                         message: str=""
                         ) -> None:
         message = message.replace("*", "+")
+        git_statuscheck_proc = await self._git_command(GitCommands.STATUS, "--porcelain", f"stage/cut{cut_num}")
+        stdout, stderr = await git_statuscheck_proc.communicate()
+        if git_statuscheck_proc.returncode != 0:
+            raise SA_LocalIOError(
+                error_log=f"A git command error : {stderr.decode('utf-8')}",
+                error_code=SA_ErrorCode.SA_8002
+            )
+        status_str = stdout.decode("utf-8").strip()
+        if ".sa_pending" not in status_str:
+            raise SA_InvalidRequestObj(
+                error_log=f"c{cut_num} {component} pending attempted by {processing_person} but not exist",
+                frontend_msg="承認待ちの提出はありません"
+            )
+        os.unlink(f"stage/cut{cut_num}/.sa_pending")
         git_commands_approve = [
+            [GitCommands.CHECKOUT, ShellArcGitBranch.PENDING],
+            [GitCommands.ADD, f"stage/cut{cut_num}"],
+            [GitCommands.COMMIT, "-m", f"{SA_CommitType.APPROVE} * {cut_num} * {component} * {processing_person} * {message} * {self._get_timemark} * ''"]
             [GitCommands.CHECKOUT, ShellArcGitBranch.MAIN],
             [GitCommands.CHECKOUT, ShellArcGitBranch.PENDING, "--", f"stage/cut{cut_num}/{component}.json"],
             [GitCommands.ADD, f"stage/cut{cut_num}/{component}.json"],
@@ -219,7 +247,7 @@ class Git_IO:
         ]
         git_commands_decline = [
             [GitCommands.CHECKOUT, ShellArcGitBranch.PENDING],
-            [GitCommands.ADD, f"stage/cut{cut_num}/{component}.json"],
+            [GitCommands.ADD, f"stage/cut{cut_num}"],
             [GitCommands.COMMIT, "--allow-empty", "-m", f"{SA_CommitType.DECLINE} * {cut_num} * {component} * {processing_person} * {message} * {self._get_timemark} * ''"]
         ]
         git_commands = git_commands_approve if is_approve else git_commands_decline
@@ -250,6 +278,8 @@ class Git_IO:
             [GitCommands.COMMIT, "-m", f"{SA_CommitType.SUBMIT} * {cut_num} * {component} * {creator_name} * {message} * {self._get_timemark} * {file_index_name}"]
         ]
         await self._continuous_git_command(git_commands=git_commands)
+        with open(self.git_repo_local_dir / f"stage/cut{cut_num}/.sa_pending", "w") as f:
+            f.write("")
         return file_index_name
     
 

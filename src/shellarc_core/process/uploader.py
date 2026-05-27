@@ -68,6 +68,42 @@ class ShellArc_Upload:
             new_value="作業中"
         )
 
+
+    async def get_upload_url(self,
+                             submitter_name: str,
+                             message: str=""
+                             ) -> str:
+        required_format = self.cfg_io.get_cfg_setting(Cfg_item.COMPONENT, self.working_component, "format")
+        collection_name = self.cfg_io.get_cfg_setting(Cfg_item.COLL_NAME)
+
+        file_index_name = await self.git_io.update_data(
+            cut_num=self.cut_num,
+            component=self.working_component,
+            creator_name=submitter_name,
+            message=message
+        )
+
+        presigned_url = self.r2_io.issue_presigned_url(
+            target_s3_file=f"{collection_name}/stage/{file_index_name}.{required_format}",
+            url_client_method="put_object",
+            http_method="PUT",
+            time_limit=180
+        )
+
+        self.gcp_io.update_info(
+            info_type=f"{self.working_component}_PIC",
+            cut_num=self.cut_num,
+            new_value=submitter_name
+        )
+        self.gcp_io.update_info(
+            info_type=f"{self.working_component}_progress",
+            cut_num=self.cut_num,
+            new_value="作業中"
+        )
+
+        return presigned_url
+
+
     @staticmethod
     async def sync_vps_with_remote() -> None:
         await Git_IO().sync_remote()

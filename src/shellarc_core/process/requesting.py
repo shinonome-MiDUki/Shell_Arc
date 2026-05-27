@@ -59,16 +59,27 @@ class ShellArc_Request:
         
         name_with_ext = f"{naming}.{self.cfg_io.get_cfg_setting(Cfg_item.COMPONENT, self.working_component, 'format')}"
         temp_dir = tempfile.mkdtemp()
-        self.r2_io.download_file(
-            to_download_file=f"{self.cfg_io.get_cfg_setting(Cfg_item.COLL_NAME)}/stage/{name_with_ext}",
-            download_destination=temp_dir,
-            file_naming=name_with_ext
-        )
-        full_temp_path = os.path.join(temp_dir, name_with_ext)
-        if not os.path.exists(full_temp_path):
-            raise SA_LocalIOError(
-                error_log=f"making temp file for file download for " \
-                    f"c{self.cut_num}{self.working_component}, but temp file disappear",
-                error_code=SA_ErrorCode.SA_8000
+        target_file_s3path = f"{self.cfg_io.get_cfg_setting(Cfg_item.COLL_NAME)}/stage/{name_with_ext}"
+        target_file_size = self.r2_io.get_s3obj_size(target_s3_file=target_file_s3path)
+        if target_file_size > 9:
+            presigned_url = self.r2_io.issue_presigned_url(
+                target_s3_file=target_file_s3path,
+                url_client_method="get_object",
+                http_method="GET",
+                time_limit=180
             )
-        return (full_temp_path, name_with_ext)
+            return (presigned_url, name_with_ext, "url")
+        else:
+            self.r2_io.download_file(
+                to_download_file=target_file_s3path,
+                download_destination=temp_dir,
+                file_naming=name_with_ext
+            )
+            full_temp_path = os.path.join(temp_dir, name_with_ext)
+            if not os.path.exists(full_temp_path):
+                raise SA_LocalIOError(
+                    error_log=f"making temp file for file download for " \
+                        f"c{self.cut_num}{self.working_component}, but temp file disappear",
+                    error_code=SA_ErrorCode.SA_8000
+                )
+            return (full_temp_path, name_with_ext, "path")
