@@ -6,6 +6,8 @@ import time
 import asyncio
 import json
 import random
+import traceback
+import datetime
 from enum import Enum
 from pathlib import Path
 
@@ -26,7 +28,7 @@ from shellarc_core.exception.structure_error import (
 )
 from shellarc_core.exception.user_exception import ShellArcException
 
-from .discord_notice_webhook import DiscordNotice as Notice
+# from .discord_notice_webhook import DiscordNotice as Notice
 
 
 
@@ -45,7 +47,7 @@ print(SERVER_ID)
 dc_client = discord.Client(intents=discord.Intents.all())
 
 #load config
-discord_config_file_path = project_ctx_dir / 'project_ctx/discord_config.json'
+discord_config_file_path = project_ctx_dir / "discord_config.json"
 with open(discord_config_file_path, mode="r", encoding="utf-8") as config_file:
     discord_config_dict = json.load(config_file)
     config = discord_config_dict
@@ -112,6 +114,7 @@ class ShellArcButton(discord.ui.Button):
                        interaction: discord.Interaction
                        ):
         await interaction.response.defer(ephemeral=True)
+        await interaction.edit_original_response(content="処理中...", view=None)
         if self.sa_action == ShellArcActions.UP:
             if self.label == "はい":
                 shell_arc_bot.dispatch(
@@ -314,12 +317,16 @@ async def on_push_action(interaction: discord.Interaction,
         return
     except Exception as e:
         await interaction.edit_original_response(content=f"UNEXPECTED PYTHON EXCEPTION : {e}", view=None)
+        tb = traceback.format_exc()
+        error_moment = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9), 'JST'))
+        print(f"!!UNEXPECTED : {error_moment.strftime('%Y%m%d%H%M%S')} -- {tb}")
         return
     
     confirm_msg = f"カット{submitting_cut} {submitting_component} が提出されました"
     for keyframe_qc in admin_roles.get("keyframe_qc", []):
         mentioning_role = discord.utils.get(message.guild.roles, name=keyframe_qc)
-        confirm_msg += f" {mentioning_role.mention}"
+        if mentioning_role is not None:
+            confirm_msg += f" {mentioning_role.mention}"
     await interaction.edit_original_response(content=confirm_msg, view=None)
 
 
@@ -355,6 +362,9 @@ async def on_reviewing_action(interaction: discord.Interaction,
         return
     except Exception as e:
         await interaction.edit_original_response(content=f"UNEXPECTED PYTHON EXCEPTION : {e}", view=None)
+        tb = traceback.format_exc()
+        error_moment = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9), 'JST'))
+        print(f"!!UNEXPECTED : {error_moment.strftime('%Y%m%d%H%M%S')} -- {tb}")
         return
         
     
@@ -375,21 +385,19 @@ async def on_download_action(interaction: discord.Interaction,
         downloaded_path = downloaded_material[0]
         downloaded_filename = downloaded_material[1]
         downloaded_method = downloaded_material[2]
+        take_name = requesting_take
         if downloaded_method == "path":
             if not Path(downloaded_path).exists():
                 raise SA_LocalIOError(
                     error_log="generated temp download path not exist",
                     error_code=SA_ErrorCode.SA_8000
                 )
-            if requesting_take > 1:
-                take_name = f"テイク{requesting_take}"
-            else:
-                take_name = "最新テイク" if requesting_take == 0 else "作業中テイク"
+            if requesting_take == "0": take_name = "最新テイク"
+            if requesting_take == "-1": take_name = "作業中テイク"
             await interaction.edit_original_response(content=f"カット{requesting_cut} {take_name} {requesting_component} を取得中", view=None)
             await interaction.channel.send(
                 f"カット{requesting_cut} {take_name} {requesting_component} が取得されました",
-                file=discord.File(downloaded_path), 
-                filename=downloaded_filename
+                file=discord.File(downloaded_path)
                 )
         elif downloaded_method == "url":
             await interaction.edit_original_response(content=f"カット{requesting_cut} {take_name} {requesting_component} のファイルが大きすぎるため、URLでお渡しします", view=None)
@@ -402,6 +410,9 @@ async def on_download_action(interaction: discord.Interaction,
         return
     except Exception as e:
         await interaction.edit_original_response(content=f"UNEXPECTED PYTHON EXCEPTION : {e}", view=None)
+        tb = traceback.format_exc()
+        error_moment = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9), 'JST'))
+        print(f"!!UNEXPECTED : {error_moment.strftime('%Y%m%d%H%M%S')} -- {tb}")
         return
     finally:
         if Path(downloaded_path).exists():
@@ -432,6 +443,9 @@ async def on_register_action(interaction: discord.Interaction,
         return
     except Exception as e:
         await interaction.edit_original_response(content=f"UNEXPECTED PYTHON EXCEPTION : {e}", view=None)
+        tb = traceback.format_exc()
+        error_moment = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9), 'JST'))
+        print(f"!!UNEXPECTED : {error_moment.strftime('%Y%m%d%H%M%S')} -- {tb}")
         return
 
     current_channel_name = interaction.channel.name.split(channel_name_divider)
@@ -555,26 +569,30 @@ async def history(ctx):
     except Exception as e:
         print(f"Error occurred while processing the submission selection : {e}")
         return
+    max_length = None
     if len(message_command) == 3:
         try:
             max_length = int(message_command[2])
         except:
             max_length = None
     if len(message_command) == 4 and message_command[3] == "-appr":
-        history_dict = ShellArc_Query.get_approve_history(
+        history_dict = await ShellArc_Query.get_approve_history(
             cut_num=quering_cut,
             component=quering_component,
             max_length=max_length
         )
     else:
-        history_dict = ShellArc_Query.get_history(
+        print("CALL572")
+        history_dict = await ShellArc_Query.get_history(
             cut_num=quering_cut,
             component=quering_component,
             max_length=max_length
         )
     reply_text = ""
-    for commit_id, commit_content in history_dict:
+    for commit_id, commit_content in history_dict.items():
         reply_text += f"{commit_id} - {commit_content}\n"
+    if not reply_text:
+        reply_text = f"カット{quering_cut}履歴はありません"
     await message.channel.send(reply_text)
 
 
@@ -591,19 +609,23 @@ async def ask(ctx):
         asking_person = str(message.author.display_name)
     await message.reply("検索中...\n10秒ほどお待ちいただく場合があります")
     shellarc_query = ShellArc_Query()
-    query_result = shellarc_query.efficient_get_spreadsheet_info(
+    query_result = await shellarc_query.efficient_get_spreadsheet_info(
         target_index_value=asking_person,
         index_info_types=[f"{c}_PIC" for c in component_name_e2j],
         target_info_types=["cut_num", "cut_num", "cut_num", "cut_num", "cut_num"],
         search_range=[1, TOTAL_CUT_COUNT]
     )
-    output_msg = asking_person
+    output_msg = asking_person + ":"
+    if not query_result:
+        await message.reply(output_msg + "\n担当作業がありません")
+        return
     for k, v in query_result.items():
-        output_msg += f"\nカット{v} {k.split('_')[0]}"
+        output_msg += f"\nカット{v} {component_name_e2j[k.split('_')[0]]}"
     await message.reply(output_msg)
 
 @shell_arc_bot.command()
 async def sync(ctx):
+    return
     message = ctx.message
     if message.author.bot:
         return

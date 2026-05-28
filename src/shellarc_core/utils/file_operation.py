@@ -1,6 +1,7 @@
 import tempfile
 import zipfile
 import os
+import traceback
 from pathlib import Path
 
 from shellarc_core.cfg.cfg_io import Cfg_IO, Cfg_item
@@ -32,24 +33,25 @@ class FileOperation:
                        required_format: str
                        ) -> str:
         tempzip_path = tempfile.NamedTemporaryFile(suffix=".zip", delete=False)
+        tempzip_path_name = tempzip_path.name
         try:
             with zipfile.ZipFile(tempzip_path.name, "w", compression=zipfile.ZIP_DEFLATED) as zf:
                 for name, byte_data in files.items():
-                    if Path(name).suffix.lstrip(".") != required_format:
+                    if Path(name).suffix.lstrip(".").lower() != "png":
+                        print(Path(name).suffix.lstrip(".").lower())
                         raise SA_InvalidUserQuery(
                             error_log=f"file with invalid extension format uploaded detected during auto zipping",
                             frontend_msg=f"{required_format}形式でご提出ください"
                         )
                     zf.writestr(name, byte_data)
-            return tempzip_path.name
         except Exception as e:
+            if Path(tempzip_path_name).exists():
+                os.unlink(tempzip_path_name)
             raise SA_LocalIOError(
                 error_log="Make zip file failed",
                 error_code=SA_ErrorCode.SA_8000
             )
-        finally:
-            if Path(tempzip_path).exists():
-                os.unlink(tempzip_path)
+        return tempzip_path_name
 
                 
 

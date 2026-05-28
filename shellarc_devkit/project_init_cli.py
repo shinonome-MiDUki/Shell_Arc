@@ -15,8 +15,7 @@ def make_spreadsheet(cut_num: int,
     try:
         vert_offset = spreadsheet_map["vert_offset"]
         header_row_idx = spreadsheet_map["header"]
-        spreadsheet_items = spreadsheet_map["items"]
-        for key, col_idx in spreadsheet_map["items"]:
+        for key, col_idx in spreadsheet_map["items"].items():
             spreadsheet.update_cell(
                 row=header_row_idx,
                 col=col_idx,
@@ -27,7 +26,7 @@ def make_spreadsheet(cut_num: int,
                 spreadsheet.update_cell(
                     row=vert_offset + cut_idx,
                     col=spreadsheet_map["items"]["cut_num"],
-                    cut_idx=cut_idx
+                    value=cut_idx
                 )
         return ""
     except Exception as e:
@@ -58,8 +57,6 @@ async def inilialize_project():
         print("Input a valid spreadsheet key")
         print("Process abolished")
         return
-    with open(spreadsheet_map_path, "r", encoding="utf-8") as f:
-        spreadsheet_map = json.load(f)
     
     auto_make_spreadsheet = str(input("Auto-make spreadsheet ? (y/N)")).strip()
     is_auto_make_spreadsheet = auto_make_spreadsheet in ["y", "Y"]
@@ -69,6 +66,8 @@ async def inilialize_project():
             print("An existing spreadsheet map json file is needed")
             print("Process abolished")
             return
+        with open(spreadsheet_map_path, "r", encoding="utf-8") as f:
+            spreadsheet_map = json.load(f)
         
     if not proj_setting_path or not proj_collection or not spreadsheet_key:
         print("Invalid inputs detected")

@@ -28,7 +28,7 @@ class R2_IO:
             Bucket=self.bucket_name,
             Key=target_s3_file,
         )
-        size_bytes = float(s3_obj.get('Size'))
+        size_bytes = float(s3_obj.get('ContentLength'))
         size_mb = size_bytes / 1024 / 1024
         return int(size_mb)
 
@@ -81,7 +81,8 @@ class R2_IO:
                 error_code=SA_ErrorCode.SA_8001
             )
         finally:
-            os.unlink(tmp_file_path)
+            if isinstance(uploading_file, bytes) and Path(tmp_file_path).exists():
+                os.unlink(tmp_file_path)
 
     def download_file(self,
                       to_download_file: str,

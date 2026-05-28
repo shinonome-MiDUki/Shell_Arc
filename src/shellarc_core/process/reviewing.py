@@ -34,10 +34,11 @@ class ShellArc_Review:
                        is_approve: bool,
                        message: str=""
                        ) -> None:
-        self._existence_check(reviewer_name=reviewer_name)
+        await self._existence_check(reviewer_name=reviewer_name)
         await self.git_io.pend_data(
             cut_num=self.cut_num,
             component=self.reviewing_component,
+            processing_person=reviewer_name,
             is_approve=is_approve,
             message=message
         )

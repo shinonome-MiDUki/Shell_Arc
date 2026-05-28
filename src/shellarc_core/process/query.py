@@ -20,17 +20,12 @@ class ShellArc_Query:
                 error_log="a range is needed for efficient_get_spreadsheet",
                 error_code=SA_ErrorCode.SA_7000
             )
-        elif len(current_spreadsheet_cache) < search_range[1] + vert_offset - 1:
-            raise SA_InternalSyntaxError(
-                error_log="requesting range for efficient_get_spreadsheet overflowing",
-                error_code=SA_ErrorCode.SA_7000
-            )
         elif search_range[0] > search_range[1]:
             raise SA_InternalSyntaxError(
                 error_log="starting cut cannot be greater than ending cut",
                 error_code=SA_ErrorCode.SA_7000
             )
-        elif len(index_info_type) != len(target_info_types):
+        elif len(index_info_types) != len(target_info_types):
             raise SA_InternalSyntaxError(
                 error_log="index_info_types must be of same length of target_info_types",
                 error_code=SA_ErrorCode.SA_7000
@@ -52,8 +47,8 @@ class ShellArc_Query:
             )[1]
             for row_num in range(search_range[0] + vert_offset - 1, search_range[1] + vert_offset):
                 searching_row = current_spreadsheet_cache[row_num]
-                target_value = searching_row[target_col]
-                index_value = searching_row[index_col]
+                target_value = searching_row[target_col-1]
+                index_value = searching_row[index_col-1]
                 if index_value == target_index_value:
                     if output_key == "index_info_type":
                         rtn[index_info_type] = str(target_value)
@@ -68,17 +63,18 @@ class ShellArc_Query:
         return git_io.get_components(cut_num=cut_num)
     
     @staticmethod
-    def get_history(cut_num: int,
+    async def get_history(cut_num: int,
                     component: str,
                     max_length: int | None=None
                     ) -> dict[str, str]:
         git_io = Git_IO()
         json_file_path = f"stage/cut{cut_num}/{component}.json"
+        print("CALL72")
         log_filter = SA_GitLogFilter(
             commit_type=SA_CommitType.SUBMIT,
             log_length=max_length
         )
-        hist_dict = git_io.get_log(
+        hist_dict = await git_io.get_log(
             output_format=[5, 3, 4],
             log_filter=log_filter,
             limit_scope=json_file_path
@@ -86,7 +82,7 @@ class ShellArc_Query:
         return hist_dict
     
     @staticmethod
-    def get_approve_history(cut_num: int,
+    async def get_approve_history(cut_num: int,
                             component: str,
                             max_length: int | None=None
                             ) -> dict[str, str]:
@@ -96,7 +92,7 @@ class ShellArc_Query:
             commit_type=SA_CommitType.APPROVE,
             log_length=max_length
         )
-        hist_dict = git_io.get_log(
+        hist_dict = await git_io.get_log(
             output_format=[5, 3, 4],
             log_filter=log_filter,
             limit_scope=json_file_path,

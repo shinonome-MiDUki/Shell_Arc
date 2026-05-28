@@ -45,11 +45,13 @@ class SA_GitLogFilter:
 
 
 class Git_IO:
+    _git_lock = asyncio.Lock()
+
     def __init__(self,
                  git_repo_local_dir: str | None=None):
         cfg_io = Cfg_IO()
         self.git_repo_local_dir = Path(cfg_io.get_cfg_setting(Cfg_item.GIT_LREPO)) \
-            if git_repo_local_dir is None else git_repo_local_dir
+            if git_repo_local_dir is None else Path(git_repo_local_dir)
 
 
     def get_components(self,
@@ -103,6 +105,7 @@ class Git_IO:
                                       git_commands: list
                                       ) -> None:
         for git_command in git_commands:
+            print(git_command)
             git_proc = await self._git_command(*git_command)
             stdout, stderr = await git_proc.communicate()
             if git_proc.returncode != 0:
@@ -187,7 +190,7 @@ class Git_IO:
                 continue
             breakdown_log = log_piece.split("=&=")
             breakdown_commit_record_ls = breakdown_log[1].split("*")
-            if max(output_format) >= len(breakdown_commit_record_ls):
+            if output_format and max(output_format) >= len(breakdown_commit_record_ls):
                 raise SA_InternalSyntaxError(
                     error_log="Git log filter index overflow",
                     error_code=SA_ErrorCode.SA_7000
@@ -221,37 +224,48 @@ class Git_IO:
                         is_approve: bool,
                         message: str=""
                         ) -> None:
-        message = message.replace("*", "+")
-        git_statuscheck_proc = await self._git_command(GitCommands.STATUS, "--porcelain", f"stage/cut{cut_num}")
-        stdout, stderr = await git_statuscheck_proc.communicate()
-        if git_statuscheck_proc.returncode != 0:
-            raise SA_LocalIOError(
-                error_log=f"A git command error : {stderr.decode('utf-8')}",
-                error_code=SA_ErrorCode.SA_8002
-            )
-        status_str = stdout.decode("utf-8").strip()
-        if ".sa_pending" not in status_str:
-            raise SA_InvalidRequestObj(
-                error_log=f"c{cut_num} {component} pending attempted by {processing_person} but not exist",
-                frontend_msg="承認待ちの提出はありません"
-            )
-        os.unlink(f"stage/cut{cut_num}/.sa_pending")
-        git_commands_approve = [
-            [GitCommands.CHECKOUT, ShellArcGitBranch.PENDING],
-            [GitCommands.ADD, f"stage/cut{cut_num}"],
-            [GitCommands.COMMIT, "-m", f"{SA_CommitType.APPROVE} * {cut_num} * {component} * {processing_person} * {message} * {self._get_timemark} * ''"]
-            [GitCommands.CHECKOUT, ShellArcGitBranch.MAIN],
-            [GitCommands.CHECKOUT, ShellArcGitBranch.PENDING, "--", f"stage/cut{cut_num}/{component}.json"],
-            [GitCommands.ADD, f"stage/cut{cut_num}/{component}.json"],
-            [GitCommands.COMMIT, "--allow-empty", "-m", f"{SA_CommitType.APPROVE} * {cut_num} * {component} * {processing_person} * {message} * {self._get_timemark} * ''"]
-        ]
-        git_commands_decline = [
-            [GitCommands.CHECKOUT, ShellArcGitBranch.PENDING],
-            [GitCommands.ADD, f"stage/cut{cut_num}"],
-            [GitCommands.COMMIT, "--allow-empty", "-m", f"{SA_CommitType.DECLINE} * {cut_num} * {component} * {processing_person} * {message} * {self._get_timemark} * ''"]
-        ]
-        git_commands = git_commands_approve if is_approve else git_commands_decline
-        await self._continuous_git_command(git_commands=git_commands)
+        async with self.__class__._git_lock:
+            message = message.replace("*", "+")
+            git_statuscheck_proc = await self._git_command(GitCommands.STATUS, "--porcelain", f"stage/cut{cut_num}")
+            stdout, stderr = await git_statuscheck_proc.communicate()
+            if git_statuscheck_proc.returncode != 0:
+                print(stderr.decode('utf-8'))
+                raise SA_LocalIOError(
+                    error_log=f"A git command error : {stderr.decode('utf-8')}",
+                    error_code=SA_ErrorCode.SA_8002
+                )
+            status_str = stdout.decode("utf-8").strip()
+            if f".sa_pending_{component}" not in status_str:
+                raise SA_InvalidRequestObj(
+                    error_log=f"c{cut_num} {component} pending attempted by {processing_person} but not exist",
+                    frontend_msg="承認待ちの提出はありません"
+                )
+            os.unlink(self.git_repo_local_dir / f"stage/cut{cut_num}/.sa_pending_{component}")
+            print("osunlink")
+            git_commands_approve = [
+                [GitCommands.CHECKOUT, ShellArcGitBranch.PENDING],
+                [GitCommands.ADD, f"stage/cut{cut_num}"],
+                [GitCommands.COMMIT, "--allow-empty", "-m", f"{SA_CommitType.APPROVE} * {cut_num} * {component} * {processing_person} * {message} * {self._get_timemark} * 'na'"],
+                [GitCommands.CHECKOUT, ShellArcGitBranch.MAIN],
+                [GitCommands.CHECKOUT, ShellArcGitBranch.PENDING, "--", f"stage/cut{cut_num}/{component}.json"],
+                [GitCommands.ADD, f"stage/cut{cut_num}/{component}.json"],
+                [GitCommands.COMMIT, "--allow-empty", "-m", f"{SA_CommitType.APPROVE} * {cut_num} * {component} * {processing_person} * {message} * {self._get_timemark} * 'na'"]
+            ]
+            git_commands_decline = [
+                [GitCommands.CHECKOUT, ShellArcGitBranch.PENDING],
+                [GitCommands.ADD, f"stage/cut{cut_num}"],
+                [GitCommands.COMMIT, "--allow-empty", "-m", f"{SA_CommitType.DECLINE} * {cut_num} * {component} * {processing_person} * {message} * {self._get_timemark} * 'na'"]
+            ]
+            git_commands = git_commands_approve if is_approve else git_commands_decline
+            try:
+                await self._continuous_git_command(git_commands=git_commands)
+            except Exception as e:
+                with open(self.git_repo_local_dir / f"stage/cut{cut_num}/.sa_pending_{component}", "w") as f:
+                    f.write("")
+                raise SA_LocalIOError(
+                    error_log="Git error while approving",
+                    error_code=SA_ErrorCode.SA_8002
+                )
             
             
     async def update_data(self,
@@ -260,27 +274,28 @@ class Git_IO:
                           creator_name: str,
                           message: str=""
                           ) -> str:
-        message = message.replace("*", "+")
-        file_index_name = self._make_index_name(
-            cut_num=cut_num,
-            component=component,
-            creator_name=creator_name
-        )
-        await self._continuous_git_command([[GitCommands.CHECKOUT, ShellArcGitBranch.PENDING]])
-        current_component_info = {
-            "creator" : creator_name,
-            "fileindex" : file_index_name
-        }
-        with open(self.git_repo_local_dir / f"stage/cut{cut_num}/{component}.json", "w", encoding="utf-8") as f:
-            json.dump(current_component_info, f, ensure_ascii=False, indent=3)
-        git_commands = [
-            [GitCommands.ADD, f"stage/cut{cut_num}/{component}.json"],
-            [GitCommands.COMMIT, "-m", f"{SA_CommitType.SUBMIT} * {cut_num} * {component} * {creator_name} * {message} * {self._get_timemark} * {file_index_name}"]
-        ]
-        await self._continuous_git_command(git_commands=git_commands)
-        with open(self.git_repo_local_dir / f"stage/cut{cut_num}/.sa_pending", "w") as f:
-            f.write("")
-        return file_index_name
+        async with self.__class__._git_lock:
+            message = message.replace("*", "+")
+            file_index_name = self._make_index_name(
+                cut_num=cut_num,
+                component=component,
+                creator_name=creator_name
+            )
+            await self._continuous_git_command([[GitCommands.CHECKOUT, ShellArcGitBranch.PENDING]])
+            current_component_info = {
+                "creator" : creator_name,
+                "fileindex" : file_index_name
+            }
+            with open(self.git_repo_local_dir / f"stage/cut{cut_num}/{component}.json", "w", encoding="utf-8") as f:
+                json.dump(current_component_info, f, ensure_ascii=False, indent=3)
+            git_commands = [
+                [GitCommands.ADD, f"stage/cut{cut_num}/{component}.json"],
+                [GitCommands.COMMIT, "-m", f"{SA_CommitType.SUBMIT} * {cut_num} * {component} * {creator_name} * {message} * {self._get_timemark} * {file_index_name}"]
+            ]
+            await self._continuous_git_command(git_commands=git_commands)
+            with open(self.git_repo_local_dir / f"stage/cut{cut_num}/.sa_pending_{component}", "w") as f:
+                f.write("")
+            return file_index_name
     
 
     async def sync_remote(self) -> None:

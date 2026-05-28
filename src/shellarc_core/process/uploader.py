@@ -1,3 +1,5 @@
+import os
+
 from pathlib import Path
 
 from shellarc_core.cloudio.io_r2 import R2_IO
@@ -26,36 +28,48 @@ class ShellArc_Upload:
                     message: str=""
                     ) -> None:
         required_format = self.cfg_io.get_cfg_setting(Cfg_item.COMPONENT, self.working_component, "format")
-        if len(file) > 1:
+        filename = ""
+        if len(file) > 1 and required_format == "zip":
             fileobj = await FileOperation.make_zip(
                 files=file,
                 required_format=required_format
                 )
             filename = Path(fileobj).name
+        elif len(file) > 1 and required_format != "zip":
+            raise SA_InvalidUserQuery(
+                error_log=f"file with invalid extension format uploaded by {submitter_name}",
+                frontend_msg=f"{required_format}形式でご提出ください"
+            )
         elif len(file) == 1:
             filename, fileobj= file.popitem()
         else:
             raise Exception
         submission_format = Path(filename).suffix.lstrip(".")
 
-        if submission_format != required_format:
-            raise SA_InvalidUserQuery(
-                error_log=f"file with invalid extension format uploaded by {submitter_name}",
-                frontend_msg=f"{required_format}形式でご提出ください"
+        try:
+            if submission_format != required_format:
+                raise SA_InvalidUserQuery(
+                    error_log=f"file with invalid extension format uploaded by {submitter_name}",
+                    frontend_msg=f"{required_format}形式でご提出ください"
+                )
+            collection_name = self.cfg_io.get_cfg_setting(Cfg_item.COLL_NAME)
+
+            file_index_name = await self.git_io.update_data(
+                cut_num=self.cut_num,
+                component=self.working_component,
+                creator_name=submitter_name,
+                message=message
             )
-        collection_name = self.cfg_io.get_cfg_setting(Cfg_item.COLL_NAME)
 
-        file_index_name = await self.git_io.update_data(
-            cut_num=self.cut_num,
-            component=self.working_component,
-            creator_name=submitter_name,
-            message=message
-        )
-
-        self.r2_io.upload_file(
-            uploading_file=fileobj,
-            file=f"{collection_name}/stage/{file_index_name}.{required_format}"
-        )
+            self.r2_io.upload_file(
+                uploading_file=fileobj,
+                file_path=f"{collection_name}/stage/{file_index_name}.{required_format}"
+            )
+        except Exception as e:
+            raise
+        finally:
+            if Path(filename).exists():
+                os.unlink(filename)
 
         self.gcp_io.update_info(
             info_type=f"{self.working_component}_PIC",

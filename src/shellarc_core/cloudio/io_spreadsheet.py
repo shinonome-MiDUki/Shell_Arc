@@ -15,7 +15,7 @@ class GCP_IO:
     def get_info(self,
                  info_type: str,
                  cut_num: int
-                 ) -> str:
+                 ) -> str | None:
         cell_coord = self.smap_io.get_cell_coord(
             cut_num=cut_num,
             item=info_type
@@ -23,8 +23,8 @@ class GCP_IO:
         rtn = self.spreadsheet.cell(
             row=cell_coord[0], 
             col=cell_coord[1]
-            )
-        return str(rtn)
+            ).value
+        return str(rtn) if rtn is not None else None
     
     def update_info(self,
                     info_type: str,
@@ -43,7 +43,8 @@ class GCP_IO:
 
     @property
     def spreadsheet_cache(self):
-        _spreadsheet_cache = self.spreadsheet.get_all_values()
-        return _spreadsheet_cache
+        if not hasattr(self, "_spreadsheet_cache"):
+            self._spreadsheet_cache = self.spreadsheet.get_all_values()
+        return self._spreadsheet_cache
 
 
