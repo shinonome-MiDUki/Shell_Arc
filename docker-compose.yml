@@ -10,6 +10,9 @@ services:
     env_file: project_ctx/.env
     environment:
       - SHELLARC_PROJECT_CTX
+    volumes:
+      - ${SHELLARC_PROJECT_CTX}:${SHELLARC_PROJECT_CTX}
+      - /home/miduki/null_project_2026/version_management:/home/miduki/null_project_2026/version_management
 
   itemi_action:
     build:
@@ -21,6 +24,10 @@ services:
     env_file: project_ctx/.env
     environment:
       - SHELLARC_PROJECT_CTX
+    volumes:
+      - ${SHELLARC_PROJECT_CTX}:${SHELLARC_PROJECT_CTX}
+      - /home/miduki/null_project_2026/version_management:/home/miduki/null_project_2026/version_management
+      - /home/.config:/home/.config
 
   ai_chat:
     build:
@@ -32,3 +39,6 @@ services:
     env_file: project_ctx/.env
     environment:
       - SHELLARC_PROJECT_CTX
+    volumes:
+      - ${SHELLARC_PROJECT_CTX}:${SHELLARC_PROJECT_CTX}
+      - /home/miduki/null_project_2026/version_management:/home/miduki/null_project_2026/version_management
