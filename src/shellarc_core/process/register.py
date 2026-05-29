@@ -26,3 +26,8 @@ class ShellArc_Register:
             cut_num=registering_cut,
             new_value=registering_person
         )
+        self.gcp_io.color_cell(
+            info_type=f"{registering_component}_PIC",
+            cut_num=registering_cut,
+            target_color=(0.7, 0.85, 0.85)
+        )

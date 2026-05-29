@@ -7,22 +7,28 @@ from dotenv import load_dotenv
 import discord
 from discord.ext import commands
 
+proj_ctx_dir = Path(os.environ.get("SHELLARC_PROJECT_CTX", None))
 load_dotenv(verbose=True)
-dotenv_path = Path(__file__).resolve().parents[1] / 'project_ctx/.env'
+dotenv_path = proj_ctx_dir / ".env"
+if not dotenv_path.exists():
+    print(".env file not exist")
+    exit()
 load_dotenv(dotenv_path)
 DIFY_KEY = os.environ.get("Dify_token")
 DIFY_BASE_URL = os.environ.get("Dify_baseurl") 
 DC_CHATBOT_TOKEN = os.environ.get("Discord_charbot_token")
-dc_client = discord.Client(intents=discord.Intents.all())
 
-discord_config_file_path = Path(__file__).resolve().parents[1] / 'project_ctx/discord_config.json'
+discord_config_file_path = proj_ctx_dir / "discord_config.json"
+if not discord_config_file_path.exists():
+    print("discord_config file not exist")
+    exit()
 with open(discord_config_file_path, mode="r", encoding="utf-8") as config_file:
     discord_config_dict = json.load(config_file)
     config = discord_config_dict
 bot_command = config["bot_command"]
 shell_arc_chatbot = commands.Bot(command_prefix=bot_command, intents=discord.Intents.all())
 
-def response_user(q: str,
+async def response_user(q: str,
                   asking_person: str,
                   chat_mode: str
                   ) -> str:
@@ -62,7 +68,7 @@ async def nuru(ctx):
     casual_server = config.get("casual_server", [])
     chat_mode = "casual" if server_id in casual_server else "technical"
     try:
-        resp = response_user(
+        resp = await response_user(
             q = message_str,
             asking_person=sender_name,
             chat_mode=chat_mode

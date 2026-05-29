@@ -42,8 +42,14 @@ class ShellArc_Review:
             is_approve=is_approve,
             message=message
         )
-        self.gcp_io.update_info(
-            info_type=f"{self.reviewing_component}_progress",
-            cut_num=self.cut_num,
-            new_value="完了"
-        )
+        if is_approve:
+            self.gcp_io.update_info(
+                info_type=f"{self.reviewing_component}_progress",
+                cut_num=self.cut_num,
+                new_value="完了"
+            )
+            self.gcp_io.color_cell(
+                info_type=f"{self.reviewing_component}_PIC",
+                cut_num=self.cut_num,
+                target_color=(0, 1, 0)
+            )

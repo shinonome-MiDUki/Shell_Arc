@@ -1,7 +1,9 @@
 import asyncio
 import os
 import json
+import hashlib
 import datetime
+
 from enum import StrEnum
 from dataclasses import dataclass
 from pathlib import Path
@@ -12,7 +14,6 @@ from shellarc_core.exception.structure_error import (
     SA_InternalSyntaxError
 )
 from shellarc_core.exception.user_exception import SA_InvalidRequestObj
-
 
 
 class GitCommands(StrEnum):
@@ -83,8 +84,8 @@ class Git_IO:
                         creator_name: str
                         ) -> str:
         component = component.replace("_", "-")
-        creator_name = creator_name.replace("_", "-")
-        index_name = f"cut{cut_num}_{component}_{creator_name}_{self._get_timemark}"
+        creator_id = hashlib.shake_128(creator_name.encode('utf-8')).hexdigest(3)
+        index_name = f"cut{cut_num}_{component}_{creator_id}_{self._get_timemark}"
         return index_name
 
 
@@ -191,10 +192,7 @@ class Git_IO:
             breakdown_log = log_piece.split("=&=")
             breakdown_commit_record_ls = breakdown_log[1].split("*")
             if output_format and max(output_format) >= len(breakdown_commit_record_ls):
-                raise SA_InternalSyntaxError(
-                    error_log="Git log filter index overflow",
-                    error_code=SA_ErrorCode.SA_7000
-                )
+                continue
             breakdown_commit_record_ls = [x.strip() for x in breakdown_commit_record_ls]
             # "commit_type" : breakdown_commit_record_ls[0],
             # "cut_num" : breakdown_commit_record_ls[1],

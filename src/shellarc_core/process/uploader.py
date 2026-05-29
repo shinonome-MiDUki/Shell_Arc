@@ -81,6 +81,11 @@ class ShellArc_Upload:
             cut_num=self.cut_num,
             new_value="作業中"
         )
+        self.gcp_io.color_cell(
+            info_type=f"{self.working_component}_PIC",
+            cut_num=self.cut_num,
+            target_color=(1, 1, 0)
+        )
 
 
     async def get_upload_url(self,

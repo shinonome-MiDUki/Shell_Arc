@@ -2,6 +2,8 @@ from shellarc_core.auth.access_spread_sheet import AccessSpreadSheet as A_GCP
 from shellarc_core.cfg.cfg_io import Cfg_IO as Cfg_IO
 from shellarc_core.cfg.cfg_io import Cfg_item
 from shellarc_core.cfg.spreadsheet_map_io import SpreadsheetMap_IO as SMap_IO
+import gspread_formatting as g_fmt
+from gspread.utils import rowcol_to_a1
 
 
 class GCP_IO:
@@ -39,6 +41,28 @@ class GCP_IO:
             row=cell_coord[0],
             col=cell_coord[1],
             value=new_value
+        )
+
+    def color_cell(self,
+                   info_type: str,
+                   cut_num: int,
+                   target_color: tuple[float]
+                   ) -> None:
+        cell_coord = self.smap_io.get_cell_coord(
+            cut_num=cut_num,
+            item=info_type
+        )
+        cell_address = rowcol_to_a1(
+            row=cell_coord[0],
+            col=cell_coord[1]
+        )
+        fmt =g_fmt.CellFormat(
+            backgroundColor=g_fmt.Color(target_color[0], target_color[1], target_color[2])
+            )
+        g_fmt.format_cell_range(
+            self.spreadsheet,
+            cell_address,
+            fmt
         )
 
     @property

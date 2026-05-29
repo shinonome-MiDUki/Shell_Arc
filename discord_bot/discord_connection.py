@@ -44,7 +44,6 @@ load_dotenv(dotenv_path)
 TOKEN = os.environ.get("Discord_token")
 SERVER_ID = os.environ.get("Discord_server_id")
 print(SERVER_ID)
-dc_client = discord.Client(intents=discord.Intents.all())
 
 #load config
 discord_config_file_path = project_ctx_dir / "discord_config.json"
@@ -223,6 +222,7 @@ class ShellArcDropdown(discord.ui.Select):
                 shell_arc_bot.dispatch(
                     ShellArcEvents.REG_Event.value,
                     interaction,
+                    self.message,
                     processing_cut,
                     processing_component,
                     processing_person,
@@ -421,6 +421,7 @@ async def on_download_action(interaction: discord.Interaction,
     
 @shell_arc_bot.event
 async def on_register_action(interaction: discord.Interaction,
+                             message: discord.Message,
                              registering_cut,
                              registering_component,
                              registering_person,
@@ -456,6 +457,7 @@ async def on_register_action(interaction: discord.Interaction,
     new_channel_name = channel_name_divider.join(current_channel_name)
     await interaction.channel.edit(name=new_channel_name)
     await interaction.edit_original_response(content=f"{registering_person}をカット{registering_cut} {registering_component}に登録しました", view=None)
+    #await interaction.channel.send(f"..remind {deadline} あしたカット{registering_cut}の締切だよ {message.author.id}")
     
 
 
