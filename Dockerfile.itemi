@@ -9,7 +9,7 @@ RUN mkdir -p src/shellarc_core && \
 RUN pip install --no-cache-dir .
 
 COPY . .
-CMD ["python3", "null_pm_manager/pm_manager.py"]
+CMD ["python3", "null_itemi_action/itemi_action.py"]
 
 
 
