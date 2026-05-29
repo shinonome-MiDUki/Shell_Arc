@@ -8,6 +8,8 @@ services:
     tty: true
     stdin_open: true
     env_file: project_ctx/.env
+    environment:
+      - SHELLARC_PROJECT_CTX
 
   itemi_action:
     build:
@@ -17,6 +19,8 @@ services:
     tty: true
     stdin_open: true
     env_file: project_ctx/.env
+    environment:
+      - SHELLARC_PROJECT_CTX
 
   ai_chat:
     build:
@@ -26,3 +30,5 @@ services:
     tty: true
     stdin_open: true
     env_file: project_ctx/.env
+    environment:
+      - SHELLARC_PROJECT_CTX
