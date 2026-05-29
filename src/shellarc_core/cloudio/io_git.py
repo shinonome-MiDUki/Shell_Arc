@@ -109,11 +109,10 @@ class Git_IO:
             git_proc = await self._git_command(*git_command)
             stdout, stderr = await git_proc.communicate()
             if git_proc.returncode != 0:
-                raise
-                # raise SA_LocalIOError(
-                #     error_log=f"A git command error : {stderr.decode('utf-8')}",
-                #     error_code=SA_ErrorCode.SA_8002
-                # )
+                raise SA_LocalIOError(
+                    error_log=f"A git command error : {stderr.decode('utf-8')}",
+                    error_code=SA_ErrorCode.SA_8002
+                )
 
 
     async def make_proj_repo(self,
