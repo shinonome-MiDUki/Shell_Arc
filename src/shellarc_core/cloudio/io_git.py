@@ -106,7 +106,6 @@ class Git_IO:
                                       git_commands: list
                                       ) -> None:
         for git_command in git_commands:
-            print(git_command)
             git_proc = await self._git_command(*git_command)
             stdout, stderr = await git_proc.communicate()
             if git_proc.returncode != 0:

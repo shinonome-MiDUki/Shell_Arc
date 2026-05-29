@@ -42,7 +42,7 @@ async def make_proj_repo(git_repo_local_dir: str,
 async def inilialize_project():
     proj_setting_path = str(input("Input path to project setting json file : ")).strip()
     if not proj_setting_path or not Path(proj_setting_path).exists():
-        print("An existing project setting yaml file is needed")
+        print("An existing project setting json file is needed")
         print("Process abolished")
         return
     
