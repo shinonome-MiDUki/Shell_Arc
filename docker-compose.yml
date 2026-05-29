@@ -13,6 +13,9 @@ services:
     volumes:
       - ${SHELLARC_PROJECT_CTX}:${SHELLARC_PROJECT_CTX}
       - /home/miduki/null_project_2026/version_management:/home/miduki/null_project_2026/version_management
+    volumes:
+      - ${SHELLARC_PROJECT_CTX}:${SHELLARC_PROJECT_CTX}
+      - /home/miduki/null_project_2026/version_management:/home/miduki/null_project_2026/version_management
 
   itemi_action:
     build:
@@ -24,6 +27,10 @@ services:
     env_file: project_ctx/.env
     environment:
       - SHELLARC_PROJECT_CTX
+    volumes:
+      - ${SHELLARC_PROJECT_CTX}:${SHELLARC_PROJECT_CTX}
+      - /home/miduki/null_project_2026/version_management:/home/miduki/null_project_2026/version_management
+      - /home/.config:/home/.config
     volumes:
       - ${SHELLARC_PROJECT_CTX}:${SHELLARC_PROJECT_CTX}
       - /home/miduki/null_project_2026/version_management:/home/miduki/null_project_2026/version_management
