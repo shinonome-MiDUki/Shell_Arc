@@ -1,9 +1,7 @@
 from notion_client import Client
 from pathlib import Path
 
-# Notion APIキーとデータベースIDを設定
-notion_api_key = "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"
-database_id = "36dd8177ad6f80b1b109d42432a37289"
+
 
 notion = Client(auth=notion_api_key)
 

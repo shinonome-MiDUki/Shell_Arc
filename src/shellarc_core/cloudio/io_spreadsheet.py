@@ -65,6 +65,9 @@ class GCP_IO:
             fmt
         )
 
+    # def make_csv(self,)
+        
+
     @property
     def spreadsheet_cache(self):
         if not hasattr(self, "_spreadsheet_cache"):
