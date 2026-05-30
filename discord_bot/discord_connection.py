@@ -288,6 +288,8 @@ async def on_push_action(interaction: discord.Interaction,
                          ):
     submitting_component_en = component_name_j2e.get(submitting_component, submitting_component)
     git_message = message.content.split(" ")[1] if len(message.content.split(" ")) > 1 else ""
+    upload_page_path = ""
+    temp_dir = ""
     try:
         shellarc_upload = ShellArc_Upload(
             cut_num=int(submitting_cut),
@@ -304,11 +306,14 @@ async def on_push_action(interaction: discord.Interaction,
                 message=git_message
             )
         else:
-            presigned_url = await shellarc_upload.get_upload_url(
+            upload_page_path, temp_dir = await shellarc_upload.get_upload_page(
                 submitter_name=submitting_person,
-                message=git_message,
+                message=git_message
             )
-            await interaction.channel.send(f"180秒以内、このからファイルをアップロードしてください : {presigned_url}")
+            await interaction.channel.send(
+                f"180秒以内、このからファイルをアップロードしてください",
+                file=discord.File(upload_page_path)
+                )
     except ShellArcException as e:
         await interaction.edit_original_response(content=e.frontend_msg, view=None)
         return
@@ -321,6 +326,14 @@ async def on_push_action(interaction: discord.Interaction,
         error_moment = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9), 'JST'))
         print(f"!!UNEXPECTED : {error_moment.strftime('%Y%m%d%H%M%S')} -- {tb}")
         return
+    finally:
+        if upload_page_path and Path(upload_page_path).exists():
+            os.unlink(upload_page_path)
+        try:
+            if temp_dir and Path(temp_dir).exists():
+                os.rmdir(temp_dir)
+        except:
+            print("Unable to delete tempdir")
     
     confirm_msg = f"カット{submitting_cut} {submitting_component} が提出されました"
     for keyframe_qc in admin_roles.get("keyframe_qc", []):

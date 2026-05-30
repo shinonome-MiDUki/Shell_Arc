@@ -222,6 +222,8 @@ class Git_IO:
                         is_approve: bool,
                         message: str=""
                         ) -> None:
+        if not message:
+            message = "No message"
         async with self.__class__._git_lock:
             message = message.replace("*", "+")
             git_statuscheck_proc = await self._git_command(GitCommands.STATUS, "--porcelain", f"stage/cut{cut_num}")
@@ -272,6 +274,8 @@ class Git_IO:
                           creator_name: str,
                           message: str=""
                           ) -> str:
+        if not message:
+            message = "No message"
         async with self.__class__._git_lock:
             message = message.replace("*", "+")
             file_index_name = self._make_index_name(

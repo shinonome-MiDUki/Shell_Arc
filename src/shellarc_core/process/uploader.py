@@ -1,5 +1,5 @@
 import os
-
+import tempfile
 from pathlib import Path
 
 from shellarc_core.cloudio.io_r2 import R2_IO
@@ -88,7 +88,7 @@ class ShellArc_Upload:
         )
 
 
-    async def get_upload_url(self,
+    async def _get_upload_url(self,
                              submitter_name: str,
                              message: str=""
                              ) -> str:
@@ -106,7 +106,7 @@ class ShellArc_Upload:
             target_s3_file=f"{collection_name}/stage/{file_index_name}.{required_format}",
             url_client_method="put_object",
             http_method="PUT",
-            time_limit=180
+            time_limit=300
         )
 
         self.gcp_io.update_info(
@@ -121,6 +121,23 @@ class ShellArc_Upload:
         )
 
         return presigned_url
+    
+    async def get_upload_page(self,
+                              submitter_name: str,
+                              message: str
+                              ) -> tuple[str]:
+        presigned_url = await self._get_upload_url(
+            submitter_name=submitter_name,
+            message=message
+        )
+        with open("uploader_from_url.html.template", "r", encoding="utf-8") as f:
+            html_template = f.read()
+        html_page_code = html_template.replace("__S3_PRESIGNED_URL_PLACEHOLDER_XYZ__", presigned_url)
+        temp_dir = tempfile.mkdtemp()
+        html_path = Path(temp_dir) / f"cut{self.cut_num}_uploader.html"
+        with open(html_path, 'w', encoding='utf-8') as f:
+            f.write(html_page_code)
+        return (str(html_path), temp_dir)
 
 
     @staticmethod
