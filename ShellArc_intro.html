@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shell Arc 2026 - ドキュメント & 解説ガイド</title>
+    <style>
+        :root {
+            --primary-color: #2e7d32;
+            --primary-light: #e8f5e9;
+            --primary-dark: #1b5e20;
+            --accent-color: #a5d6a7;
+            --bg-color: #f4f7f5;
+            --chat-bg: #ffffff;
+            --text-dark: #2c3e50;
+            --text-light: #ffffff;
+            --text-muted: #7f8c8d;
+            --border-color: #e0e0e0;
+            --code-bg: #f8f9fa;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans JP", sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+
+        header {
+            background-color: var(--primary-dark);
+            color: var(--text-light);
+            padding: 20px 0;
+            text-align: center;
+            border-bottom: 4px solid var(--accent-color);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+        }
+
+        header p {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 30px auto;
+            padding: 0 15px;
+        }
+
+        /* --- チャット風UIセクション --- */
+        .chat-section {
+            background-color: var(--chat-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            padding: 25px;
+            margin-bottom: 40px;
+            border: 1px solid var(--border-color);
+        }
+
+        .chat-title {
+            font-size: 1.2rem;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--primary-light);
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .message {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            max-width: 85%;
+        }
+
+        /* いてみちゃん（左側） */
+        .message.itemi {
+            align-self: flex-start;
+        }
+
+        /* ぬるたろう（右側・返答） */
+        .message.nurutaro {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        .avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--accent-color);
+            background-color: var(--primary-light);
+            flex-shrink: 0;
+        }
+
+        .message-content {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sender-name {
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+        .nurutaro .sender-name {
+            text-align: right;
+        }
+
+        .bubble {
+            padding: 12px 16px;
+            border-radius: 18px;
+            font-size: 0.95rem;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        .itemi .bubble {
+            background-color: #f1f3f5;
+            color: var(--text-dark);
+            border-top-left-radius: 4px;
+        }
+
+        .nurutaro .bubble {
+            background-color: var(--primary-light);
+            color: var(--primary-dark);
+            border-top-right-radius: 4px;
+            border: 1px solid var(--accent-color);
+        }
+
+        /* --- コマンド一覧セクション --- */
+        .docs-section {
+            background-color: #ffffff;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-color);
+        }
+
+        .docs-section h2 {
+            color: var(--primary-dark);
+            font-size: 1.5rem;
+            margin-bottom: 25px;
+            border-left: 5px solid var(--primary-color);
+            padding-left: 12px;
+        }
+
+        .category-title {
+            font-size: 1.2rem;
+            color: var(--primary-color);
+            margin: 25px 0 15px 0;
+            padding-bottom: 5px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .command-card {
+            background-color: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 15px;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .command-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            border-color: var(--accent-color);
+        }
+
+        .command-header {
+            background-color: var(--code-bg);
+            padding: 12px 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .command-name {
+            font-family: "Courier New", Courier, monospace;
+            font-weight: bold;
+            color: var(--primary-dark);
+            font-size: 1.05rem;
+        }
+
+        .command-badge {
+            font-size: 0.75rem;
+            background-color: var(--primary-color);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .command-badge.admin {
+            background-color: #e67e22;
+        }
+
+        .command-body {
+            padding: 15px 20px;
+            font-size: 0.95rem;
+            color: var(--text-dark);
+        }
+
+        footer {
+            text-align: center;
+            padding: 30px 0;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            border-top: 1px solid var(--border-color);
+            margin-top: 5px;
+        }
+
+        @media (max-width: 600px) {
+            .message {
+                max-width: 95%;
+            }
+            .container {
+                margin: 15px auto;
+            }
+            .docs-section {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Shell Arc デジタルコンテンツ制作フレームワーク</h1>
+        <p>未定研 (2026) | Discord ボット・インターフェース解説</p>
+    </header>
+
+    <div class="container">
+
+        <section class="chat-section">
+            <div class="chat-title">
+                <span>💬</span> Shell Arc ってなに？（導入ミニ解説）
+            </div>
+            <div class="chat-container">
+
+                <div class="message itemi">
+                    <img src="itemi.png" alt="いてみ" class="avatar" onerror="this.style.backgroundColor='#a5d6a7'">
+                    <div class="message-content">
+                        <span class="sender-name">いてみちゃん</span>
+                        <div class="bubble">
+                            今年Shell ArcっていうDiscordアプリを導入したらしいけど、Shell Arcは一体なんなの？ファイル管理って、そのまま送り合えばいいんじゃん。
+                        </div>
+                    </div>
+                </div>
+
+                <div class="message nurutaro">
+                    <img src="nurutaro.png" alt="ぬるたろう" class="avatar" onerror="this.style.backgroundColor='#2e7d32'">
+                    <div class="message-content">
+                        <span class="sender-name">ぬるたろう</span>
+                        <div class="bubble">
+                            少人数ならファイルを送りあっても確かに問題ないけど、チームが大きくなると色々と大変なのぬる。「あのカットのリンクはどこにあったかな」とか「昨日の方がやはりいいけどそのファイルが見つからない」とか、みたいなカオスになるかもぬる。
+                        </div>
+                    </div>
+                </div>
+
+                <div class="message itemi">
+                    <img src="itemi.png" alt="いてみ" class="avatar" onerror="this.style.backgroundColor='#a5d6a7'">
+                    <div class="message-content">
+                        <span class="sender-name">いてみちゃん</span>
+                        <div class="bubble">
+                            だからShell Arcを通じて提出するんだね。
+                        </div>
+                    </div>
+                </div>
+
+                <div class="message nurutaro">
+                    <img src="nurutaro.png" alt="ぬるたろう" class="avatar" onerror="this.style.backgroundColor='#2e7d32'">
+                    <div class="message-content">
+                        <span class="sender-name">ぬるたろう</span>
+                        <div class="bubble">
+                            そうなのぬる！Shell Arcを通したら、みんなの作品が同じ場所で管理されて、迷わなくなるのぬる〜。
+                        </div>
+                    </div>
+                </div>
+
+                <div class="message itemi">
+                    <img src="itemi.png" alt="いてみ" class="avatar" onerror="this.style.backgroundColor='#a5d6a7'">
+                    <div class="message-content">
+                        <span class="sender-name">いてみちゃん</span>
+                        <div class="bubble">
+                            でもそれはただのファイル転送アプリじゃないの？
+                        </div>
+                    </div>
+                </div>
+
+                <div class="message nurutaro">
+                    <img src="nurutaro.png" alt="ぬるたろう" class="avatar" onerror="this.style.backgroundColor='#2e7d32'">
+                    <div class="message-content">
+                        <span class="sender-name">ぬるたろう</span>
+                        <div class="bubble">
+                            違うよぬる！Shell Arcは厳密にはただのアプリじゃないの。Shell Arcは未定研で開発された、オープンソースデジタルコンテンツ制作フレームワークだぬる。Shell Arcという安全な枠組みの中で、クリエーターのみんなさんが安心して制作できるためのものだよぬる〜。
+                        </div>
+                    </div>
+                </div>
+
+                <div class="message itemi">
+                    <img src="itemi.png" alt="いてみ" class="avatar" onerror="this.style.backgroundColor='#a5d6a7'">
+                    <div class="message-content">
+                        <span class="sender-name">いてみちゃん</span>
+                        <div class="bubble">
+                            未定研発…とは？
+                        </div>
+                    </div>
+                </div>
+
+                <div class="message nurutaro">
+                    <img src="nurutaro.png" alt="ぬるたろう" class="avatar" onerror="this.style.backgroundColor='#2e7d32'">
+                    <div class="message-content">
+                        <span class="sender-name">ぬるたろう</span>
+                        <div class="bubble">
+                            Shell Arcの中心は、ShellArc のワークフローを支えるライブラリ「ShellArc Core」、独自のバージョン管理コア「Git Subsystem for ShellArc」、制作進行補助とスケジュリングサーバー「Itemi Action」、そしてShellArcのコア機能に直接かつ安全にアクセスできるエクスプレッション「ShellArc Command Set」から構成されているぬる。そしてそれらの機能をクリエーターが簡単に使えるために、さまざまなインターフェースがあるのぬる。Discord ボットは、そのインターフェースの一つだぬる。
+                        </div>
+                    </div>
+                </div>
+
+                <div class="message itemi">
+                    <img src="itemi.png" alt="いてみ" class="avatar" onerror="this.style.backgroundColor='#a5d6a7'">
+                    <div class="message-content">
+                        <span class="sender-name">いてみちゃん</span>
+                        <div class="bubble">
+                            なるほど、つまりアニメじゃなくても使えるの？
+                        </div>
+                    </div>
+                </div>
+
+                <div class="message nurutaro">
+                    <img src="nurutaro.png" alt="ぬるたろう" class="avatar" onerror="this.style.backgroundColor='#2e7d32'">
+                    <div class="message-content">
+                        <span class="sender-name">ぬるたろう</span>
+                        <div class="bubble">
+                            さすがいてみちゃん！そうなのぬる！ShellArc は、アニメだけじゃなく、インディーゲーム制作、実写映画制作、多人数のTRPG創作などにも活用できるぬる！ShellArc Core を自分が使い慣れているシステムに繋げば、誰でもShell Arc を活用できるぬる。
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <section class="docs-section">
+            <h2>未定研 Shell Arc 2026 Discord ボット - コマンド一覧</h2>
+            
+            <div class="category-title">1. Shell Arc 2026 コマンド</div>
+
+            <div class="command-card">
+                <div class="command-header">
+                    <span class="command-name">..up</span>
+                    <span class="command-badge">提出</span>
+                </div>
+                <div class="command-body">
+                    メッセージに提出したいファイルを添付して、送信すると、提出している作業などの確認UIが出てきます。UIに従って選択すると、ファイルが提出されます。
+                </div>
+            </div>
+
+            <div class="command-card">
+                <div class="command-header">
+                    <span class="command-name">..upbig</span>
+                    <span class="command-badge">巨大ファイル</span>
+                </div>
+                <div class="command-body">
+                    Discordで送信できない巨大ファイルを提出したいとき、このコマンドを送信してください。アップロード用のURLが返され、180秒以内にアップロードしてください。
+                </div>
+            </div>
+
+            <div class="command-card">
+                <div class="command-header">
+                    <span class="command-name">..appr</span>
+                    <span class="command-badge admin">作画監督等用</span>
+                </div>
+                <div class="command-body">
+                    [作画監督等用] ..apprと送信すると、そのチャンネルのカットを承認するか否かを選択するUIが出てきます。UIに従って選択すると、チェックができます。
+                </div>
+            </div>
+
+            <div class="command-card">
+                <div class="command-header">
+                    <span class="command-name">..dl (バージョン)</span>
+                    <span class="command-badge">ダウンロード</span>
+                </div>
+                <div class="command-body">
+                    ..dlと送信すると、デフォルトで該当カットの「最新確定カット」が返されます。<br>
+                    引数で <code>-1</code> を指定すると、「最新チェック待ちカット」が返されます。<br>
+                    引数で「バージョンインデックス」を指定すると、指定されたバージョンが返されます。
+                </div>
+            </div>
+
+            <div class="command-card">
+                <div class="command-header">
+                    <span class="command-name">..check</span>
+                    <span class="command-badge admin">作画監督等用</span>
+                </div>
+                <div class="command-body">
+                    [作画監督等用] デフォルトで「最新チェック待ちカット」が返されます。作監チェックなどに便利です。
+                </div>
+            </div>
+
+            <div class="command-card">
+                <div class="command-header">
+                    <span class="command-name">..reg (-f)</span>
+                    <span class="command-badge">担当登録</span>
+                </div>
+                <div class="command-body">
+                    デフォルトで自分を該当カットに登録します。<br>
+                    <code>-f</code> フラグをつけると、すでに該当カットに登録している人がいるかどうかにかかわらず、強制的に自分の名前で上書きできます。
+                </div>
+            </div>
+
+            <div class="command-card">
+                <div class="command-header">
+                    <span class="command-name">..history 作業工程 (最大長さ)</span>
+                    <span class="command-badge">履歴</span>
+                </div>
+                <div class="command-body">
+                    指定された作業工程の提出履歴を調べることができます。最大長さを指定すると、返される履歴リストの件数を制限できます。<br>
+                    返される履歴は、「バージョンインデックス - 履歴内容」で表示されます。このバージョンインデックスを使い、<code>..dl</code> で過去バージョンを取得できます。
+                </div>
+            </div>
+
+            <div class="command-card">
+                <div class="command-header">
+                    <span class="command-name">..ask (メンバー)</span>
+                    <span class="command-badge">確認</span>
+                </div>
+                <div class="command-body">
+                    デフォルトで自分の現在の担当作業を確認できます。メンバー引数を指定すると、指定されたメンバーの現在の担当作業を確認できます。
+                </div>
+            </div>
+
+            <div class="command-card">
+                <div class="command-header">
+                    <span class="command-name">..sync</span>
+                    <span class="command-badge">同期</span>
+                </div>
+                <div class="command-body">
+                    クラウドにサーバー内容を同期させます。
+                </div>
+            </div>
+
+            <div class="command-card">
+                <div class="command-header">
+                    <span class="command-name">..sapyc コマンド</span>
+                    <span class="command-badge admin">デベロッパー</span>
+                </div>
+                <div class="command-body">
+                    ShellArc Expression 命令系コマンドを実行できます。
+                </div>
+            </div>
+
+            <div class="category-title">2. ぬるたろう専用コマンド</div>
+
+            <div class="command-card">
+                <div class="command-header">
+                    <span class="command-name">..nuru 内容</span>
+                    <span class="command-badge">AIサポート</span>
+                </div>
+                <div class="command-body">
+                    テクニカルサポートチャットボット「ぬるたろう」を呼び出すコマンドです。ShellArcの使用方法などの技術的な質問に対応できます。
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <footer>
+        <p>&copy; 2026 未定研 (Miteiken). All Rights Reserved.</p>
+    </footer>
+
+</body>
+</html>
