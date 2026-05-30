@@ -1,0 +1,13 @@
+**/.streamlit/secrets.toml
+**/site_packages/**
+.env
+project_ctx/**
+!project_ctx/.gitkeep
+**/.env
+**/.DS_Store
+**/__pycache__/**
+linker_setting.yaml
+project_setting.yaml
+*.zip
+**/keys/**
+
