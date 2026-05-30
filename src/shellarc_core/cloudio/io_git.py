@@ -109,6 +109,7 @@ class Git_IO:
             git_proc = await self._git_command(*git_command)
             stdout, stderr = await git_proc.communicate()
             if git_proc.returncode != 0:
+                print(stderr.decode('utf-8'))
                 raise SA_LocalIOError(
                     error_log=f"A git command error : {stderr.decode('utf-8')}",
                     error_code=SA_ErrorCode.SA_8002

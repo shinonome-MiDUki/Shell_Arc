@@ -10,9 +10,10 @@ services:
     env_file: project_ctx/.env
     environment:
       - SHELLARC_PROJECT_CTX
-    volumes:
-      - ${SHELLARC_PROJECT_CTX}:${SHELLARC_PROJECT_CTX}
-      - /home/miduki/null_project_2026/version_management:/home/miduki/null_project_2026/version_management
+      - GIT_AUTHOR_NAME=ShellArc2026
+      - GIT_AUTHOR_EMAIL=shellarc@miteiken.com
+      - GIT_COMMITTER_NAME=ShellArc2026
+      - GIT_COMMITTER_EMAIL=shellarc@miteiken.com
     volumes:
       - ${SHELLARC_PROJECT_CTX}:${SHELLARC_PROJECT_CTX}
       - /home/miduki/null_project_2026/version_management:/home/miduki/null_project_2026/version_management
@@ -27,10 +28,6 @@ services:
     env_file: project_ctx/.env
     environment:
       - SHELLARC_PROJECT_CTX
-    volumes:
-      - ${SHELLARC_PROJECT_CTX}:${SHELLARC_PROJECT_CTX}
-      - /home/miduki/null_project_2026/version_management:/home/miduki/null_project_2026/version_management
-      - /home/.config:/home/.config
     volumes:
       - ${SHELLARC_PROJECT_CTX}:${SHELLARC_PROJECT_CTX}
       - /home/miduki/null_project_2026/version_management:/home/miduki/null_project_2026/version_management
