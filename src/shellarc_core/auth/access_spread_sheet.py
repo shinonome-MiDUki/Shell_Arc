@@ -45,9 +45,7 @@ class AccessSpreadSheet:
         SPREADSHEET_KEY = str(spreadsheet_key)
         try:
             gc_auth = gspread.authorize(creds)
-            masterspreadsheet = gc_auth.open_by_key(SPREADSHEET_KEY)
-            spreadsheet_index = 0
-            self._spreadsheet = masterspreadsheet.get_worksheet(spreadsheet_index)
+            self.masterspreadsheet = gc_auth.open_by_key(SPREADSHEET_KEY)
         except Exception as e:
             self._spreadsheet = None
             raise SA_AuthError(
@@ -55,8 +53,11 @@ class AccessSpreadSheet:
                 error_code=SA_ErrorCode.SA_9000
             )
 
-    @property
-    def spreadsheet_obj(self):
-        return self._spreadsheet
+    def spreadsheet_obj(self,
+                        page_idx: int
+                        ) -> gspread.Worksheet:
+        ws = self.masterspreadsheet.get_worksheet(page_idx)
+        return ws
+    
 
 

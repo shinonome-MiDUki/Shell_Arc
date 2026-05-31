@@ -130,7 +130,8 @@ class ShellArc_Upload:
             submitter_name=submitter_name,
             message=message
         )
-        with open("uploader_from_url.html.template", "r", encoding="utf-8") as f:
+        html_template_path = Path(__file__).resolve().parent / "uploader_from_url.html.template"
+        with open(html_template_path, "r", encoding="utf-8") as f:
             html_template = f.read()
         html_page_code = html_template.replace("__S3_PRESIGNED_URL_PLACEHOLDER_XYZ__", presigned_url)
         temp_dir = tempfile.mkdtemp()

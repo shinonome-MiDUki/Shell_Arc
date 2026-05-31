@@ -27,6 +27,7 @@ from shellarc_core.exception.structure_error import (
     SA_LocalIOError
 )
 from shellarc_core.exception.user_exception import ShellArcException
+from .sapyc_intepreter import SAPYC_Intepreter
 
 # from .discord_notice_webhook import DiscordNotice as Notice
 
@@ -54,7 +55,6 @@ with open(discord_config_file_path, mode="r", encoding="utf-8") as config_file:
 TOTAL_CUT_COUNT = config["total_cut_count"]
 webhook_bot_name = config["webhook_bot_name"]
 cut_extraction_regex = config["notice_message_cut_extraction_regex"]
-submission_channel_catagory_name = config["submission_channel_catagory_name"]
 channel_name_divider = config.get("channel_name_divider", "_")
 bot_command = config.get("bot_command", "..")
 component_name_e2j = config["component_reference"]
@@ -655,7 +655,24 @@ async def sapyc(ctx):
     if message.channel.name != shellarc_center["admin_cmd_center"] \
         or cmd_auth_role not in message.author.roles:
         return
-    cmd = message.content.lstrip("..sapyc").strip()
+    try:
+        cmd = message.content.lstrip("..sapyc").strip()
+        await SAPYC_Intepreter().intepret_sapyc(
+            message=message,
+            cmd=cmd
+        )
+    except ShellArcException as e:
+        await message.channel.send(content=e.frontend_msg, view=None)
+        return
+    except ShellArcError as e:
+        await message.channel.send(content=e.frontend_msg, view=None)
+        return
+    except Exception as e:
+        await message.channel.send(content=f"UNEXPECTED PYTHON EXCEPTION : {e}", view=None)
+        tb = traceback.format_exc()
+        error_moment = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9), 'JST'))
+        print(f"!!UNEXPECTED : {error_moment.strftime('%Y%m%d%H%M%S')} -- {tb}")
+        return
 
 
 # @shell_arc_bot.command()

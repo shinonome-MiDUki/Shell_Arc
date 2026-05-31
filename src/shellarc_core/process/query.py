@@ -10,7 +10,8 @@ class ShellArc_Query:
                                              index_info_types: list[str],
                                              target_info_types: list[str],
                                              search_range: list[int],
-                                             output_key: str="index_info_type"
+                                             output_key: str="index_info_type",
+                                             page_idx: int=0
                                              ) -> dict:
         gcp_io = GCP_IO()
         smap_io = SpreadsheetMap_IO()
@@ -39,11 +40,13 @@ class ShellArc_Query:
             target_info_type = target_info_types[i]
             index_col = smap_io.get_cell_coord(
                 cut_num=1,
-                item=index_info_type
+                item=index_info_type,
+                page_idx=page_idx
             )[1]
             target_col = smap_io.get_cell_coord(
                 cut_num=1,
-                item=target_info_type
+                item=target_info_type,
+                page_idx=page_idx
             )[1]
             for row_num in range(search_range[0] + vert_offset - 1, search_range[1] + vert_offset):
                 searching_row = current_spreadsheet_cache[row_num]
@@ -69,7 +72,6 @@ class ShellArc_Query:
                     ) -> dict[str, str]:
         git_io = Git_IO()
         json_file_path = f"stage/cut{cut_num}/{component}.json"
-        print("CALL72")
         log_filter = SA_GitLogFilter(
             commit_type=SA_CommitType.SUBMIT,
             log_length=max_length

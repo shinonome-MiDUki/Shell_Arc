@@ -56,3 +56,16 @@ class SA_EditingRejection(ShellArcException):
             error_type=SA_ExceptionType.EDIT_REJECT, 
             frontend_msg=frontend_msg
             )
+        
+class SA_SapycSyntaxError(ShellArcException):
+    def __init__(self, 
+                 error_log,
+                 frontend_msg: str | None=None
+                 ):
+        super().__init__(
+            error_log=error_log, 
+            error_type=SA_ExceptionType.SAPYC_SYNTAX_ERROR, 
+            frontend_msg=frontend_msg
+            )
+        
+        

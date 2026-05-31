@@ -19,15 +19,16 @@ class SpreadsheetMap_IO:
 
     def get_cell_coord(self,
                  cut_num: int,
-                 item: str
+                 item: str,
+                 page_idx: int=0
                  ) -> tuple[int]:
-        row_idx = cut_num + self.spreadsheet_map.get("vert_offset", None)
+        row_idx = cut_num + self.spreadsheet_map.get(f"vert_offset_{page_idx}", None)
         if not isinstance(row_idx, int):
             raise SA_ProjStructError(
                 error_log="vert_offset not configured properly in spreadsheet map",
                 error_code=SA_ErrorCode.SA_4102
             )
-        col_idx = self.spreadsheet_map.get("items", {}).get(item, None)
+        col_idx = self.spreadsheet_map.get(f"items_{page_idx}", {}).get(item, None)
         if not isinstance(col_idx, int):
             raise SA_ProjStructError(
                 error_log="requested spreadsheet cell column idx not configured",
@@ -35,8 +36,10 @@ class SpreadsheetMap_IO:
             )
         return (row_idx, col_idx)
     
-    def get_vert_offset(self) -> int:
-        vert_offset = self.spreadsheet_map.get("vert_offset", None)
+    def get_vert_offset(self,
+                        page_idx: int=0
+                        ) -> int:
+        vert_offset = self.spreadsheet_map.get(f"vert_offset_{page_idx}", None)
         if not isinstance(vert_offset, int):
             raise SA_ProjStructError(
                 error_log="vert_offset not configured properly in spreadsheet map",

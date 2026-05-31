@@ -10,19 +10,21 @@ class GCP_IO:
     def __init__(self):
         cfg_io = Cfg_IO()
         spreadsheet_key = cfg_io.get_cfg_setting(Cfg_item.SPREADSHEET_KEY)
-        a_gcp = A_GCP(spreadsheet_key=spreadsheet_key)
-        self.spreadsheet = a_gcp.spreadsheet_obj
+        self.a_gcp = A_GCP(spreadsheet_key=spreadsheet_key)
         self.smap_io = SMap_IO()
 
     def get_info(self,
                  info_type: str,
-                 cut_num: int
+                 cut_num: int,
+                 page_idx: int=0
                  ) -> str | None:
+        spreadsheet = self.a_gcp.spreadsheet_obj(page_idx=page_idx)
         cell_coord = self.smap_io.get_cell_coord(
             cut_num=cut_num,
-            item=info_type
+            item=info_type,
+            page_idx=page_idx
         )
-        rtn = self.spreadsheet.cell(
+        rtn = spreadsheet.cell(
             row=cell_coord[0], 
             col=cell_coord[1]
             ).value
@@ -31,13 +33,16 @@ class GCP_IO:
     def update_info(self,
                     info_type: str,
                     cut_num: int,
-                    new_value: str
+                    new_value: str,
+                    page_idx: int=0
                     ) -> None:
+        spreadsheet = self.a_gcp.spreadsheet_obj(page_idx=page_idx)
         cell_coord = self.smap_io.get_cell_coord(
             cut_num=cut_num,
-            item=info_type
+            item=info_type,
+            page_idx=page_idx
         )
-        self.spreadsheet.update_cell(
+        spreadsheet.update_cell(
             row=cell_coord[0],
             col=cell_coord[1],
             value=new_value
@@ -46,11 +51,14 @@ class GCP_IO:
     def color_cell(self,
                    info_type: str,
                    cut_num: int,
-                   target_color: tuple[float]
+                   target_color: tuple[float],
+                   page_idx: int=0
                    ) -> None:
+        spreadsheet = self.a_gcp.spreadsheet_obj(page_idx=page_idx)
         cell_coord = self.smap_io.get_cell_coord(
             cut_num=cut_num,
-            item=info_type
+            item=info_type,
+            page_idx=page_idx
         )
         cell_address = rowcol_to_a1(
             row=cell_coord[0],
@@ -60,7 +68,7 @@ class GCP_IO:
             backgroundColor=g_fmt.Color(target_color[0], target_color[1], target_color[2])
             )
         g_fmt.format_cell_range(
-            self.spreadsheet,
+            spreadsheet,
             cell_address,
             fmt
         )
@@ -69,9 +77,12 @@ class GCP_IO:
         
 
     @property
-    def spreadsheet_cache(self):
+    def spreadsheet_cache(self,
+                          page_idx: int=0
+                          ) -> list:
+        spreadsheet = self.a_gcp.spreadsheet_obj(page_idx=page_idx)
         if not hasattr(self, "_spreadsheet_cache"):
-            self._spreadsheet_cache = self.spreadsheet.get_all_values()
+            self._spreadsheet_cache = spreadsheet.get_all_values()
         return self._spreadsheet_cache
 
 

@@ -42,7 +42,7 @@ def access_check():
     with open(spreadsheet_id_txt, "r", encoding="utf-8") as f:
         spreadsheet_id = f.read()
     gcp_instance = AccessSpreadSheet(spreadsheet_key=str(spreadsheet_id))
-    if gcp_instance.spreadsheet_obj is not None:
+    if gcp_instance.spreadsheet_obj(page_idx=0) is not None:
         print("GCP access : NORMAL")
     else:
         print("GCP access : FAILED !!!!!!!!!!!!")

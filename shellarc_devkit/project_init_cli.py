@@ -13,7 +13,7 @@ def make_spreadsheet(cut_num: int,
                      spreadsheet: gspread.Worksheet
                      ) -> str :
     try:
-        vert_offset = spreadsheet_map["vert_offset"]
+        vert_offset = spreadsheet_map["vert_offset_0"]
         header_row_idx = spreadsheet_map["header"]
         for key, col_idx in spreadsheet_map["items"].items():
             spreadsheet.update_cell(
@@ -101,7 +101,7 @@ async def inilialize_project():
     #try access
     try:
         spreadsheet_instance = SpreadSheet(spreadsheet_key)
-        spreadsheet = spreadsheet_instance.spreadsheet_obj
+        spreadsheet = spreadsheet_instance.spreadsheet_obj(page_idx=0)
         print("Spreadsheet (GCP) access successful")
     except Exception as e:
         print(f"Spreadsheet (GCP) access failed due to : {e}")
