@@ -644,6 +644,7 @@ async def sync(ctx):
     if message.author.bot:
         return
     await ShellArc_Upload.sync_vps_with_remote()
+    await message.channel.send("同期しました")
 
 @shell_arc_bot.command()
 async def sapyc(ctx):
