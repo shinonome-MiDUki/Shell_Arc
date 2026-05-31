@@ -27,6 +27,14 @@ class ShellArc_Upload:
                     submitter_name: str,
                     message: str=""
                     ) -> None:
+        """Upload a file to the R2 storage based on the provided file, submitter name, and message, 
+        and update the corresponding information in the Google Spreadsheet to reflect the new submission.
+
+        Args:
+            file (dict[str, bytes]): A dictionary containing the file name as the key and the file content as bytes as the value, representing the file to be uploaded.
+            submitter_name (str): The name of the person submitting the file, used for updating the Google Spreadsheet with the new PIC and progress information.
+            message (str): An optional message provided by the submitter to be included in the Git commit message when updating the data in the Git repository (Default : "").
+        """
         required_format = self.cfg_io.get_cfg_setting(Cfg_item.COMPONENT, self.working_component, "format")
         filename = ""
         if len(file) > 1 and required_format == "zip":
@@ -92,6 +100,16 @@ class ShellArc_Upload:
                              submitter_name: str,
                              message: str=""
                              ) -> str:
+        """Get a presigned URL for uploading a file to the R2 storage based on the provided submitter name and message,
+        and update the corresponding information in the Google Spreadsheet to reflect the new submission (Internal method).
+
+        Args:
+            submitter_name (str): The name of the person submitting the file, used for updating the Google Spreadsheet with the new PIC and progress information.
+            message (str): An optional message provided by the submitter to be included in the Git commit message when updating the data in the Git repository (Default : "").
+
+        Returns:
+            str: A presigned URL for uploading the file to the R2 storage.
+            """
         required_format = self.cfg_io.get_cfg_setting(Cfg_item.COMPONENT, self.working_component, "format")
         collection_name = self.cfg_io.get_cfg_setting(Cfg_item.COLL_NAME)
 
@@ -122,10 +140,23 @@ class ShellArc_Upload:
 
         return presigned_url
     
+
     async def get_upload_page(self,
                               submitter_name: str,
                               message: str
                               ) -> tuple[str]:
+        """Get the file path of the generated HTML upload page for uploading a file to the R2 storage,
+        which includes a presigned URL for uploading the file, and update the corresponding information in the Google Spreadsheet to reflect the new submission.
+
+        Args:
+            submitter_name (str): The name of the person submitting the file, used for updating the Google Spreadsheet with the new PIC and progress information.
+            message (str): An optional message provided by the submitter to be included in the Git commit message when updating the data in the Git repository (Default : "").
+        
+        Returns:
+            tuple[str]: A tuple containing the file path of the generated HTML upload page and the temporary directory where the HTML file is stored, 
+                which can be used for uploading the file to the R2 storage via the presigned URL included in the HTML page.
+                The temporary directory should be cleaned up after the upload process is completed to avoid leaving unnecessary files on the server.
+        """
         presigned_url = await self._get_upload_url(
             submitter_name=submitter_name,
             message=message
@@ -143,4 +174,6 @@ class ShellArc_Upload:
 
     @staticmethod
     async def sync_vps_with_remote() -> None:
+        """Synchronize the VPS with the remote Git repository
+        """
         await Git_IO().sync_remote()

@@ -14,6 +14,11 @@ class AccessSpreadSheet:
     def __init__(self, 
                  spreadsheet_key: str
                  ) -> None:
+        """Initialize the AccessSpreadSheet instance by authenticating with Google Sheets API using service account credentials.
+
+        Args:
+            spreadsheet_key (str): The key of the Google Spreadsheet to access.
+        """
         API_CONFIG_PATH = os.path.join(tempfile.gettempdir(), "api_config_secret.json")
         load_dotenv(verbose=True)
         project_ctx_dir = Path(os.environ.get("SHELLARC_PROJECT_CTX", None))
@@ -56,6 +61,14 @@ class AccessSpreadSheet:
     def spreadsheet_obj(self,
                         page_idx: int
                         ) -> gspread.Worksheet:
+        """Get the Google Spreadsheet worksheet object for the specified page index.
+        
+        Args:
+            page_idx (int): The index of the worksheet page to access (0-based index).
+
+        Returns:
+            ws (gspread.Worksheet): The worksheet object corresponding to the specified page index in the Google Spreadsheet.
+        """
         ws = self.masterspreadsheet.get_worksheet(page_idx)
         return ws
     

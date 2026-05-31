@@ -7,6 +7,8 @@ from enum import Enum
 from shellarc_core.exception.structure_error import SA_ProjStructError, SA_ErrorCode
 
 class Cfg_item(Enum):
+    """Enum for configuration items in the project settings.
+    """
     PROJ_NAME = "project_name"
     BUCKET_NAME = "bucket_name"
     COLL_NAME = "collection_name"
@@ -28,9 +30,18 @@ class Cfg_IO:
         with open(cfg_path, "r", encoding="utf-8") as f:
             self.cfg = json.load(f)
 
+
     def get_cfg_setting(self,
                         *args
                         ) -> Any:
+        """Get the value of a specific configuration item from the project settings.
+
+        Args:
+            *args: A variable number of arguments representing the keys to access the desired configuration item.
+
+        Returns:
+            current_item (Any): The value of the requested configuration item, which can be of any data type depending on the structure of the project settings JSON file.
+        """
         current_item = self.cfg
         for k in args:
             if not isinstance(current_item, dict):

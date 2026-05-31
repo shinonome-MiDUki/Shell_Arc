@@ -16,15 +16,34 @@ class ShellArc_Request:
                  cut_num: int,
                  requesting_component: str
                  ) -> None:
+        """Initialize the ShellArc_Request class with the specified cut number and requesting component, 
+        and set up the necessary cloud I/O instances for R2 storage and Git operations.
+
+        Args:
+            cut_num (int): The cut number for which the request is being made.
+            requesting_component (str): The name of the component for which the request is being made (e.g., "modeling", "texturing").
+        """
         self.r2_io = R2_IO()
         self.git_io = Git_IO()
         self.cfg_io = Cfg_IO()
         self.working_component = requesting_component
         self.cut_num = cut_num
 
+
     async def download_material(self,
                                 requesting_take: str
                                 ) -> tuple[str]:
+        """Download the material file from the R2 storage based on the specified requesting take, 
+        which can be either the latest take ("0"), the working take ("-1"), or a specific commit ID.
+
+        Args:
+            requesting_take (str): The identifier for the take to be requested, 
+                which can be "0" for the latest take, "-1" for the working take, or a specific commit ID for a particular take.
+        
+        Returns:
+            tuple[str]: A tuple containing the file path or presigned URL of the downloaded material file, 
+                the name of the downloaded file with extension, and a string indicating whether the returned path is a "url" or a "path".
+        """
         # take = 0 : latest ; take = -1 : working
         frontend_msg_whenerror = ""
         if requesting_take == "0":

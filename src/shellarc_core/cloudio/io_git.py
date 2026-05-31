@@ -17,6 +17,8 @@ from shellarc_core.exception.user_exception import SA_InvalidRequestObj
 
 
 class GitCommands(StrEnum):
+    """Enum class for git command strings.
+    """
     SHOW = "show"
     COMMIT = "commit"
     CHECKOUT = "checkout"
@@ -27,18 +29,33 @@ class GitCommands(StrEnum):
     LOG = "log"
     STATUS = "status"
 
+
 class SA_CommitType(StrEnum):
+    """Enum class for commit type strings used in git commit messages.
+    """
     DECLINE = "DECLINE"
     APPROVE = "APPROVE"
     SUBMIT = "SUBMIT"
     REPOINT = "REPOINT"
 
+
 class ShellArcGitBranch(StrEnum):
+    """Enum class for git branch names used in the ShellArc project.
+    """
     PENDING = "pending"
     MAIN = "main"
 
+
 @dataclass
 class SA_GitLogFilter:
+    """Data class for filtering git log records based on commit type, cut number, component name, and log length.
+
+    Attributes:
+        commit_type (SA_CommitType | str | None): The type of commit to filter by (e.g., "SUBMIT", "APPROVE", "DECLINE", "REPOINT"). If None, do not filter by commit type.
+        cut_num (int | None): The cut number to filter by. If None, do not filter by cut number.
+        component (str | None): The component name to filter by. If None, do not filter by component name.
+        log_length (int | None): The maximum number of log records to return. If None, return all log records that match the other filter criteria. 
+    """
     commit_type: SA_CommitType | str | None = None
     cut_num: int | None = None
     component: str | None = None
@@ -59,6 +76,14 @@ class Git_IO:
     def get_components(self,
                        cut_num: int
                        ) -> list[str]:
+        """Get the component list for the specified cut number from project_main.json file.
+        
+        Args:
+            cut_num (int): The cut number to get the component list for.
+
+        Returns:
+            list[str]: A list of component names for the specified cut number.
+        """
         with open(self.git_repo_local_dir / "project_main.json", "r", encoding="utf-8") as f:
             pj_main = json.load(f)
             components = pj_main.get("common", None)
@@ -73,6 +98,11 @@ class Git_IO:
 
     @property
     def _get_timemark(self) -> str:
+        """Get the current time mark in JST timezone (Property)(Internal method).
+        
+        Returns:
+            time_mark (str): The current time mark in JST timezone, formatted as YYYYMMDDHHMMSS.
+        """
         t_delta = datetime.timedelta(hours=9)
         now = datetime.datetime.now(datetime.timezone(t_delta, 'JST'))
         time_mark = now.strftime('%Y%m%d%H%M%S')
@@ -84,6 +114,16 @@ class Git_IO:
                         component: str,
                         creator_name: str
                         ) -> str:
+        """Generate a unique index name for the component data file based on the cut number, component name, creator name, and current time mark (Internal method).
+
+        Args:
+            cut_num (int): The cut number of the component.
+            component (str): The name of the component.
+            creator_name (str): The name of the creator of the component data.
+
+        Returns:
+            index_name (str): A unique index name for the component data file, formatted as 'cut{cut_num}_{component}_{creator_id}_{time_mark}'.
+        """
         component = component.replace("_", "-")
         creator_id = hashlib.shake_128(creator_name.encode('utf-8')).hexdigest(3)
         index_name = f"cut{cut_num}_{component}_{creator_id}_{self._get_timemark}"
@@ -93,6 +133,14 @@ class Git_IO:
     async def _git_command(self,
                           *git_cmds_param
                           ) -> asyncio.subprocess.Process:
+        """Execute a single git command asynchronously in the local git repository (Internal method).
+
+        Args:
+            *git_cmds_param: Variable length argument list for git command and its parameters (e.g., "checkout", "main").
+
+        Returns:
+            git_proc (asyncio.subprocess.Process): The process object representing the executed git command.
+        """
         git_cmds = ["git"] + list(git_cmds_param)
         git_proc = await asyncio.create_subprocess_exec(
                 *git_cmds,
@@ -106,6 +154,11 @@ class Git_IO:
     async def _continuous_git_command(self,
                                       git_commands: list
                                       ) -> None:
+        """Execute multiple git commands sequentially in the local git repository (Internal method).
+
+        Args:
+            git_commands (list): A list of git commands, where each command is represented as a list of command and its parameters (e.g., ["checkout", "main"]).
+        """
         for git_command in git_commands:
             git_proc = await self._git_command(*git_command)
             stdout, stderr = await git_proc.communicate()
@@ -120,6 +173,13 @@ class Git_IO:
     async def make_proj_repo(self,
                              proj_settings: dict 
                              ) -> None:
+        """Initialize the local git repository for the project based on the provided project settings, and create the necessary directory structure and initial commit.
+
+        Args:
+            proj_settings (dict): A dictionary containing the project settings, 
+                including "cut_num" (the number of cuts in the project) and "components" (a dictionary of components for each cut). 
+                The "components" dictionary should have the format {component_name: {"format": component_format}}
+        """
         self.git_repo_local_dir.mkdir(parents=True, exist_ok=True)
         stage_dir = self.git_repo_local_dir / "stage"
         stage_dir.mkdir(parents=True, exist_ok=True)
@@ -151,6 +211,18 @@ class Git_IO:
                                  component: str,
                                  commit_id: str | None=None
                                  ) -> dict[str, str]:
+        """Get the component information for the specified cut number and component name from the git repository, based on the specified branch and commit ID.
+
+        Args:
+            branch (ShellArcGitBranch | str): The git branch to get the component information from (e.g., "pending" or "main").
+            cut_num (int): The cut number of the component to get the information for.
+            component (str): The name of the component to get the information for.
+            commit_id (str | None): The specific commit ID to get the component information from. 
+                If None, get the information from the latest commit in the specified branch (Default : None).
+
+        Returns:
+            requested_info (dict[str, str]): A dictionary containing the component information retrieved from the git
+        """
         await self._continuous_git_command([[GitCommands.CHECKOUT, branch]])
         component_json_path = self.git_repo_local_dir / f"stage/cut{cut_num}/{component}.json"
         if component_json_path.exists():
@@ -182,6 +254,19 @@ class Git_IO:
                       limit_scope: str | None=None,
                       branch: ShellArcGitBranch | str=ShellArcGitBranch.PENDING
                       ) -> dict[str, str]:
+        """Get the git log records from the specified branch in the git repository, 
+        filtered and formatted based on the provided log filter and output format.
+
+        Args:
+            output_format (list[int]): A list of integers representing the indices of the commit record fields to include in the output log records. 
+                The commit record fields are expected to be in the following order in the git log output: commit_type, cut_num, component, creator_name, commit_message, timemark, file_index_name. 
+                For example, if output_format is [0, 2, 3], the output log records will include the commit_type, component, and creator_name fields.
+            log_filter (SA_GitLogFilter | None): An instance of SA_GitLogFilter containing the filter criteria for the git log records. 
+                If None, do not apply any filtering and return all log records that match the output format criteria (Default : None).
+            limit_scope (str | None): A string representing the limit scope for the git log command (e.g., a specific file path or directory). 
+                If None, do not limit the scope and return log records for all commits in the specified branch (Default : None).
+            branch (ShellArcGitBranch | str): The git branch to get the log records from (Default : ShellArcGitBranch.PENDING).
+        """
         if log_filter is None:
             log_filter = SA_GitLogFilter()
         if limit_scope is None:
@@ -230,6 +315,14 @@ class Git_IO:
                            repoint_target_cut: int,
                            component: str
                            ) -> None:
+        """Repoint the specified component data from the original cut number to the target cut number in the git repository, 
+        by creating a new commit in the pending branch with the updated component information.
+
+        Args:
+            be_repointed_cut (int): The original cut number of the component data to be repointed.
+            repoint_target_cut (int): The target cut number to repoint the component data to.
+            component (str): The name of the component to be repointed.
+        """
         async with self.__class__._git_lock:
             await self._continuous_git_command([[GitCommands.CHECKOUT, ShellArcGitBranch.PENDING]])
             current_component_info = {
@@ -253,6 +346,16 @@ class Git_IO:
                         is_approve: bool,
                         message: str=""
                         ) -> None:
+        """Pend the specified component data for approval or decline in the git repository,
+        by creating a new commit in the pending branch with the approval or decline information, and removing the pending status file for the component.
+
+        Args:
+            cut_num (int): The cut number of the component data to be pended.
+            component (str): The name of the component to be pended.
+            processing_person (str): The name of the person processing the approval or decline.
+            is_approve (bool): A boolean value indicating whether the component data is approved (True) or declined (False).
+            message (str): An optional message to include in the commit message for the approval or decline action (Default : "").
+        """
         if not message:
             message = "No message"
         async with self.__class__._git_lock:
@@ -305,6 +408,18 @@ class Git_IO:
                           creator_name: str,
                           message: str=""
                           ) -> str:
+        """Update the specified component data in the git repository by creating a new commit in the pending branch with the updated component information, 
+        and returning the generated file index name for the updated component data.
+
+        Args:
+            cut_num (int): The cut number of the component data to be updated.
+            component (str): The name of the component to be updated.
+            creator_name (str): The name of the creator of the updated component data.
+            message (str): An optional message to include in the commit message for the update action (Default : "").
+
+        Returns:
+            file_index_name (str): The generated file index name for the updated component data, formatted
+        """
         if not message:
             message = "No message"
         async with self.__class__._git_lock:
@@ -332,6 +447,8 @@ class Git_IO:
     
 
     async def sync_remote(self) -> None:
+        """Synchronize the local git repository with the remote repository by pushing the latest commits from both the main and pending branches to the remote origin.
+        """
         git_commands = [
             [GitCommands.PUSH, "origin", ShellArcGitBranch.MAIN],
             [GitCommands.CHECKOUT, ShellArcGitBranch.PENDING],

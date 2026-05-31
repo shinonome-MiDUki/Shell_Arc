@@ -39,6 +39,11 @@ class Cloudflare_R2_service_Access:
             )
 
     @property
-    def s3_client(self):
+    def s3_client(self) -> boto3.client:
+        """Get the Cloudflare R2 S3 client instance (Property)
+
+        Returns:
+            _s3_client (boto3.client): The S3 client instance for Cloudflare R2 operations.
+        """
         return self._s3_client
         

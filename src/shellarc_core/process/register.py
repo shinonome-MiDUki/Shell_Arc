@@ -5,12 +5,21 @@ class ShellArc_Register:
     def __init__(self):
         self.gcp_io = GCP_IO()
 
+
     async def register_work(self,
                       registering_person: str,
                       registering_component: str,
                       registering_cut: int,
                       force: bool=False
                       ) -> None:
+        """Register a person for a specific component and cut in the Google Spreadsheet, with an option to force the registration even if there is already a registered person.
+
+        Args:
+            registering_person (str): The name of the person to be registered for the specified component and cut.
+            registering_component (str): The name of the component to register the person for (e.g., "modeling", "texturing").
+            registering_cut (int): The cut number of the component to register the person for.
+            force (bool): A boolean flag indicating whether to force the registration even if there is already a registered person for the specified component and cut (Default : False).
+        """
         current_pic = self.gcp_io.get_info(
             info_type=f"{registering_component}_PIC",
             cut_num=registering_cut

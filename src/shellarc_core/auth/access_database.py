@@ -45,7 +45,12 @@ class AccessDB:
             )
 
     @property
-    def database(self):
+    def database(self) -> firestore.Client:
+        """Get the Firestore client instance (Property)
+
+        Returns:
+            _database (firestore.Client): The Firestore client instance for database operations.
+        """
         return self._database
 
 

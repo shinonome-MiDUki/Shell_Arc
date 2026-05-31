@@ -13,6 +13,22 @@ class ShellArc_Query:
                                              output_key: str="index_info_type",
                                              page_idx: int=0
                                              ) -> dict:
+        """Efficiently retrieve specific information from the Google Spreadsheet by searching for a target index value 
+        within a specified range and returning the corresponding information based on the provided index and target information types.
+
+        Args:
+            target_index_value (str): The value to be searched for in the specified index column of the spreadsheet.
+            index_info_types (list[str]): A list of information types corresponding to the columns that contain the index values to be searched for in the spreadsheet.
+            target_info_types (list[str]): A list of information types corresponding to the columns that contain the target values to be retrieved from the spreadsheet.
+            search_range (list[int]): A list containing two integers representing the starting and ending cut numbers that define the range of rows to be searched in the spreadsheet.
+            output_key (str): A string that specifies the key to be used in the returned dictionary for the retrieved information, 
+                which can be either "index_info_type" to use the index information type as the key or "target_info_type" to use the target information type as the key (Default : "index_info_type").
+            page_idx (int): The index of the spreadsheet page to perform the search and retrieval from (Default : 0).
+
+        Returns:
+            dict: A dictionary containing the retrieved information from the spreadsheet, 
+                where the keys are determined by the specified output_key parameter and the values are the corresponding retrieved values from the spreadsheet.
+        """
         gcp_io = GCP_IO()
         smap_io = SpreadsheetMap_IO()
         vert_offset = smap_io.get_vert_offset()
@@ -60,16 +76,37 @@ class ShellArc_Query:
         
         return rtn
     
+
     @staticmethod
     def get_components_enname(cut_num: int) -> list[str]:
+        """Get the list of component names in English for the specified cut number by retrieving the information from the Git repository.
+
+        Args:
+            cut_num (int): The cut number of the components to retrieve the names for.
+
+        Returns:
+            list[str]: A list of component names in English corresponding to the specified cut number.
+        """
         git_io = Git_IO()
         return git_io.get_components(cut_num=cut_num)
     
+
     @staticmethod
     async def get_history(cut_num: int,
                     component: str,
                     max_length: int | None=None
                     ) -> dict[str, str]:
+        """Get the commit history for the specified cut number and component by retrieving the log information from the Git repository,
+        and filter the log entries based on the commit type and maximum length if provided.
+
+        Args:
+            cut_num (int): The cut number of the component to retrieve the history for.
+            component (str): The name of the component to retrieve the history for.
+            max_length (int | None): The maximum number of log entries to retrieve for the specified cut number and component, or None to retrieve all log entries (Default : None).
+
+        Returns:
+            hist_dict (dict[str, str]): A dictionary containing the commit history for the specified cut number and component
+        """
         git_io = Git_IO()
         json_file_path = f"stage/cut{cut_num}/{component}.json"
         log_filter = SA_GitLogFilter(
@@ -83,11 +120,23 @@ class ShellArc_Query:
         )
         return hist_dict
     
+
     @staticmethod
     async def get_approve_history(cut_num: int,
                             component: str,
                             max_length: int | None=None
                             ) -> dict[str, str]:
+        """Get the approval commit history for the specified cut number and component by retrieving the log information from the Git repository,
+        and filter the log entries based on the commit type and maximum length if provided.
+
+        Args:
+            cut_num (int): The cut number of the component to retrieve the approval history for.
+            component (str): The name of the component to retrieve the approval history for.
+            max_length (int | None): The maximum number of log entries to retrieve for the specified cut number and component, or None to retrieve all log entries (Default : None).
+
+        Returns:
+            hist_dict (dict[str, str]): A dictionary containing the approval commit history for the specified cut number and component
+        """
         git_io = Git_IO()
         json_file_path = f"stage/cut{cut_num}/{component}.json"
         log_filter = SA_GitLogFilter(
