@@ -303,6 +303,7 @@ class Git_IO:
     async def sync_remote(self) -> None:
         git_commands = [
             [GitCommands.PUSH, "origin", ShellArcGitBranch.MAIN],
+            [GitCommands.CHECKOUT, "origin", ShellArcGitBranch.PENDING]
             [GitCommands.PUSH, "origin", ShellArcGitBranch.PENDING]
         ]
         await self._continuous_git_command(git_commands=git_commands)

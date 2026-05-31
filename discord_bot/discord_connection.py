@@ -27,7 +27,7 @@ from shellarc_core.exception.structure_error import (
     SA_LocalIOError
 )
 from shellarc_core.exception.user_exception import ShellArcException
-from .sapyc_intepreter import SAPYC_Intepreter
+#from .sapyc_intepreter import SAPYC_Intepreter
 
 # from .discord_notice_webhook import DiscordNotice as Notice
 
@@ -640,7 +640,6 @@ async def ask(ctx):
 
 @shell_arc_bot.command()
 async def sync(ctx):
-    return
     message = ctx.message
     if message.author.bot:
         return
