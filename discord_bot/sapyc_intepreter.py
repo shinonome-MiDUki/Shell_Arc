@@ -7,6 +7,7 @@ class SAPYC_Intepreter:
     async def history_log(message: discord.Message,
                           *args
                           ) -> None:
+        pass
 
 
     async def intepret_sapyc(self,
