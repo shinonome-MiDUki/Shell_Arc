@@ -646,33 +646,33 @@ async def sync(ctx):
     await ShellArc_Upload.sync_vps_with_remote()
     await message.channel.send("同期しました")
 
-@shell_arc_bot.command()
-async def sapyc(ctx):
-    message = ctx.message
-    if message.author.bot:
-        return
-    cmd_auth_role = discord.utils.get(message.guild.roles, name=admin_roles.get("admin_cmd"))
-    if message.channel.name != shellarc_center["admin_cmd_center"] \
-        or cmd_auth_role not in message.author.roles:
-        return
-    try:
-        cmd = message.content.lstrip("..sapyc").strip()
-        await SAPYC_Intepreter().intepret_sapyc(
-            message=message,
-            cmd=cmd
-        )
-    except ShellArcException as e:
-        await message.channel.send(content=e.frontend_msg, view=None)
-        return
-    except ShellArcError as e:
-        await message.channel.send(content=e.frontend_msg, view=None)
-        return
-    except Exception as e:
-        await message.channel.send(content=f"UNEXPECTED PYTHON EXCEPTION : {e}", view=None)
-        tb = traceback.format_exc()
-        error_moment = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9), 'JST'))
-        print(f"!!UNEXPECTED : {error_moment.strftime('%Y%m%d%H%M%S')} -- {tb}")
-        return
+# @shell_arc_bot.command()
+# async def sapyc(ctx):
+#     message = ctx.message
+#     if message.author.bot:
+#         return
+#     cmd_auth_role = discord.utils.get(message.guild.roles, name=admin_roles.get("admin_cmd"))
+#     if message.channel.name != shellarc_center["admin_cmd_center"] \
+#         or cmd_auth_role not in message.author.roles:
+#         return
+#     try:
+#         cmd = message.content.lstrip("..sapyc").strip()
+#         await SAPYC_Intepreter().intepret_sapyc(
+#             message=message,
+#             cmd=cmd
+#         )
+#     except ShellArcException as e:
+#         await message.channel.send(content=e.frontend_msg, view=None)
+#         return
+#     except ShellArcError as e:
+#         await message.channel.send(content=e.frontend_msg, view=None)
+#         return
+#     except Exception as e:
+#         await message.channel.send(content=f"UNEXPECTED PYTHON EXCEPTION : {e}", view=None)
+#         tb = traceback.format_exc()
+#         error_moment = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9), 'JST'))
+#         print(f"!!UNEXPECTED : {error_moment.strftime('%Y%m%d%H%M%S')} -- {tb}")
+#         return
 
 
 # @shell_arc_bot.command()
