@@ -22,12 +22,13 @@ from shellarc_core.process.requesting import ShellArc_Request
 from shellarc_core.process.reviewing import ShellArc_Review
 from shellarc_core.process.uploader import ShellArc_Upload
 from shellarc_core.process.query import ShellArc_Query
+from shellarc_core.sapyc.sapyc_interpreter import SAPYC_Interpreter
 from shellarc_core.exception.structure_error import (
     ShellArcError, SA_AuthError, SA_ErrorCode,
     SA_LocalIOError
 )
 from shellarc_core.exception.user_exception import ShellArcException
-#from .sapyc_intepreter import SAPYC_Intepreter
+
 
 # from .discord_notice_webhook import DiscordNotice as Notice
 
@@ -646,33 +647,24 @@ async def sync(ctx):
     await ShellArc_Upload.sync_vps_with_remote()
     await message.channel.send("同期しました")
 
-# @shell_arc_bot.command()
-# async def sapyc(ctx):
-#     message = ctx.message
-#     if message.author.bot:
-#         return
-#     cmd_auth_role = discord.utils.get(message.guild.roles, name=admin_roles.get("admin_cmd"))
-#     if message.channel.name != shellarc_center["admin_cmd_center"] \
-#         or cmd_auth_role not in message.author.roles:
-#         return
-#     try:
-#         cmd = message.content.lstrip("..sapyc").strip()
-#         await SAPYC_Intepreter().intepret_sapyc(
-#             message=message,
-#             cmd=cmd
-#         )
-#     except ShellArcException as e:
-#         await message.channel.send(content=e.frontend_msg, view=None)
-#         return
-#     except ShellArcError as e:
-#         await message.channel.send(content=e.frontend_msg, view=None)
-#         return
-#     except Exception as e:
-#         await message.channel.send(content=f"UNEXPECTED PYTHON EXCEPTION : {e}", view=None)
-#         tb = traceback.format_exc()
-#         error_moment = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9), 'JST'))
-#         print(f"!!UNEXPECTED : {error_moment.strftime('%Y%m%d%H%M%S')} -- {tb}")
-#         return
+@shell_arc_bot.command()
+async def sapyc(ctx):
+    message = ctx.message
+    if message.author.bot:
+        return
+    try:
+        cmd = message.content.lstrip("..sapyc").strip()
+        rtn = await SAPYC_Interpreter.interpret_sapyc(cmd=cmd)
+        return rtn
+    except ShellArcException as e:
+        await message.channel.send(content=e.frontend_msg, view=None)
+    except ShellArcError as e:
+        await message.channel.send(content=e.frontend_msg, view=None)
+    except Exception as e:
+        await message.channel.send(content=f"UNEXPECTED PYTHON EXCEPTION : {e}", view=None)
+        tb = traceback.format_exc()
+        error_moment = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9), 'JST'))
+        print(f"!!UNEXPECTED : {error_moment.strftime('%Y%m%d%H%M%S')} -- {tb}")
 
 
 # @shell_arc_bot.command()

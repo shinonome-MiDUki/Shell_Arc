@@ -31,6 +31,7 @@ class SA_CommitType(StrEnum):
     DECLINE = "DECLINE"
     APPROVE = "APPROVE"
     SUBMIT = "SUBMIT"
+    REPOINT = "REPOINT"
 
 class ShellArcGitBranch(StrEnum):
     PENDING = "pending"
@@ -38,7 +39,7 @@ class ShellArcGitBranch(StrEnum):
 
 @dataclass
 class SA_GitLogFilter:
-    commit_type: SA_CommitType | None = None
+    commit_type: SA_CommitType | str | None = None
     cut_num: int | None = None
     component: str | None = None
     log_length: int | None = None
@@ -145,7 +146,7 @@ class Git_IO:
         
 
     async def get_component_info(self,
-                                 branch: ShellArcGitBranch,
+                                 branch: ShellArcGitBranch | str,
                                  cut_num: int,
                                  component: str,
                                  commit_id: str | None=None
@@ -163,6 +164,15 @@ class Git_IO:
                 requested_info = {}
         else:
             requested_info = {}
+        repointer = requested_info.get("repointer", None)
+        if repointer is not None:
+            repointer = int(repointer)
+            requested_info = await self.get_component_info(
+                branch=branch,
+                cut_num=repointer,
+                component=component,
+                commit_id=branch
+            )
         return requested_info
     
 
@@ -170,7 +180,7 @@ class Git_IO:
                       output_format: list[int],
                       log_filter: SA_GitLogFilter | None=None,
                       limit_scope: str | None=None,
-                      branch: ShellArcGitBranch=ShellArcGitBranch.PENDING
+                      branch: ShellArcGitBranch | str=ShellArcGitBranch.PENDING
                       ) -> dict[str, str]:
         if log_filter is None:
             log_filter = SA_GitLogFilter()
@@ -213,6 +223,27 @@ class Git_IO:
             if log_filter.log_length is not None and len(rtn) >= log_filter.log_length:
                 break
         return rtn
+    
+
+    async def repoint_data(self,
+                           be_repointed_cut: int,
+                           repoint_target_cut: int,
+                           component: str
+                           ) -> None:
+        async with self.__class__._git_lock:
+            await self._continuous_git_command([[GitCommands.CHECKOUT, ShellArcGitBranch.PENDING]])
+            current_component_info = {
+                "repointer" : repoint_target_cut
+            }
+            with open(self.git_repo_local_dir / f"stage/cut{be_repointed_cut}/{component}.json", "w", encoding="utf-8") as f:
+                json.dump(current_component_info, f, ensure_ascii=False, indent=3)
+            git_commands = [
+                [GitCommands.ADD, f"stage/cut{be_repointed_cut}/{component}.json"],
+                [GitCommands.COMMIT, "-m", f"{SA_CommitType.REPOINT} * {be_repointed_cut} * {component} * REPOINT * {be_repointed_cut}->{repoint_target_cut} * {self._get_timemark} * 'na'"]
+            ]
+            await self._continuous_git_command(git_commands=git_commands)
+            with open(self.git_repo_local_dir / f"stage/cut{be_repointed_cut}/.sa_pending_{component}", "w") as f:
+                f.write("")
         
     
     async def pend_data(self,
