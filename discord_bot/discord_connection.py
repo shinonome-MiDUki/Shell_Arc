@@ -8,6 +8,7 @@ import json
 import random
 import traceback
 import datetime
+import hashlib
 from enum import Enum
 from pathlib import Path
 
@@ -639,6 +640,17 @@ async def ask(ctx):
         output_msg += f"\nカット{v} {component_name_e2j[k.split('_')[0]]}"
     await message.reply(output_msg)
 
+
+@shell_arc_bot.command()
+async def myid(ctx):
+    message = ctx.message
+    if message.author.bot:
+        return
+    creator_name = message.author.display_name
+    creator_id = hashlib.shake_128(creator_name.encode('utf-8')).hexdigest(3)
+    await message.channel.send(f"{creator_id}さんのIDは {creator_id} です")
+
+
 @shell_arc_bot.command()
 async def sync(ctx):
     message = ctx.message
@@ -646,6 +658,7 @@ async def sync(ctx):
         return
     await ShellArc_Upload.sync_vps_with_remote()
     await message.channel.send("同期しました")
+
 
 @shell_arc_bot.command()
 async def sapyc(ctx):

@@ -16,6 +16,7 @@ class Cfg_item(Enum):
     CUTNUM = "cut_num"
     COMPONENT = "components"
     GIT_LREPO = "git_repo_local"
+    LOCAL_BACKUP = "local_backup_dir"
 
 
 class Cfg_IO:
