@@ -648,7 +648,7 @@ async def myid(ctx):
         return
     creator_name = message.author.display_name
     creator_id = hashlib.shake_128(creator_name.encode('utf-8')).hexdigest(3)
-    await message.channel.send(f"{creator_id}さんのIDは {creator_id} です")
+    await message.channel.send(f"{creator_name}さんのIDは {creator_id} です")
 
 
 @shell_arc_bot.command()
