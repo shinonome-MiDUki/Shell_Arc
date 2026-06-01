@@ -58,7 +58,7 @@ async def nuru(ctx):
     if message.author.bot:
         return
     message_str = str(message.content)
-    message_str = message_str.lstrip("..nuru").strip()
+    message_str = message_str.lstrip(f"{bot_command}nuru").strip()
     if not message_str:
         return
     await message.channel.send("考えているぬる...")
@@ -77,5 +77,34 @@ async def nuru(ctx):
         print(f"Dify error : {e}")
         return
     await message.channel.send(resp)
+
+@shell_arc_chatbot.command()
+async def weather(ctx):
+    message = ctx.message
+    if message.author.bot:
+        return
+    city_name = "福岡" if len(message.split(" ")) < 2 else message.split(" ")[1]
+    with open(Path(__file__).resolve().parent / "city_id.json", "r", encoding="utf-8") as f:
+        city_id_dict = json.load(f)
+    city_id = city_id_dict.get(city_name, None)
+    if city_id is None:
+        message.channel.send("無効な地名です")
+        return
+    response = requests.get(f"https://weather.tsukumijima.net/api/forecast/city/{city_id}")
+    if response.status_code != 200:
+        message.channel.send("API通信無効です")
+        return
+    weather_json_str = response.text
+    weather_json_dict = json.loads(weather_json_str)
+    date = weather_json_dict["forecasts"][0]["date"]
+    report = weather_json_dict["description"]["bodyText"]
+    summary = weather_json_dict["forecasts"][0]["telop"]
+    weather = weather_json_dict["forecasts"][0]["detail"]["weather"]
+    min_temp = weather_json_dict["forecasts"][0]["temperature"]["min"]["celsius"]
+    max_temp = weather_json_dict["forecasts"][0]["temperature"]["max"]["celsius"]
+    reply_msg = f"{date}\n{report}\n\n天気：{summary}・{weather}\n温度：{min_temp}〜{max_temp}"
+    message.channel.send(reply_msg)
+
+
 
 shell_arc_chatbot.run(DC_CHATBOT_TOKEN)
