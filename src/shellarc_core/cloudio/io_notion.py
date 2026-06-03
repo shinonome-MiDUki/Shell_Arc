@@ -23,7 +23,9 @@ class Notion_IO:
                        ) -> None:
         if isinstance(download_destination, Path):
             download_destination = str(download_destination)
-        image_url = self.notion_db["results"][self.cut_num - 1]["properties"][attr_name]["files"]["file"]["url"]
+        if self.cut_num > len(self.notion_db["results"]):
+            raise 
+        image_url = self.notion_db["results"][self.cut_num * -1]["properties"][attr_name]["files"][0]["file"]["url"]
         response = requests.get(image_url)
         if response.status_code != 200:
             raise SA_CommunicationError(
