@@ -6,6 +6,7 @@ from shellarc_core.auth.access_notion import Notion_Access
 from shellarc_core.cfg.cfg_io import Cfg_IO, Cfg_item
 
 from shellarc_core.exception.structure_error import SA_CommunicationError, SA_ErrorCode
+from shellarc_core.exception.user_exception import SA_InvalidRequestObj
 
 class Notion_IO:
     def __init__(self,
@@ -24,7 +25,10 @@ class Notion_IO:
         if isinstance(download_destination, Path):
             download_destination = str(download_destination)
         if self.cut_num > len(self.notion_db["results"]):
-            raise 
+            raise SA_InvalidRequestObj(
+                error_log="Requesting lo of an unexisting cut",
+                frontend_msg=f"カット{self.cut_num}のLOはまだ存在しません"
+            )
         image_url = self.notion_db["results"][self.cut_num * -1]["properties"][attr_name]["files"][0]["file"]["url"]
         response = requests.get(image_url)
         if response.status_code != 200:
