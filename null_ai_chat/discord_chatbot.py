@@ -83,16 +83,16 @@ async def weather(ctx):
     message = ctx.message
     if message.author.bot:
         return
-    city_name = "福岡" if len(message.split(" ")) < 2 else message.split(" ")[1]
+    city_name = "福岡" if len(message.content.split(" ")) < 2 else message.content.split(" ")[1]
     with open(Path(__file__).resolve().parent / "city_id.json", "r", encoding="utf-8") as f:
         city_id_dict = json.load(f)
     city_id = city_id_dict.get(city_name, None)
     if city_id is None:
-        message.channel.send("無効な地名です")
+        await message.channel.send("無効な地名です")
         return
     response = requests.get(f"https://weather.tsukumijima.net/api/forecast/city/{city_id}")
     if response.status_code != 200:
-        message.channel.send("API通信無効です")
+        await message.channel.send("API通信無効です")
         return
     weather_json_str = response.text
     weather_json_dict = json.loads(weather_json_str)
@@ -103,7 +103,7 @@ async def weather(ctx):
     min_temp = weather_json_dict["forecasts"][0]["temperature"]["min"]["celsius"]
     max_temp = weather_json_dict["forecasts"][0]["temperature"]["max"]["celsius"]
     reply_msg = f"{date}\n{report}\n\n天気：{summary}・{weather}\n温度：{min_temp}〜{max_temp}"
-    message.channel.send(reply_msg)
+    await message.channel.send(reply_msg)
 
 
 
