@@ -17,6 +17,7 @@ class Cfg_item(Enum):
     COMPONENT = "components"
     GIT_LREPO = "git_repo_local"
     LOCAL_BACKUP = "local_backup_dir"
+    NOTION_DBID = "notion_dbid"
 
 
 class Cfg_IO:

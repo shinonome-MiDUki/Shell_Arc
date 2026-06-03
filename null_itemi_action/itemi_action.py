@@ -93,36 +93,6 @@ async def deadline(ctx):
     if message.author.bot:
         return
     
-
-@shell_arc_pmbot.command()
-async def up_lo(ctx):
-    message = ctx.message
-    if message.author.bot:
-        return
-    files = message.attachments
-    if not files:
-        await message.channel.send("pngファイルを添付してからご送信ください")
-        return
-    lo_file = files[0]
-    lo_file_bytes = await lo_file.read()
-    channel_name = message.channel.name
-    cut_num = int(process_cut_num(channel_name.split(channel_name_divider)[0]))
-    try:
-        sa_storyboard = ShellArc_Storyboard(cut_num=cut_num)
-        await sa_storyboard.upload_storyboard(file=(lo_file.filename, lo_file_bytes))
-        await message.channel.send(f"カット{cut_num}LO をアップロードできました")
-    except ShellArcException as e:
-        await message.channel.send(content=e.frontend_msg, view=None)
-        return
-    except ShellArcError as e:
-        await message.channel.send(content=e.frontend_msg, view=None)
-        return
-    except Exception as e:
-        await message.channel.send(content=f"UNEXPECTED PYTHON EXCEPTION : {e}", view=None)
-        tb = traceback.format_exc()
-        error_moment = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9), 'JST'))
-        print(f"!!UNEXPECTED : {error_moment.strftime('%Y%m%d%H%M%S')} -- {tb}")
-        return
     
 @shell_arc_pmbot.command()
 async def lo(ctx):
@@ -133,7 +103,7 @@ async def lo(ctx):
     cut_num = int(process_cut_num(channel_name.split(channel_name_divider)[0]))
     try:
         sa_storyboard = ShellArc_Storyboard(cut_num=cut_num)
-        downloaded_lo_path, downloaded_lo_name = await sa_storyboard.download_storyboard()
+        downloaded_lo_path = await sa_storyboard.download_storyboard()
         if not Path(downloaded_lo_path).exists():
             raise SA_LocalIOError(
                     error_log="generated temp download path not exist",
@@ -158,6 +128,10 @@ async def lo(ctx):
     finally:
         if Path(downloaded_lo_path).exists():
             os.unlink(downloaded_lo_path)
+        download_lo_dir = Path(downloaded_lo_path).resolve().parent
+        if download_lo_dir.exists():
+            try: os.rmdir(download_lo_dir)
+            except: pass
 
 
 @shell_arc_pmbot.command()

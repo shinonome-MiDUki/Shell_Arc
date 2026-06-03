@@ -20,7 +20,8 @@ dependencies = [
     "keyring", 
     "discord.py",
     "requests",
-    "gspread-formatting"
+    "gspread-formatting",
+    "notion_client"
 ]
 requires-python = ">=3.9"
 authors = [

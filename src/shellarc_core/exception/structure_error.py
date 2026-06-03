@@ -4,6 +4,7 @@ from enum import Enum
 from shellarc_core.exception.exceptions import SA_ExceptionType
 
 class SA_ErrorCode(Enum):
+    SA_3000 = "HTTP request error"
     SA_4001 = "Cfg path not exist"
     SA_4002 = "Cfg request item key not exist"
     SA_4101 = "Spreadsheet map path not exist"
