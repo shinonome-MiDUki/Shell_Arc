@@ -37,6 +37,7 @@ class SA_CommitType(StrEnum):
     APPROVE = "APPROVE"
     SUBMIT = "SUBMIT"
     REPOINT = "REPOINT"
+    ABSORPTION = "ABSORPTION"
 
 
 class ShellArcGitBranch(StrEnum):
@@ -338,6 +339,37 @@ class Git_IO:
             with open(self.git_repo_local_dir / f"stage/cut{be_repointed_cut}/.sa_pending_{component}", "w") as f:
                 f.write("")
         
+    async def absorb_data(self,
+                          absorbing_cut: int,
+                          absorb_target_cut: int,
+                          component: str,
+                          commit_id: str=None,
+                          branch: ShellArcGitBranch=ShellArcGitBranch.PENDING
+                          ) -> None:
+        await self._continuous_git_command([[GitCommands.CHECKOUT, branch]])
+        component_json_path = self.git_repo_local_dir / f"stage/cut{absorb_target_cut}/{component}.json"
+        if component_json_path.exists():
+            commit_id = commit_id if commit_id is not None else branch
+            git_proc = await self._git_command(GitCommands.SHOW, f"{commit_id}:stage/cut{absorb_target_cut}/{component}.json")
+            stdout, stderr = await git_proc.communicate()
+            if git_proc.returncode == 0:
+                requested_info_str = stdout.decode("utf-8")
+                requested_info = json.loads(requested_info_str)
+            else:
+                requested_info = {}
+        else:
+            requested_info = {}
+        await self._continuous_git_command([[GitCommands.CHECKOUT, ShellArcGitBranch.PENDING]])
+        with open(self.git_repo_local_dir / f"stage/cut{absorbing_cut}/{component}.json", "w", encoding="utf-8") as f:
+            json.dump(requested_info, f, ensure_ascii=False, indent=3)
+        git_commands = [
+            [GitCommands.ADD, f"stage/cut{absorbing_cut}/{component}.json"],
+            [GitCommands.COMMIT, "-m", f"{SA_CommitType.ABSORPTION} * {absorbing_cut} * {component} * ABSORB * {absorb_target_cut}->{absorbing_cut} * {self._get_timemark} * 'na'"]
+        ]
+        await self._continuous_git_command(git_commands=git_commands)
+        with open(self.git_repo_local_dir / f"stage/cut{absorbing_cut}/.sa_pending_{component}", "w") as f:
+            f.write("")
+
     
     async def pend_data(self,
                         cut_num: int,

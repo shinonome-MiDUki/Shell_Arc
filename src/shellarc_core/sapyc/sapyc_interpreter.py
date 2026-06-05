@@ -43,6 +43,44 @@ class SAPYC_Interpreter:
             component=component
         )
         return True
+    
+    @classmethod
+    async def rebase_data(cls,
+                          *args
+                          ) -> bool:
+        """
+        cut_num ; target_commit_id ; component
+        """
+        cut_num = int(args[0])
+        target_commit_id = str(args[1])
+        component = str(args[2])
+        git_io = Git_IO()
+        await git_io.absorb_data(
+            absorbing_cut=cut_num,
+            absorb_target_cut=cut_num,
+            component=component,
+            commit_id=target_commit_id
+        )
+        return True
+    
+    @classmethod
+    async def absorb_data(cls,
+                          *args
+                          ) -> bool:
+        """
+        absorbing_cut_num ; target_cut_num ; commit_id ; component
+        """
+        absorbing_cut_num = int(args[0])
+        target_cut_num = int(args[1])
+        commid_id = str(args[2])
+        component = str(args[3])
+        git_io = Git_IO()
+        await git_io.absorb_data(
+            absorbing_cut=absorbing_cut_num,
+            absorb_target_cut=target_cut_num,
+            component=component,
+            commit_id=commid_id
+        )
 
 
     @classmethod
