@@ -46,8 +46,8 @@ class Notion_IO:
         img_info = [
                         {
                             "name": f"cut{self.cut_num}_lo.png",
-                            "type": "file",
-                            "file": {"url": img_url}
+                            "type": "external",
+                            "external": {"url": img_url}
                         }
                     ]
         if self.cut_num > len(self.notion_db["results"]):

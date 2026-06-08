@@ -27,3 +27,6 @@ Release ShellArc 2026.3.0 Production ;
 
 2026-06-04 : 
 ..lo command for downloading layout image from Notion directly ;
+
+2026-06-08 :
+..lo + file attachment for uploading layout image from Discord directly ;
