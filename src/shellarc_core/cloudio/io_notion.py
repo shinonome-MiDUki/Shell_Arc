@@ -55,11 +55,11 @@ class Notion_IO:
                 error_log="Requesting lo of an unexisting cut",
                 frontend_msg=f"カット{self.cut_num}のLOはまだ準備されていません"
             )
+        target_page_id = self.notion_db["results"][self.cut_num * -1]["id"]
         try:
-            self.notion_db["results"][self.cut_num * -1]["properties"][attr_name]["files"] = img_info
-            self.notion.databases.update(
-                database_id=self.database_id,
-                title=self.notion_db
+            self.notion.pages.update(
+                page_id=target_page_id,
+                properties={attr_name: {"files": img_info}}
             )
         except:
             raise SA_CommunicationError(
