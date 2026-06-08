@@ -2,7 +2,7 @@ import tempfile
 import datetime
 import os
 import time
-from typing import Any
+from typing import overload, Union
 from pathlib import Path
 
 import boto3
@@ -15,11 +15,13 @@ from shellarc_core.exception.structure_error import (
 )
 
 class R2_IO:
-    def __init__(self):
+    def __init__(self, 
+                 bucket_name: str | None=None
+                 ):
         a_r2 = A_R2()
         self.s3_client = a_r2.s3_client
         cfg_io = Cfg_IO()
-        self.bucket_name = cfg_io.get_cfg_setting(Cfg_item.BUCKET_NAME)
+        self.bucket_name = cfg_io.get_cfg_setting(Cfg_item.BUCKET_NAME) if bucket_name is None else bucket_name
 
 
     def get_s3obj_size(self,
@@ -70,12 +72,27 @@ class R2_IO:
             HttpMethod=http_method
         )
         return presigned_url
+    
+    @overload
+    def upload_file(self, 
+                    uploading_file: bytes | str | Path,
+                    file_path: str | Path,
+                    url_prefix: str
+                    ) -> str: ...
+    
+    @overload
+    def upload_file(self, 
+                    uploading_file: bytes | str | Path,
+                    file_path: str | Path,
+                    url_prefix: None
+                    ) -> None: ...
         
 
     def upload_file(self,
                     uploading_file: bytes | str | Path,
-                    file_path: str | Path
-                    ) -> None:
+                    file_path: str | Path,
+                    url_prefix: str | None=None
+                    ) -> str | None:
         """Upload a file to the R2 storage by either directly uploading the file from a local path 
         or by writing the file content from bytes to a temporary file and then uploading it.
 
@@ -114,6 +131,10 @@ class R2_IO:
         finally:
             if isinstance(uploading_file, bytes) and Path(tmp_file_path).exists():
                 os.unlink(tmp_file_path)
+        if url_prefix is None: 
+            return
+        else:
+            return f"{url_prefix}/{file_path}"
 
 
     def download_file(self,

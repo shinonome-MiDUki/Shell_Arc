@@ -12,10 +12,10 @@ class Notion_IO:
     def __init__(self,
                  cut_num: int
                  ):
-        notion = Notion_Access().get_notion_client
-        database_id = str(Cfg_IO().get_cfg_setting(Cfg_item.NOTION_DBID))
-        data_source_id = notion.databases.retrieve(database_id)['data_sources'][0]['id']
-        self.notion_db = notion.data_sources.query(data_source_id = data_source_id)
+        self.notion = Notion_Access().get_notion_client
+        self.database_id = str(Cfg_IO().get_cfg_setting(Cfg_item.NOTION_DBID))
+        data_source_id = self.notion.databases.retrieve(self.database_id)['data_sources'][0]['id']
+        self.notion_db = self.notion.data_sources.query(data_source_id = data_source_id)
         self.cut_num = cut_num
 
     def get_image_file(self,
@@ -38,3 +38,32 @@ class Notion_IO:
             )
         with open(download_destination, "wb") as f:
             f.write(response.content)
+
+    def put_image_url(self,
+                      img_url: str,
+                      attr_name: str="画像"
+                      ) -> None:
+        img_info = [
+                        {
+                            "name": f"cut{self.cut_num}_lo.png",
+                            "type": "file",
+                            "file": {"url": img_url}
+                        }
+                    ]
+        if self.cut_num > len(self.notion_db["results"]):
+            raise SA_InvalidRequestObj(
+                error_log="Requesting lo of an unexisting cut",
+                frontend_msg=f"カット{self.cut_num}のLOはまだ準備されていません"
+            )
+        try:
+            self.notion_db["results"][self.cut_num * -1]["properties"][attr_name]["files"] = img_info
+            self.notion.databases.update(
+                database_id=self.database_id,
+                title=self.notion_db
+            )
+        except:
+            raise SA_CommunicationError(
+                error_log="Request failed when uploadng image url to Notion",
+                error_code=SA_ErrorCode.SA_3000
+            )
+        

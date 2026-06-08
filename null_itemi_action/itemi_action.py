@@ -93,14 +93,9 @@ async def deadline(ctx):
     if message.author.bot:
         return
     
-    
-@shell_arc_pmbot.command()
-async def lo(ctx):
-    message = ctx.message
-    if message.author.bot:
-        return
-    channel_name = message.channel.name
-    cut_num = int(process_cut_num(channel_name.split(channel_name_divider)[0]))
+async def dl_lo(message: discord.Message,
+                cut_num: int
+                ) -> None:
     try:
         sa_storyboard = ShellArc_Storyboard(cut_num=cut_num)
         downloaded_lo_path = await sa_storyboard.download_storyboard()
@@ -132,6 +127,50 @@ async def lo(ctx):
         if download_lo_dir.exists():
             try: os.rmdir(download_lo_dir)
             except: pass
+
+
+async def up_lo(message: discord.Message,
+                cut_num: int
+                ) -> None:
+    try:
+        lo_file = message.attachments[0]
+        lo_file_bytes = await lo_file.read()
+        sa_storyboard = ShellArc_Storyboard(cut_num=cut_num)
+        await sa_storyboard.upload_storyboard(file_obj=lo_file_bytes)
+        await message.channel.send(f"カット{cut_num}LOがアップロードされました")
+    except ShellArcException as e:
+        await message.channel.send(content=e.frontend_msg, view=None)
+        return
+    except ShellArcError as e:
+        await message.channel.send(content=e.frontend_msg, view=None)
+        return
+    except Exception as e:
+        await message.channel.send(content=f"UNEXPECTED PYTHON EXCEPTION : {e}", view=None)
+        tb = traceback.format_exc()
+        error_moment = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9), 'JST'))
+        print(f"!!UNEXPECTED : {error_moment.strftime('%Y%m%d%H%M%S')} -- {tb}")
+        return
+
+    
+@shell_arc_pmbot.command()
+async def lo(ctx):
+    message = ctx.message
+    if message.author.bot:
+        return
+    channel_name = message.channel.name
+    cut_num = int(process_cut_num(channel_name.split(channel_name_divider)[0]))
+    file_attachments = message.attachments
+    if not file_attachments:
+        await dl_lo(
+            message=message,
+            cut_num=cut_num
+        )
+    else:
+        await up_lo(
+            message=message,
+            cut_num=cut_num
+        )
+
 
 
 @shell_arc_pmbot.command()
