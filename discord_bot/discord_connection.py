@@ -221,6 +221,7 @@ class ShellArcDropdown(discord.ui.Select):
                 )
             elif self.sa_action == ShellArcActions.REG:
                 is_force = len(self.message.content.split(" ")) > 1 and self.message.content.split(" ")[1] == "f"
+                processing_person = str(self.message.content.split(" ")[2]) if len(self.message.content.split(" ")) > 2 else processing_person
                 shell_arc_bot.dispatch(
                     ShellArcEvents.REG_Event.value,
                     interaction,
