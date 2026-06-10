@@ -6,8 +6,7 @@ project_ctx/**
 **/.env
 **/.DS_Store
 **/__pycache__/**
-**/token.bin
+**/keys/**
 linker_setting.yaml
 project_setting.yaml
 *.zip
-**/shellarc_native/build/**
