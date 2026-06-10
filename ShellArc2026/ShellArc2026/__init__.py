@@ -1,13 +1,17 @@
-print("run")
-
 import sys
 import os
 from pathlib import Path
 
+site_package = str(Path(__file__).resolve().parent / "site_packages")
+print(site_package)
+if site_package not in sys.path:
+    sys.path.append(site_package)
+    
 import bpy
 
 from . import shellarc_blender_ui as shellarc_blender_ui
 from .shellarc_blender_ui import SHELLARC_BLENDER_CustomPanel
+from . import shellarc_ui_action as shellarc_ui_action
 from .shellarc_ui_action import (
     SHELLARC_modetoggle_Nop,
     SHELLARC_getfile_Nop,
@@ -94,21 +98,21 @@ def blender_normal_exit_action():
             os.unlink(cache_path)
 
 def register():
-    site_package = str(Path(__file__).resolve().parent / "site_packages")
-    print(site_package)
-    if site_package not in sys.path:
-        sys.path.append(site_package)
     import keyring
     from .shellarc_ui_action import update_asset_list
     if keyring.get_password("shellarc", "shellarc") is None:
         keyring.set_password("shellarc", "shellarc", "")
     for c in classes:
-        bpy.utils.register_class(c)
+        try:
+            bpy.utils.register_class(c)
+        except ValueError:
+            bpy.utils.unregister_class(c) 
+            bpy.utils.register_class(c)
     if blender_normal_exit_action not in bpy.app.handlers.exit_pre:
         bpy.app.handlers.exit_pre.append(blender_normal_exit_action)
     if blender_normal_exit_action not in bpy.app.handlers.load_pre:
         bpy.app.handlers.load_pre.append(blender_normal_exit_action)
-    update_asset_list()
+    #update_asset_list()
     shellarc_blender_ui.init_props()
 
 

@@ -13,7 +13,7 @@ from bpy.props import (
 )
 
 from .shellarc_blender_action import LocalOperation
-from shellarc_ui_action import (
+from .shellarc_ui_action import (
     SHELLARC_modetoggle_Nop,
     SHELLARC_getfile_Nop,
     SHELLARC_forcesubmit_Nop,
@@ -46,10 +46,13 @@ class SHELLARC_BLENDER_CustomPanel(Panel):
 
     def draw(self, context):
         layout = self.layout
+
+        if not hasattr(context, 'scene') or context.scene is None:
+            return
         scene = context.scene
 
         pref = context.preferences
-        addon_pref = pref.addons[__package__].preferences
+        addon_pref = pref.addons["bl_ext.user_default.ShellArc2026"].preferences
         mem_id = addon_pref.member_id if addon_pref is not None else ""
 
         if not mem_id:
@@ -59,7 +62,7 @@ class SHELLARC_BLENDER_CustomPanel(Panel):
                 layout.prop(scene, "shellarc_prop_str_decodekey", text="デコードキー")
             layout.operator(SHELLARC_login_Nop.bl_idname, text="ログイン")
 
-        elif mem_id.startswith("m"):
+        else:
 
             if "under_progress" not in bpy.context.scene or bpy.context.scene["under_progress"] is False:
                 current_mode = "今 : モデリングモード" if scene.shellarc_prop_bool_ismodellingmode else "今 : レイアウトモード"

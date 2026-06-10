@@ -4,7 +4,7 @@ from bpy.props import StringProperty, FloatProperty
 
 
 class SHELLARC_AddonPreferences(AddonPreferences):
-    bl_idname = __package__
+    bl_idname = "bl_ext.user_default.ShellArc2026"
 
     member_id: StringProperty(
         name="6桁メンバーID",
