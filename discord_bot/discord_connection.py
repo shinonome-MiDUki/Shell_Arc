@@ -104,7 +104,22 @@ class ShellArcEvents(Enum):
 
 
 
+@shell_arc_bot.check
+async def check_if_running(ctx):
+    message = ctx.message
+    if message.content.startswith("..onoff"):
+        return
+    global ONOFF
+    if not ONOFF:
+        raise commands.CheckFailure("ShellArcメインテナンス中です\n申し訳ございませんがしばらく経ってから再度実行してください")
+    return True
 
+@shell_arc_bot.event
+async def on_command_error(ctx, error):
+    if isinstance(error, commands.CheckFailure):
+        await ctx.send(str(error))
+    else:
+        raise error
 
 class ShellArcButton(discord.ui.Button):
     def __init__(self, 
