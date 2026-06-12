@@ -147,6 +147,10 @@ class SAPYC_Interpreter:
             rtn = await cls.get_history_log(*command_content_ls)
         elif cmd_name == "spreadsheet":
             rtn = await cls.read_spreadsheet(*command_content_ls)
+        elif cmd_name == "rebase":
+            rtn = await cls.rebase_data(*command_content_ls)
+        elif cmd_name == "absorb":
+            rtn = await cls.absorb_data(*command_content_ls)
         else: 
             rtn = "Invalid Command"
         return rtn
