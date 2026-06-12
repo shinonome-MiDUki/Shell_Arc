@@ -26,6 +26,11 @@ class ShellArc_Upload:
                     format: str,
                     submitter_name: str
                     ) -> dict:
+        if self.working_component == "layout":
+            raise SA_InvalidUserQuery(
+                error_log="..up used for uploading layout",
+                frontend_msg="レイアウトは..loコマンドでアップロードしてください"
+            )
         current_take_num = int(self.db_io.get_meta_info(request_info=DB_meta.CURRENT_TAKE)) + 1
         naming = FileOp.renamed(
             cut_num=self.cut_num,
