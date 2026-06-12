@@ -761,6 +761,7 @@ async def makech(ctx):
 
 @shell_arc_bot.command()
 async def onoff(ctx):
+    global ONOFF
     message: discord.Message = ctx.message
     if message.author.bot:
         return
