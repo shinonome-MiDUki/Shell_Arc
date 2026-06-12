@@ -98,7 +98,7 @@ class SAPYC_Interpreter:
         )
         git_io = Git_IO()
         output_format = [int(i) for i in args[4].split("+")]
-        rtn = git_io.get_log(
+        rtn = await git_io.get_log(
             output_format=output_format,
             log_filter=log_filter,
             limit_scope=str(args[5]) if args[5] != "None" else None,
