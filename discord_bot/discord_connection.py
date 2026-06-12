@@ -80,11 +80,11 @@ def process_cut_num(cut_cluster):
 async def authority_check(message: discord.Message,
                           authority_group: str
                           ) -> bool:
-    admin_roles = [
+    admin_roles_ctx = [
         discord.utils.get(message.guild.roles, name=authorized)
         for authorized in admin_roles.get(authority_group, [])
         ]
-    if not set(admin_roles).intersection(set(message.author.roles)):
+    if not set(admin_roles_ctx).intersection(set(message.author.roles)):
         return False
     return True
 
