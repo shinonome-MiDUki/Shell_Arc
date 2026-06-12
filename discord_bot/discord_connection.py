@@ -107,8 +107,8 @@ class ShellArcEvents(Enum):
 @shell_arc_bot.check
 async def check_if_running(ctx):
     message = ctx.message
-    if message.content.startswith("..onoff"):
-        return
+    if ctx.command.name == "onoff":
+        return True
     global ONOFF
     if not ONOFF:
         raise commands.CheckFailure("ShellArcメインテナンス中です\n申し訳ございませんがしばらく経ってから再度実行してください")
