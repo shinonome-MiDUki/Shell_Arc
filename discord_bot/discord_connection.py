@@ -297,7 +297,7 @@ async def send_submission_log(message: discord.Message,
                               submitting_component: str,
                               submitting_person: str
                               ) -> None:
-    submission_log_channel = discord.utils.get(message.guild.channels, id="") #**********
+    submission_log_channel = discord.utils.get(message.guild.channels, id=int(shellarc_center["notice_center"])) #**********
     submission_datetime = datetime.datetime.now()
     submission_datetime_str = datetime.datetime.strftime(submission_datetime, "%d/%m/%Y, %H:%M:%S")
     await submission_log_channel.send(
@@ -645,7 +645,7 @@ async def ask(ctx):
     message = ctx.message
     if message.author.bot:
         return
-    if message.channel.name != shellarc_center["schedule_query_center"]:
+    if message.channel.id != int(shellarc_center["schedule_query_center"]):
         return
     try:
         asking_person = str(message.content.split(" ")[1])
