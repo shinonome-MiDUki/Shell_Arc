@@ -88,11 +88,13 @@ async def reboot_scheduler() -> None:
         )
     sa_sm.stop_scheduler(recauculate=True)
 
+
 @shell_arc_pmbot.command()
 async def deadline(ctx):
     message = ctx.message
     if message.author.bot:
         return
+    
     
 async def dl_lo(message: discord.Message,
                 cut_num: int

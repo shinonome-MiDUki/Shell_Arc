@@ -33,7 +33,7 @@ from shellarc_core.exception.user_exception import ShellArcException
 
 # from .discord_notice_webhook import DiscordNotice as Notice
 
-
+ONOFF = True
 
 load_dotenv(verbose=True)
 project_ctx_dir = Path(os.environ.get("SHELLARC_PROJECT_CTX", None))
@@ -76,6 +76,17 @@ def process_cut_num(cut_cluster):
     if match:
         return str(match.group(1))
     return None
+
+async def authority_check(message: discord.Message,
+                          authority_group: str
+                          ) -> bool:
+    admin_roles = [
+        discord.utils.get(message.guild.roles, name=authorized)
+        for authorized in admin_roles.get(authority_group, [])
+        ]
+    if not set(admin_roles).intersection(set(message.author.roles)):
+        return False
+    return True
 
 class ShellArcActions(Enum):
     UP = 1
@@ -281,6 +292,19 @@ class ShellArcDropdownView(discord.ui.View):
 
 
 #ACTIONS
+async def send_submission_log(message: discord.Message,
+                              submitting_cut: int,
+                              submitting_component: str,
+                              submitting_person: str
+                              ) -> None:
+    submission_log_channel = discord.utils.get(message.guild.channels, id="") #**********
+    submission_datetime = datetime.datetime.now()
+    submission_datetime_str = datetime.datetime.strftime(submission_datetime, "%d/%m/%Y, %H:%M:%S")
+    await submission_log_channel.send(
+        f"{submission_datetime_str}\n"\
+        f"{submitting_person}さんがカット{submitting_cut}・{submitting_component}を提出しました "\
+        f"{message.channel.mention}"
+    )
 
 @shell_arc_bot.event
 async def on_push_action(interaction: discord.Interaction, 
@@ -344,6 +368,12 @@ async def on_push_action(interaction: discord.Interaction,
         if mentioning_role is not None:
             confirm_msg += f" {mentioning_role.mention}"
     await interaction.edit_original_response(content=confirm_msg, view=None)
+    await send_submission_log(
+        message=message,
+        submitting_cut=submitting_cut,
+        submitting_component=submitting_component,
+        submitting_person=submitting_person
+    )
 
 
 @shell_arc_bot.event
@@ -474,9 +504,6 @@ async def on_register_action(interaction: discord.Interaction,
     await interaction.channel.edit(name=new_channel_name)
     await interaction.edit_original_response(content=f"{registering_person}をカット{registering_cut} {registering_component}に登録しました", view=None)
     #await interaction.channel.send(f"..remind {deadline} あしたカット{registering_cut}の締切だよ {message.author.id}")
-    
-
-
 
 
 
@@ -600,7 +627,6 @@ async def history(ctx):
             max_length=max_length
         )
     else:
-        print("CALL572")
         history_dict = await ShellArc_Query.get_history(
             cut_num=quering_cut,
             component=quering_component,
@@ -685,6 +711,13 @@ async def makech(ctx):
     message: discord.Message = ctx.message
     if message.author.bot:
         return
+    is_authorized = await authority_check(
+        message=message,
+        authority_group="admin_cmd"
+    )
+    if not is_authorized:
+        await message.channel.send("このコマンドを実行するためには権限が必要です")
+        return
     try:
         message_breakdown = message.content.split(" ")
         catagory_id = int(message_breakdown[1])
@@ -710,6 +743,33 @@ async def makech(ctx):
         return
 
     await message.channel.send("完了です")
+
+@shell_arc_bot.command()
+async def onoff(ctx):
+    message: discord.Message = ctx.message
+    if message.author.bot:
+        return
+    is_authorized = await authority_check(
+        message=message,
+        authority_group="admin_cmd"
+    )
+    if not is_authorized:
+        await message.channel.send("このコマンドを実行するためには権限が必要です")
+        return
+    ONOFF = not ONOFF
+    status_msg = "ボットを切断しました" if not ONOFF else "ボットを起動しました"
+    await message.channel.send(status_msg)
+
+
+@shell_arc_bot.event
+async def on_message(message: discord.Message):
+    if message.author.bot:
+        return
+    if not message.content.startswith(".."):
+        return
+    if not ONOFF:
+        await message.channel.send("ShellArcメインテナンス中です")
+    return
 
 # @shell_arc_bot.event
 # async def on_message(message):
