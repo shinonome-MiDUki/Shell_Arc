@@ -1,6 +1,7 @@
 import os
 import re
 import json
+import asyncio
 import datetime
 import traceback
 from pathlib import Path
@@ -233,6 +234,38 @@ async def remind(ctx):
     except ShellArcException as e:
         await message.channel.send(e.frontend_msg)
         return
+    
+
+@shell_arc_pmbot.command()
+async def makech(ctx):
+    message: discord.Message = ctx.message
+    if message.author.bot:
+        return
+    try:
+        message_breakdown = message.content.split(" ")
+        catagory_id = str(message_breakdown[1])
+        naming = str(message_breakdown[2])
+        range_from = int(message_breakdown[3])
+        range_to = int(message_breakdown[4])
+    except:
+        await message.channel.send("無効な形式です（..makech カタゴリID 命名規則 開始カット 終了カット）")
+        return
+    try: 
+        catagory = discord.utils.get(message.guild.categories, id=catagory_id)
+    except:
+        await message.channel.send("無効なカタゴリIDです")
+        return
+    
+    try:
+        for count in range(range_from, range_to+1):
+            await catagory.create_text_channel(f"{naming.replace("*", str(count))}{channel_name_divider}")
+            if count % 5 == 0:
+                await asyncio.sleep(1.1)
+    except:
+        await message.channel.send("Discord make channel error")
+        return
+
+    await message.channel.send("完了です")
     
 
 @shell_arc_pmbot.event

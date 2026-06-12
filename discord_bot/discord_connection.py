@@ -680,36 +680,6 @@ async def sapyc(ctx):
         error_moment = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9), 'JST'))
         print(f"!!UNEXPECTED : {error_moment.strftime('%Y%m%d%H%M%S')} -- {tb}")
 
-
-# @shell_arc_bot.command()
-# async def build_project_server(ctx):
-#     message = ctx.message
-#     if message.author.bot:
-#         return
-#     author_roles = [role.name for role in message.author.roles]
-#     if "SETTER_ADMIN" not in author_roles or message.channel.name != "build_channel":
-#         await message.channel.send("\"build_channel\"という名前を持つチャンネルを作成し、\"SETTER_ADMIN\"という名前のロールを設定者に付与してください")
-#         return
-    
-#     Category = await ctx.guild.create_category(submission_channel_catagory_name)
-#     await Category.create_text_channel(center_channel_names["notice_center"])
-#     await Category.create_text_channel(center_channel_names["schedule_query_center"])
-
-#     for count in range(1, TOTAL_CUT_COUNT+1):
-#         if count in linker_children_set:
-#             continue
-#         child_cut = linkp.trace_to_child(count)
-#         if child_cut is not None:
-#             child_text = "、".join([str(i) for i in child_cut])
-#             child_text = str(count) + "、" + child_text
-#         else: 
-#             child_text = str(count)
-#         await Category.create_text_channel(f"{child_text}{channel_name_divider}")
-#         if count % 5 == 0:
-#             time.sleep(1.5)
-
-#     await message.channel.send("設定完了です\n\"BUILD_CHANNEL\"チャンネルと\"SETTER_ADMIN\"ロールを削除してください")
-
 # @shell_arc_bot.event
 # async def on_message(message):
 #     if message.author == shell_arc_bot.user:
