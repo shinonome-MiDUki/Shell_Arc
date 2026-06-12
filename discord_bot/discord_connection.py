@@ -776,18 +776,6 @@ async def onoff(ctx):
     status_msg = "ボットを切断しました" if not ONOFF else "ボットを起動しました"
     await message.channel.send(status_msg)
 
-
-@shell_arc_bot.event
-async def on_message(message: discord.Message):
-    if message.author.bot:
-        return
-    if not message.content.startswith(".."):
-        return
-    if not ONOFF:
-        await message.channel.send("ShellArcメインテナンス中です")
-    await shell_arc_bot.process_commands(message)
-    return
-
 # @shell_arc_bot.event
 # async def on_message(message):
 #     if message.author == shell_arc_bot.user:
