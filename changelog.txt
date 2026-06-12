@@ -33,4 +33,5 @@ Release ShellArc 2026.3.0 Production ;
 
 2026-06-12 :
 ..makech command for generating cut channels automatically ;
-
+..onoff command for switching off the bot for maintainance ;
+Implement dispatch for SAPYC rebase and absorb commands ;
