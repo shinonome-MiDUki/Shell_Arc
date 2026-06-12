@@ -769,6 +769,7 @@ async def on_message(message: discord.Message):
         return
     if not ONOFF:
         await message.channel.send("ShellArcメインテナンス中です")
+    await shell_arc_bot.process_commands(message)
     return
 
 # @shell_arc_bot.event
