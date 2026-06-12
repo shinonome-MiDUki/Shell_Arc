@@ -680,6 +680,37 @@ async def sapyc(ctx):
         error_moment = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9), 'JST'))
         print(f"!!UNEXPECTED : {error_moment.strftime('%Y%m%d%H%M%S')} -- {tb}")
 
+@shell_arc_bot.command()
+async def makech(ctx):
+    message: discord.Message = ctx.message
+    if message.author.bot:
+        return
+    try:
+        message_breakdown = message.content.split(" ")
+        catagory_id = int(message_breakdown[1])
+        naming = str(message_breakdown[2])
+        range_from = int(message_breakdown[3])
+        range_to = int(message_breakdown[4])
+    except:
+        await message.channel.send("無効な形式です（..makech カタゴリID 命名規則 開始カット 終了カット）")
+        return
+    try: 
+        catagory = discord.utils.get(message.guild.categories, id=catagory_id)
+    except:
+        await message.channel.send("無効なカタゴリIDです")
+        return
+    
+    try:
+        for count in range(range_from, range_to+1):
+            await catagory.create_text_channel(f"{naming.replace('*', str(count))}{channel_name_divider}")
+            if count % 5 == 0:
+                await asyncio.sleep(1.1)
+    except Exception as e:
+        await message.channel.send(f"Discord make channel error : {e}")
+        return
+
+    await message.channel.send("完了です")
+
 # @shell_arc_bot.event
 # async def on_message(message):
 #     if message.author == shell_arc_bot.user:
