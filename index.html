@@ -51,6 +51,35 @@
             opacity: 0.9;
         }
 
+        /* --- 目次ナビ --- */
+        .toc-nav {
+            background-color: var(--primary-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+        }
+        .toc-inner {
+            max-width: 800px;
+            margin: 0 auto;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 4px;
+            padding: 8px;
+        }
+        .toc-inner a {
+            color: #fff;
+            text-decoration: none;
+            font-size: 0.85rem;
+            padding: 5px 12px;
+            border-radius: 6px;
+            transition: background-color 0.2s;
+        }
+        .toc-inner a:hover {
+            background-color: rgba(255,255,255,0.2);
+        }
+
         .container {
             max-width: 800px;
             margin: 30px auto;
@@ -92,12 +121,10 @@
             max-width: 85%;
         }
 
-        /* いてみちゃん（左側） */
         .message.itemi {
             align-self: flex-start;
         }
 
-        /* ぬるたろう（右側・返答） */
         .message.nurutaro {
             align-self: flex-end;
             flex-direction: row-reverse;
@@ -149,13 +176,14 @@
             border: 1px solid var(--accent-color);
         }
 
-        /* --- コマンド一覧セクション --- */
+        /* --- セクション共通 --- */
         .docs-section {
             background-color: #ffffff;
             border-radius: 12px;
             padding: 30px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.05);
             border: 1px solid var(--border-color);
+            margin-bottom: 40px;
         }
 
         .docs-section h2 {
@@ -196,6 +224,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 10px;
         }
 
         .command-name {
@@ -212,9 +241,13 @@
             padding: 3px 8px;
             border-radius: 4px;
             font-weight: bold;
+            white-space: nowrap;
         }
         .command-badge.admin {
             background-color: #e67e22;
+        }
+        .command-badge.dev {
+            background-color: #8e44ad;
         }
 
         .command-body {
@@ -222,6 +255,210 @@
             font-size: 0.95rem;
             color: var(--text-dark);
         }
+        .command-body code {
+            background-color: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "Courier New", Courier, monospace;
+            color: var(--primary-dark);
+            font-size: 0.9em;
+        }
+
+        /* --- よく使うコマンド（強調カード） --- */
+        .intro-lead {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+        }
+        .frequent-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+        }
+        .freq-card {
+            border: 2px solid var(--accent-color);
+            border-radius: 10px;
+            padding: 18px;
+            background: linear-gradient(180deg, var(--primary-light) 0%, #ffffff 60%);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .freq-icon {
+            font-size: 1.8rem;
+        }
+        .freq-cmd {
+            font-family: "Courier New", Courier, monospace;
+            font-weight: bold;
+            color: var(--primary-dark);
+            font-size: 1.1rem;
+        }
+        .freq-desc {
+            font-size: 0.9rem;
+            color: var(--text-dark);
+        }
+        .freq-how {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            background-color: #fff;
+            border-radius: 6px;
+            padding: 6px 8px;
+            border: 1px dashed var(--border-color);
+        }
+
+        /* --- SAPYC 図解 --- */
+        .sapyc-intro {
+            background-color: var(--primary-light);
+            border-radius: 10px;
+            padding: 18px 20px;
+            margin-bottom: 25px;
+            font-size: 0.95rem;
+        }
+        .syntax-diagram {
+            background-color: #1b1b1b;
+            color: #eee;
+            border-radius: 10px;
+            padding: 20px;
+            font-family: "Courier New", Courier, monospace;
+            font-size: 0.95rem;
+            overflow-x: auto;
+            margin: 20px 0;
+            text-align: center;
+            line-height: 2.2;
+        }
+        .syntax-diagram .tok {
+            padding: 3px 8px;
+            border-radius: 5px;
+            margin: 0 2px;
+            white-space: nowrap;
+            display: inline-block;
+        }
+        .tok-domain { background-color: #2e7d32; }
+        .tok-space  { background-color: #00838f; }
+        .tok-name   { background-color: #c2185b; }
+        .tok-sep    { color: #ffca28; font-weight: bold; }
+        .tok-arg    { background-color: #5d4037; }
+        .syntax-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 14px;
+            font-size: 0.85rem;
+        }
+        .syntax-legend span {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .legend-dot {
+            width: 14px; height: 14px; border-radius: 3px; display:inline-block;
+        }
+
+        /* --- SAPYC ビルダー --- */
+        .builder {
+            border: 2px solid var(--primary-color);
+            border-radius: 12px;
+            padding: 22px;
+            margin: 25px 0;
+            background-color: #fcfdfc;
+        }
+        .builder h3 {
+            color: var(--primary-dark);
+            margin-bottom: 6px;
+            font-size: 1.15rem;
+        }
+        .builder .builder-hint {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+        }
+        .builder label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: var(--text-dark);
+            margin: 12px 0 4px;
+        }
+        .builder select, .builder input {
+            width: 100%;
+            padding: 9px 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 0.95rem;
+            font-family: inherit;
+        }
+        .builder input:focus, .builder select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+        .arg-hint {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+        #argFields {
+            margin-top: 6px;
+        }
+        .builder-output {
+            margin-top: 20px;
+            background-color: #1b1b1b;
+            color: #a5d6a7;
+            border-radius: 8px;
+            padding: 16px;
+            font-family: "Courier New", Courier, monospace;
+            font-size: 0.95rem;
+            word-break: break-all;
+            position: relative;
+            min-height: 50px;
+        }
+        .copy-btn {
+            margin-top: 12px;
+            background-color: var(--primary-color);
+            color: #fff;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .copy-btn:hover { background-color: var(--primary-dark); }
+        .copy-btn.copied { background-color: #00897b; }
+
+        /* --- 表 --- */
+        .sapyc-table-wrap { overflow-x: auto; margin-top: 10px; }
+        table.sapyc-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.88rem;
+            min-width: 560px;
+        }
+        table.sapyc-table th, table.sapyc-table td {
+            border: 1px solid var(--border-color);
+            padding: 10px 12px;
+            text-align: left;
+            vertical-align: top;
+        }
+        table.sapyc-table th {
+            background-color: var(--primary-color);
+            color: #fff;
+        }
+        table.sapyc-table tr:nth-child(even) { background-color: var(--code-bg); }
+        table.sapyc-table code {
+            font-family: "Courier New", Courier, monospace;
+            color: var(--primary-dark);
+        }
+
+        .note-box {
+            border-left: 4px solid #8e44ad;
+            background-color: #f6f0fa;
+            padding: 14px 18px;
+            border-radius: 0 8px 8px 0;
+            font-size: 0.88rem;
+            margin-top: 20px;
+        }
+        .note-box strong { color: #8e44ad; }
 
         footer {
             text-align: center;
@@ -233,15 +470,9 @@
         }
 
         @media (max-width: 600px) {
-            .message {
-                max-width: 95%;
-            }
-            .container {
-                margin: 15px auto;
-            }
-            .docs-section {
-                padding: 20px;
-            }
+            .message { max-width: 95%; }
+            .container { margin: 15px auto; }
+            .docs-section { padding: 20px; }
         }
     </style>
 </head>
@@ -252,9 +483,20 @@
         <p>未定研 (2026) | Discord ボット・インターフェース解説</p>
     </header>
 
+    <nav class="toc-nav">
+        <div class="toc-inner">
+            <a href="#intro">はじめに</a>
+            <a href="#frequent">よく使うコマンド</a>
+            <a href="#all-commands">全コマンド一覧</a>
+            <a href="#sapyc">SAPYC 解説</a>
+            <a href="#dev">開発者向け補足</a>
+        </div>
+    </nav>
+
     <div class="container">
 
-        <section class="chat-section">
+        <!-- ===== イントロ（既存サイトから流用） ===== -->
+        <section class="chat-section" id="intro">
             <div class="chat-title">
                 <span>💬</span> Shell Arc ってなに？（導入ミニ解説）
             </div>
@@ -363,9 +605,57 @@
             </div>
         </section>
 
-        <section class="docs-section">
+        <!-- ===== よく使うコマンド ===== -->
+        <section class="docs-section" id="frequent">
+            <h2>まずはこれだけ！よく使うコマンド</h2>
+            <p class="intro-lead">
+                毎日の作業でよく使う5つのコマンドです。コマンドはすべて <code>..</code>（ピリオド2つ）で始まります。
+                難しいことは分からなくても、この5つを覚えれば日常の提出・受け取りはバッチリです。
+            </p>
+            <div class="frequent-grid">
+
+                <div class="freq-card">
+                    <div class="freq-icon">📤</div>
+                    <div class="freq-cmd">..up</div>
+                    <div class="freq-desc">ファイルを提出する。一番よく使うコマンドです。</div>
+                    <div class="freq-how">ファイルを添付して <b>..up</b> と送信 → 出てきたボタンを選ぶだけ。</div>
+                </div>
+
+                <div class="freq-card">
+                    <div class="freq-icon">📥</div>
+                    <div class="freq-cmd">..dl</div>
+                    <div class="freq-desc">そのカットの最新確定ファイルを受け取る。</div>
+                    <div class="freq-how">チャンネルで <b>..dl</b> と送信。過去版が欲しいときは番号を付けます。</div>
+                </div>
+
+                <div class="freq-card">
+                    <div class="freq-icon">🙋</div>
+                    <div class="freq-cmd">..reg</div>
+                    <div class="freq-desc">そのカットの担当として自分を登録する。</div>
+                    <div class="freq-how">担当するチャンネルで <b>..reg</b> と送信するだけ。</div>
+                </div>
+
+                <div class="freq-card">
+                    <div class="freq-icon">🤖</div>
+                    <div class="freq-cmd">..nuru</div>
+                    <div class="freq-desc">困ったら「ぬるたろう」に技術的な質問ができる。</div>
+                    <div class="freq-how"><b>..nuru 質問内容</b> と送ると答えてくれます。</div>
+                </div>
+
+                <div class="freq-card">
+                    <div class="freq-icon">🌤️</div>
+                    <div class="freq-cmd">..weather</div>
+                    <div class="freq-desc">天気を聞く（ひと息つきたいとき用）。</div>
+                    <div class="freq-how"><b>..weather 都市名</b>。省略すると福岡の天気が出ます。</div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ===== 全コマンド一覧（既存を流用・整理） ===== -->
+        <section class="docs-section" id="all-commands">
             <h2>未定研 Shell Arc 2026 Discord ボット - コマンド一覧</h2>
-            
+
             <div class="category-title">1. Shell Arc 2026 コマンド</div>
 
             <div class="command-card">
@@ -464,11 +754,22 @@
 
             <div class="command-card">
                 <div class="command-header">
-                    <span class="command-name">..sapyc コマンド</span>
-                    <span class="command-badge admin">デベロッパー</span>
+                    <span class="command-name">..onoff</span>
+                    <span class="command-badge admin">管理者用</span>
                 </div>
                 <div class="command-body">
-                    ShellArc Expression 命令系コマンドを実行できます。
+                    [管理者用] ボット自体の稼働／停止を切り替えます。引数は不要で、送信するたびに状態が切り替わります（稼働中なら停止、停止中なら稼働）。
+                </div>
+            </div>
+
+            <div class="command-card">
+                <div class="command-header">
+                    <span class="command-name">..sapyc コマンド</span>
+                    <span class="command-badge dev">デベロッパー</span>
+                </div>
+                <div class="command-body">
+                    ShellArc Expression 命令系コマンド（SAPYC）を実行できます。詳しい書き方は
+                    <a href="#sapyc">下の「SAPYC 解説」</a>を参照してください。
                 </div>
             </div>
 
@@ -481,6 +782,16 @@
                 </div>
                 <div class="command-body">
                     テクニカルサポートチャットボット「ぬるたろう」を呼び出すコマンドです。ShellArcの使用方法などの技術的な質問に対応できます。
+                </div>
+            </div>
+
+            <div class="command-card">
+                <div class="command-header">
+                    <span class="command-name">..weather (都市名)</span>
+                    <span class="command-badge">天気</span>
+                </div>
+                <div class="command-body">
+                    指定した都市の天気予報を表示します。都市名を省略すると福岡の天気が返されます。
                 </div>
             </div>
 
@@ -499,14 +810,169 @@
 
             <div class="command-card">
                 <div class="command-header">
-                    <span class="command-name">..remind YYYYMMSSHHMM リマインド内容 (メンバー番号)</span>
+                    <span class="command-name">..lo</span>
+                    <span class="command-badge">レイアウト</span>
+                </div>
+                <div class="command-body">
+                    そのチャンネルのカットのレイアウト（LO）を扱います。<br>
+                    ファイルを<b>添付せずに</b> <code>..lo</code> と送ると LO をダウンロード、<br>
+                    ファイルを<b>添付して</b> <code>..lo</code> と送ると LO をアップロードします。
+                </div>
+            </div>
+
+            <div class="command-card">
+                <div class="command-header">
+                    <span class="command-name">..remind YYYYMMDDHHMM リマインド内容 (チャンネル番号) (メンバー番号)</span>
                     <span class="command-badge">スケジューラ</span>
                 </div>
                 <div class="command-body">
                     いてみちゃんにリマインダーを登録できます。<br>
-                    指定した日時に、登録したチャンネルへリマインドが届きます。<br>
-                    デフォルトのリマインド対象は 送信者自身 です。
+                    日時は <code>YYYYMMDDHHMM</code> の12桁で指定します（例：2026年5月20日14時30分 → <code>202605201430</code>）。<br>
+                    指定した日時に、登録したチャンネルへリマインドが届きます。デフォルトのリマインド対象は送信者自身です。
                 </div>
+            </div>
+        </section>
+
+        <!-- ===== SAPYC 解説 ===== -->
+        <section class="docs-section" id="sapyc">
+            <h2>SAPYC コマンド解説（上級者向け）</h2>
+
+            <div class="sapyc-intro">
+                <strong>SAPYC（ShellArc Command Set）</strong>は、Shell Arc の内部機能に直接アクセスするための「命令文」です。
+                普段の作業では <code>..up</code> や <code>..dl</code> で十分ですが、過去データの参照付け替えや履歴の詳細取得など、
+                細かい操作をしたいときに使います。<br>
+                Discord では <code>..sapyc</code> に続けて、下記の形式の命令文を書いて送信します。
+                難しそうに見えますが、<b>下の「組み立てツール」を使えば自動で作れます</b>。
+            </div>
+
+            <div class="category-title" style="margin-top:10px;">① 構文の仕組み</div>
+            <p style="font-size:0.92rem; margin-bottom:6px;">
+                SAPYC の命令文は「どの機能を呼ぶか」を表す<b>前半</b>と、「具体的な値」を表す<b>後半</b>を、記号
+                <code>&lt;</code> で区切ります。区切り文字はそれぞれ <code>;</code>（セミコロン）です。
+            </p>
+
+            <div class="syntax-diagram">
+                <span class="tok tok-domain">ドメイン</span><span class="tok-sep">;</span><span class="tok tok-space">空間</span><span class="tok-sep">;</span><span class="tok tok-name">コマンド名</span>
+                &nbsp;<span class="tok-sep">&lt;</span>&nbsp;
+                <span class="tok tok-arg">引数1</span><span class="tok-sep">;</span><span class="tok tok-arg">引数2</span><span class="tok-sep">;</span><span class="tok tok-arg">…</span>
+                <div class="syntax-legend">
+                    <span><span class="legend-dot" style="background:#2e7d32"></span>ドメイン：機能の大分類</span>
+                    <span><span class="legend-dot" style="background:#00838f"></span>空間：対象の領域</span>
+                    <span><span class="legend-dot" style="background:#c2185b"></span>コマンド名：実行する操作</span>
+                    <span><span class="legend-dot" style="background:#5d4037"></span>引数：操作に渡す値</span>
+                </div>
+            </div>
+            <p style="font-size:0.82rem; color:var(--text-muted);">
+                ※ 命令文の末尾に <code>/</code> を付けると、それ以降はコメントとして無視されます。
+            </p>
+
+            <div class="category-title">② 組み立てツール（クリックで作成）</div>
+            <div class="builder">
+                <h3>🛠️ SAPYC 命令文ジェネレーター</h3>
+                <p class="builder-hint">コマンドを選んで値を入れると、送信できる命令文が下に自動で出来上がります。コピーして Discord に貼り付けてください。</p>
+
+                <label for="domainIn">ドメイン</label>
+                <input type="text" id="domainIn" value="shellarc" oninput="buildSapyc()">
+
+                <label for="spaceIn">空間</label>
+                <input type="text" id="spaceIn" value="core" oninput="buildSapyc()">
+
+                <label for="cmdSel">コマンド名</label>
+                <select id="cmdSel" onchange="renderArgs(); buildSapyc()">
+                    <option value="record">record（コンポーネント情報を取得）</option>
+                    <option value="repoint">repoint（データの参照先を付け替え）</option>
+                    <option value="rebase">rebase（指定コミットへ作り直す）</option>
+                    <option value="absorb">absorb（別カットのデータを取り込む）</option>
+                    <option value="history">history（コミット履歴を取得）</option>
+                    <option value="spreadsheet">spreadsheet（スプレッドシートを読む）</option>
+                </select>
+
+                <div id="argFields"></div>
+
+                <label style="margin-top:16px;">完成した命令文</label>
+                <div class="builder-output" id="sapycOut">..sapyc </div>
+                <button class="copy-btn" id="copyBtn" onclick="copySapyc()">📋 コピーする</button>
+            </div>
+
+            <div class="category-title">③ コマンド一覧表</div>
+            <p style="font-size:0.9rem; margin-bottom:4px;">
+                現在 <code>..sapyc</code> から実行できるコマンドは次の4つです。引数は左から順に <code>;</code> で区切って並べます。
+            </p>
+            <div class="sapyc-table-wrap">
+                <table class="sapyc-table">
+                    <thead>
+                        <tr>
+                            <th>コマンド名</th>
+                            <th>役割</th>
+                            <th>引数（左から順に）</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>record</code></td>
+                            <td>指定カットのコンポーネント情報を取得する</td>
+                            <td><code>cut_num</code>（カット番号）;<code>component</code>（部品名）;<code>branch</code>（ブランチ）;<code>commit_id</code>（任意・省略可）</td>
+                        </tr>
+                        <tr>
+                            <td><code>repoint</code></td>
+                            <td>あるカットのデータ参照先を別のカットへ付け替える</td>
+                            <td><code>be_repointed_cut</code>（付け替えられる側）;<code>repoint_target_cut</code>（参照先）;<code>component</code>（部品）</td>
+                        </tr>
+                        <tr>
+                            <td><code>rebase</code></td>
+                            <td>指定カットのデータを、指定コミットの状態へ作り直す</td>
+                            <td><code>cut_num</code>（カット番号）;<code>target_commit_id</code>（対象コミットID）;<code>component</code>（部品）</td>
+                        </tr>
+                        <tr>
+                            <td><code>absorb</code></td>
+                            <td>別カットのデータ（指定コミット）を取り込む</td>
+                            <td><code>absorbing_cut_num</code>（取り込む側）;<code>target_cut_num</code>（取り込み元）;<code>commit_id</code>（コミットID）;<code>component</code>（部品）</td>
+                        </tr>
+                        <tr>
+                            <td><code>history</code></td>
+                            <td>条件を指定してコミット履歴を取得する</td>
+                            <td><code>commit_type</code>;<code>cut_num</code>;<code>component</code>;<code>log_length</code>;<code>output_format</code>;<code>limit_scope</code>;<code>branch</code><br><span class="arg-hint">不要な項目は <code>None</code>、output_format は <code>+</code> 区切りの数字</span></td>
+                        </tr>
+                        <tr>
+                            <td><code>spreadsheet</code></td>
+                            <td>指定カットのスプレッドシート情報を読む</td>
+                            <td><code>cut_num</code>（カット番号）;<code>info_type</code>（情報種別）;<code>page_idx</code>（任意・省略可）</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="category-title">④ 具体例</div>
+            <div class="command-card">
+                <div class="command-header"><span class="command-name">record の例</span></div>
+                <div class="command-body">
+                    カット12番・「genga」コンポーネントの情報を main ブランチから取得：<br>
+                    <code>..sapyc shellarc;core;record&lt;12;genga;main</code>
+                </div>
+            </div>
+            <div class="command-card">
+                <div class="command-header"><span class="command-name">history の例</span></div>
+                <div class="command-body">
+                    カット12番の履歴を最大5件取得（不要項目は None）：<br>
+                    <code>..sapyc shellarc;core;history&lt;None;12;None;5;1;None;None</code>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== 開発者向け補足 ===== -->
+        <section class="docs-section" id="dev">
+            <h2>開発者向け補足</h2>
+            <p style="font-size:0.92rem;">
+                このセクションはコードを触る開発者向けの注記です。通常の利用者は読み飛ばして問題ありません。
+            </p>
+            <div class="note-box">
+                <strong>SAPYC コマンドの実装状況：</strong><br>
+                現在 <code>interpret_sapyc()</code> のディスパッチには
+                <code>record</code> / <code>repoint</code> / <code>rebase</code> / <code>absorb</code> /
+                <code>history</code> / <code>spreadsheet</code> が登録されており、いずれも
+                <code>..sapyc</code> から実行できます。<br>
+                新しいコマンドを追加する場合は、対応するクラスメソッドを実装したうえで
+                <code>interpret_sapyc()</code> 内の <code>if cmd_name == ...</code> 分岐への登録が必要です。
             </div>
         </section>
 
@@ -515,6 +981,114 @@
     <footer>
         <p>&copy; 2026 未定研 (Miteiken). All Rights Reserved.</p>
     </footer>
+
+    <script>
+        // 各コマンドの引数定義（sapyc_interpreter.py の docstring に基づく）
+        const ARG_DEFS = {
+            record: [
+                { key: "cut_num",   label: "カット番号 (cut_num)",     placeholder: "例：12",     hint: "数値。対象のカット番号" },
+                { key: "component", label: "コンポーネント (component)", placeholder: "例：genga",  hint: "部品名（文字列）" },
+                { key: "branch",    label: "ブランチ (branch)",        placeholder: "例：main",   hint: "対象ブランチ名" },
+                { key: "commit_id", label: "コミットID (commit_id) ※任意", placeholder: "省略可", hint: "空欄なら最新を取得", optional: true }
+            ],
+            repoint: [
+                { key: "be_repointed_cut",  label: "付け替えられる側のカット (be_repointed_cut)", placeholder: "例：12", hint: "参照を変更する側" },
+                { key: "repoint_target_cut", label: "参照先のカット (repoint_target_cut)",       placeholder: "例：5",  hint: "新しい参照先" },
+                { key: "component",          label: "コンポーネント (component)",                  placeholder: "例：genga", hint: "対象の部品" }
+            ],
+            rebase: [
+                { key: "cut_num",          label: "カット番号 (cut_num)",            placeholder: "例：12",  hint: "作り直す対象のカット" },
+                { key: "target_commit_id", label: "対象コミットID (target_commit_id)", placeholder: "例：a1b2c3", hint: "この状態へ作り直す" },
+                { key: "component",        label: "コンポーネント (component)",       placeholder: "例：genga", hint: "対象の部品" }
+            ],
+            absorb: [
+                { key: "absorbing_cut_num", label: "取り込む側のカット (absorbing_cut_num)", placeholder: "例：12", hint: "データを受け取る側" },
+                { key: "target_cut_num",    label: "取り込み元のカット (target_cut_num)",   placeholder: "例：5",  hint: "データの提供元" },
+                { key: "commit_id",         label: "コミットID (commit_id)",               placeholder: "例：a1b2c3", hint: "取り込むコミット" },
+                { key: "component",         label: "コンポーネント (component)",            placeholder: "例：genga", hint: "対象の部品" }
+            ],
+            history: [
+                { key: "commit_type",   label: "コミット種別 (commit_type)",   placeholder: "None", hint: "不要なら None", optional: true },
+                { key: "cut_num",       label: "カット番号 (cut_num)",         placeholder: "None または 12", hint: "不要なら None", optional: true },
+                { key: "component",     label: "コンポーネント (component)",     placeholder: "None", hint: "不要なら None", optional: true },
+                { key: "log_length",    label: "取得件数 (log_length)",        placeholder: "None または 5", hint: "不要なら None", optional: true },
+                { key: "output_format", label: "出力フォーマット (output_format)", placeholder: "例：1+2", hint: "数字を + で区切る" },
+                { key: "limit_scope",   label: "範囲制限 (limit_scope)",       placeholder: "None", hint: "不要なら None", optional: true },
+                { key: "branch",        label: "ブランチ (branch)",            placeholder: "None", hint: "不要なら None", optional: true }
+            ],
+            spreadsheet: [
+                { key: "cut_num",   label: "カット番号 (cut_num)",   placeholder: "例：12",   hint: "対象カット番号" },
+                { key: "info_type", label: "情報種別 (info_type)",   placeholder: "例：staff", hint: "読み取る情報の種類" },
+                { key: "page_idx",  label: "ページ番号 (page_idx) ※任意", placeholder: "省略可（既定0）", hint: "空欄なら0", optional: true }
+            ]
+        };
+
+        function renderArgs() {
+            const cmd = document.getElementById("cmdSel").value;
+            const wrap = document.getElementById("argFields");
+            wrap.innerHTML = "";
+            ARG_DEFS[cmd].forEach(arg => {
+                const lbl = document.createElement("label");
+                lbl.textContent = arg.label;
+                const inp = document.createElement("input");
+                inp.type = "text";
+                inp.dataset.key = arg.key;
+                inp.dataset.optional = arg.optional ? "1" : "0";
+                inp.placeholder = arg.placeholder;
+                inp.oninput = buildSapyc;
+                const hint = document.createElement("div");
+                hint.className = "arg-hint";
+                hint.textContent = arg.hint;
+                wrap.appendChild(lbl);
+                wrap.appendChild(inp);
+                wrap.appendChild(hint);
+            });
+        }
+
+        function buildSapyc() {
+            const domain = document.getElementById("domainIn").value.trim() || "shellarc";
+            const space  = document.getElementById("spaceIn").value.trim() || "core";
+            const cmd    = document.getElementById("cmdSel").value;
+            const inputs = document.querySelectorAll("#argFields input");
+
+            // 末尾の連続した「任意かつ空欄」の引数は省略する
+            let vals = [];
+            inputs.forEach(i => vals.push({ v: i.value.trim(), opt: i.dataset.optional === "1" }));
+            while (vals.length && vals[vals.length - 1].opt && vals[vals.length - 1].v === "") {
+                vals.pop();
+            }
+            const argStr = vals.map(x => x.v).join(";");
+            const out = `..sapyc ${domain};${space};${cmd}<${argStr}`;
+            document.getElementById("sapycOut").textContent = out;
+        }
+
+        function copySapyc() {
+            const text = document.getElementById("sapycOut").textContent;
+            const btn = document.getElementById("copyBtn");
+            navigator.clipboard.writeText(text).then(() => {
+                btn.textContent = "✅ コピーしました！";
+                btn.classList.add("copied");
+                setTimeout(() => {
+                    btn.textContent = "📋 コピーする";
+                    btn.classList.remove("copied");
+                }, 1600);
+            }).catch(() => {
+                // クリップボードAPIが使えない環境向けフォールバック
+                const r = document.createRange();
+                r.selectNode(document.getElementById("sapycOut"));
+                window.getSelection().removeAllRanges();
+                window.getSelection().addRange(r);
+                document.execCommand("copy");
+                window.getSelection().removeAllRanges();
+                btn.textContent = "✅ コピーしました！";
+                setTimeout(() => { btn.textContent = "📋 コピーする"; }, 1600);
+            });
+        }
+
+        // 初期化
+        renderArgs();
+        buildSapyc();
+    </script>
 
 </body>
 </html>
