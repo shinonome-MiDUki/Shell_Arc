@@ -243,7 +243,7 @@ async def makech(ctx):
         return
     try:
         message_breakdown = message.content.split(" ")
-        catagory_id = str(message_breakdown[1])
+        catagory_id = int(message_breakdown[1])
         naming = str(message_breakdown[2])
         range_from = int(message_breakdown[3])
         range_to = int(message_breakdown[4])
@@ -258,11 +258,11 @@ async def makech(ctx):
     
     try:
         for count in range(range_from, range_to+1):
-            await catagory.create_text_channel(f"{naming.replace("*", str(count))}{channel_name_divider}")
+            await catagory.create_text_channel(f"{naming.replace('*', str(count))}{channel_name_divider}")
             if count % 5 == 0:
                 await asyncio.sleep(1.1)
-    except:
-        await message.channel.send("Discord make channel error")
+    except Exception as e:
+        await message.channel.send(f"Discord make channel error : {e}")
         return
 
     await message.channel.send("完了です")
