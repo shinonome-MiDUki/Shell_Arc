@@ -460,6 +460,51 @@
         }
         .note-box strong { color: #8e44ad; }
 
+        /* --- エラーコード早見表 --- */
+        .err-group-title {
+            font-size: 0.95rem;
+            font-weight: bold;
+            color: #fff;
+            padding: 6px 12px;
+            border-radius: 6px;
+            margin: 22px 0 8px;
+            display: inline-block;
+        }
+        .err-3 { background-color: #00838f; }
+        .err-4 { background-color: #5d4037; }
+        .err-5 { background-color: #6a1b9a; }
+        .err-6 { background-color: #2e7d32; }
+        .err-7 { background-color: #c2185b; }
+        .err-8 { background-color: #ef6c00; }
+        .err-9 { background-color: #b71c1c; }
+
+        table.err-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.86rem;
+            margin-bottom: 6px;
+        }
+        table.err-table th, table.err-table td {
+            border: 1px solid var(--border-color);
+            padding: 8px 10px;
+            text-align: left;
+            vertical-align: top;
+        }
+        table.err-table th {
+            background-color: var(--code-bg);
+            color: var(--text-dark);
+        }
+        table.err-table td.code {
+            font-family: "Courier New", Courier, monospace;
+            font-weight: bold;
+            color: var(--primary-dark);
+            white-space: nowrap;
+        }
+        table.err-table td.en {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
         footer {
             text-align: center;
             padding: 30px 0;
@@ -490,6 +535,7 @@
             <a href="#all-commands">全コマンド一覧</a>
             <a href="#sapyc">SAPYC 解説</a>
             <a href="#dev">開発者向け補足</a>
+            <a href="#errcode">エラーコード</a>
         </div>
     </nav>
 
@@ -974,6 +1020,66 @@
                 新しいコマンドを追加する場合は、対応するクラスメソッドを実装したうえで
                 <code>interpret_sapyc()</code> 内の <code>if cmd_name == ...</code> 分岐への登録が必要です。
             </div>
+
+            <h2 style="margin-top:35px;" id="errcode">エラーコード早見表</h2>
+            <p style="font-size:0.92rem; margin-bottom:6px;">
+                ボットがエラーを返したとき、メッセージに <code>SA_XXXX</code> という番号が表示されることがあります。
+                その番号の意味と、考えられる原因・対処をまとめました。番号は先頭の数字でグループ分けされています。
+            </p>
+
+            <span class="err-group-title err-3">SA_3xxx ｜ 通信</span>
+            <table class="err-table">
+                <tr><th>コード</th><th>意味</th><th>原因・対処の目安</th></tr>
+                <tr><td class="code">SA_3000<div class="en">HTTP request error</div></td><td>HTTP リクエストでエラーが起きた</td><td>外部サービスとの通信に失敗。時間をおいて再実行、改善しなければ管理者へ。</td></tr>
+            </table>
+
+            <span class="err-group-title err-4">SA_4xxx ｜ 設定 (Config)</span>
+            <table class="err-table">
+                <tr><th>コード</th><th>意味</th><th>原因・対処の目安</th></tr>
+                <tr><td class="code">SA_4001<div class="en">Cfg path not exist</div></td><td>設定ファイルのパスが存在しない</td><td>設定ファイルが見つからない。配置場所を確認。</td></tr>
+                <tr><td class="code">SA_4002<div class="en">Cfg request item key not exist</div></td><td>設定内に必要な項目（キー）が無い</td><td>設定ファイルに項目が不足。記述漏れを確認。</td></tr>
+                <tr><td class="code">SA_4101<div class="en">Spreadsheet map path not exist</div></td><td>スプレッドシート対応表のパスが無い</td><td>スプレッドシートのマップ設定ファイルが見つからない。</td></tr>
+                <tr><td class="code">SA_4102<div class="en">Spreadsheet map unconfiged coord</div></td><td>対応表に未設定の座標がある</td><td>スプレッドシートのマップに未定義のセル指定がある。</td></tr>
+            </table>
+
+            <span class="err-group-title err-5">SA_5xxx ｜ データ</span>
+            <table class="err-table">
+                <tr><th>コード</th><th>意味</th><th>原因・対処の目安</th></tr>
+                <tr><td class="code">SA_5001<div class="en">DB unfound info</div></td><td>データベースに該当情報が見つからない</td><td>指定したカット・項目が存在しない可能性。入力値を確認。</td></tr>
+                <tr><td class="code">SA_5002<div class="en">Non active index unspecified</div></td><td>非アクティブなインデックスが未指定</td><td>対象バージョン（インデックス）の指定が必要。</td></tr>
+                <tr><td class="code">SA_5003<div class="en">Requsted status info dict not exist</div></td><td>要求された状態情報が存在しない</td><td>該当する状態データがまだ無い。提出状況を確認。</td></tr>
+                <tr><td class="code">SA_5101<div class="en">None file uploaded unexpectedly</div></td><td>ファイルが添付されていない</td><td>アップロード系の操作でファイルを添付し忘れている。</td></tr>
+                <tr><td class="code">SA_5201<div class="en">Spreadsheet index is non natural num</div></td><td>スプレッドシートの番号が自然数でない</td><td>ページ番号などに 0 以上の整数を指定。</td></tr>
+            </table>
+
+            <span class="err-group-title err-6">SA_6xxx ｜ Git / プロジェクト</span>
+            <table class="err-table">
+                <tr><th>コード</th><th>意味</th><th>原因・対処の目安</th></tr>
+                <tr><td class="code">SA_6000<div class="en">Git remote comminication error</div></td><td>Git リモートとの通信エラー</td><td>クラウド側との同期に失敗。時間をおいて再試行。</td></tr>
+                <tr><td class="code">SA_6001<div class="en">Project index files missing essential data</div></td><td>プロジェクト索引に必須データが欠けている</td><td>プロジェクト管理ファイルが破損・不足。管理者へ。</td></tr>
+                <tr><td class="code">SA_6002<div class="en">Project json compositions key error</div></td><td>プロジェクト JSON の構成キーエラー</td><td>設定 JSON の構造に問題。記述を確認。</td></tr>
+            </table>
+
+            <span class="err-group-title err-7">SA_7xxx ｜ パラメータ</span>
+            <table class="err-table">
+                <tr><th>コード</th><th>意味</th><th>原因・対処の目安</th></tr>
+                <tr><td class="code">SA_7000<div class="en">Incorrect parameter</div></td><td>パラメータ（引数）が正しくない</td><td>コマンドの引数の書き方・値を確認。SAPYC なら一覧表を参照。</td></tr>
+            </table>
+
+            <span class="err-group-title err-8">SA_8xxx ｜ サーバー I/O</span>
+            <table class="err-table">
+                <tr><th>コード</th><th>意味</th><th>原因・対処の目安</th></tr>
+                <tr><td class="code">SA_8000<div class="en">Server local IO error</div></td><td>サーバー内のファイル読み書きエラー</td><td>サーバー側の一時ファイル処理に失敗。再試行か管理者へ。</td></tr>
+                <tr><td class="code">SA_8001<div class="en">Communication error</div></td><td>通信エラー</td><td>サーバー間の通信に失敗。時間をおいて再試行。</td></tr>
+                <tr><td class="code">SA_8002<div class="en">Git error</div></td><td>Git 処理エラー</td><td>バージョン管理処理で問題が発生。管理者へ。</td></tr>
+            </table>
+
+            <span class="err-group-title err-9">SA_9xxx ｜ 認証</span>
+            <table class="err-table">
+                <tr><th>コード</th><th>意味</th><th>原因・対処の目安</th></tr>
+                <tr><td class="code">SA_9000<div class="en">Auth error</div></td><td>認証エラー</td><td>権限・トークンに問題。管理者へ確認。</td></tr>
+                <tr><td class="code">SA_9001<div class="en">Expected .env file missing</div></td><td>必要な .env ファイルが無い</td><td>環境設定ファイル（.env）が未配置。セットアップを確認。</td></tr>
+            </table>
         </section>
 
     </div>
