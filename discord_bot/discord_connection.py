@@ -118,8 +118,11 @@ async def check_if_running(ctx):
 async def on_command_error(ctx, error):
     if isinstance(error, commands.CheckFailure):
         await ctx.send(str(error))
+    elif isinstance(error, commands.CommandNotFound):
+        return
     else:
         raise error
+
 
 class ShellArcButton(discord.ui.Button):
     def __init__(self, 

@@ -44,6 +44,12 @@ cut_extraction_regex = config["notice_message_cut_extraction_regex"]
 channel_name_divider = config.get("channel_name_divider", "_")
 shell_arc_pmbot = commands.Bot(command_prefix=bot_command, intents=discord.Intents.all())
 
+
+@shell_arc_pmbot.event
+async def on_command_error(ctx, error):
+    if isinstance(error, commands.CommandNotFound):
+        return
+
 def process_cut_num(cut_cluster):
     match = re.search(cut_extraction_regex, cut_cluster)
     if match:

@@ -28,6 +28,11 @@ with open(discord_config_file_path, mode="r", encoding="utf-8") as config_file:
 bot_command = config["bot_command"]
 shell_arc_chatbot = commands.Bot(command_prefix=bot_command, intents=discord.Intents.all())
 
+@shell_arc_chatbot.event
+async def on_command_error(ctx, error):
+    if isinstance(error, commands.CommandNotFound):
+        return
+
 async def response_user(q: str,
                   asking_person: str,
                   chat_mode: str
