@@ -674,7 +674,7 @@ async def ask(ctx):
     query_result = await shellarc_query.efficient_get_spreadsheet_info(
         target_index_value=asking_person,
         index_info_types=[f"{c}_PIC" for c in component_name_e2j],
-        target_info_types=["cut_num", "cut_num", "cut_num", "cut_num", "cut_num"],
+        target_info_types=["cut_num"] * len(component_name_e2j),
         search_range=[1, TOTAL_CUT_COUNT]
     )
     output_msg = asking_person + ":"
