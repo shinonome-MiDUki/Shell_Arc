@@ -102,7 +102,7 @@ class SAPYC_Interpreter:
             output_format=output_format,
             log_filter=log_filter,
             limit_scope=str(args[5]) if args[5] != "None" else None,
-            branch=str(args[6]) if args[6] != "None" else None
+            branch=str(args[6]) if args[6] != "None" else "pending"
         )
         return rtn
     

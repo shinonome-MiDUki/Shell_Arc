@@ -713,7 +713,7 @@ async def sapyc(ctx):
     try:
         cmd = message.content.lstrip("..sapyc").strip()
         rtn = await SAPYC_Interpreter.interpret_sapyc(cmd=cmd)
-        return rtn
+        await message.channel.send(rtn)
     except ShellArcException as e:
         await message.channel.send(content=e.frontend_msg, view=None)
     except ShellArcError as e:
