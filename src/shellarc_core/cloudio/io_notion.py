@@ -29,7 +29,16 @@ class Notion_IO:
                 error_log="Requesting lo of an unexisting cut",
                 frontend_msg=f"カット{self.cut_num}のLOはまだ存在しません"
             )
-        image_url = self.notion_db["results"][self.cut_num * -1]["properties"][attr_name]["files"][0]["file"]["url"]
+        notion_response_files = self.notion_db["results"][self.cut_num * -1]["properties"][attr_name]["files"][0]
+        if "files" in notion_response_files:
+            image_url = self.notion_db["results"][self.cut_num * -1]["properties"][attr_name]["files"][0]["file"]["url"]
+        elif "external" in notion_response_files:
+            image_url = self.notion_db["results"][self.cut_num * -1]["properties"][attr_name]["files"][0]["external"]["url"]
+        else:
+            raise SA_CommunicationError(
+                error_log="Required key not in notion response",
+                error_code=SA_ErrorCode.SA_3000
+            )
         response = requests.get(image_url)
         if response.status_code != 200:
             raise SA_CommunicationError(

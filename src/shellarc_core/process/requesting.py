@@ -79,8 +79,9 @@ class ShellArc_Request:
         required_format = self.cfg_io.get_cfg_setting(Cfg_item.COMPONENT, self.working_component, 'format')
         if "|" in required_format:
             name_without_ext = naming
-            target_file_s3path_prefix = f"{self.cfg_io.get_cfg_setting(Cfg_item.COLL_NAME)}/stage"
+            target_file_s3path_prefix = f"{self.cfg_io.get_cfg_setting(Cfg_item.COLL_NAME)}/stage/{name_without_ext}"
             target_file_s3path = self.r2_io.get_path_with_ext(path_without_ext=target_file_s3path_prefix)
+            name_with_ext = target_file_s3path.split("/")[-1]
         else:
             name_with_ext = f"{naming}.{self.cfg_io.get_cfg_setting(Cfg_item.COMPONENT, self.working_component, 'format')}"
             target_file_s3path = f"{self.cfg_io.get_cfg_setting(Cfg_item.COLL_NAME)}/stage/{name_with_ext}"
