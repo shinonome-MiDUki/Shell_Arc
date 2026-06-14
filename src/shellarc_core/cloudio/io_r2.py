@@ -19,7 +19,7 @@ class R2_IO:
                  bucket_name: str | None=None
                  ):
         a_r2 = A_R2()
-        self.s3_client = a_r2.s3_client
+        self.s3_client: boto3.client = a_r2.s3_client
         cfg_io = Cfg_IO()
         self.bucket_name = cfg_io.get_cfg_setting(Cfg_item.BUCKET_NAME) if bucket_name is None else bucket_name
 
@@ -72,6 +72,16 @@ class R2_IO:
             HttpMethod=http_method
         )
         return presigned_url
+    
+    def get_path_with_ext(self,
+                          path_without_ext: str
+                          ) -> str:
+        response = self.s3_client.list_objects_v2(
+            Bucket=self.bucket_name,
+            Prefix=path_without_ext
+            )
+        exact_path_w_ext = response["Contents"][0]["Key"]
+        return exact_path_w_ext
     
     @overload
     def upload_file(self, 

@@ -30,7 +30,7 @@ class FileOperation:
 
     @staticmethod
     async def make_zip(files: dict[str, bytes],
-                       required_format: str
+                       required_format: list[str]
                        ) -> str:
         tempzip_path = tempfile.NamedTemporaryFile(suffix=".zip", delete=False)
         tempzip_path_name = tempzip_path.name
@@ -41,7 +41,7 @@ class FileOperation:
                         print(Path(name).suffix.lstrip(".").lower())
                         raise SA_InvalidUserQuery(
                             error_log=f"file with invalid extension format uploaded detected during auto zipping",
-                            frontend_msg=f"{required_format}形式でご提出ください"
+                            frontend_msg=f"PNG形式のみ圧縮可能です"
                         )
                     zf.writestr(name, byte_data)
         except Exception as e:

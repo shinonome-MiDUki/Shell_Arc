@@ -76,9 +76,15 @@ class ShellArc_Request:
                 error_code=SA_ErrorCode.SA_6002
             )
         
-        name_with_ext = f"{naming}.{self.cfg_io.get_cfg_setting(Cfg_item.COMPONENT, self.working_component, 'format')}"
+        required_format = self.cfg_io.get_cfg_setting(Cfg_item.COMPONENT, self.working_component, 'format')
+        if "|" in required_format:
+            name_without_ext = naming
+            target_file_s3path_prefix = f"{self.cfg_io.get_cfg_setting(Cfg_item.COLL_NAME)}/stage"
+            target_file_s3path = self.r2_io.get_path_with_ext(path_without_ext=target_file_s3path_prefix)
+        else:
+            name_with_ext = f"{naming}.{self.cfg_io.get_cfg_setting(Cfg_item.COMPONENT, self.working_component, 'format')}"
+            target_file_s3path = f"{self.cfg_io.get_cfg_setting(Cfg_item.COLL_NAME)}/stage/{name_with_ext}"
         temp_dir = tempfile.mkdtemp()
-        target_file_s3path = f"{self.cfg_io.get_cfg_setting(Cfg_item.COLL_NAME)}/stage/{name_with_ext}"
         target_file_size = self.r2_io.get_s3obj_size(target_s3_file=target_file_s3path)
         if target_file_size > 9:
             presigned_url = self.r2_io.issue_presigned_url(

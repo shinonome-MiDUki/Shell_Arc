@@ -35,18 +35,18 @@ class ShellArc_Upload:
             submitter_name (str): The name of the person submitting the file, used for updating the Google Spreadsheet with the new PIC and progress information.
             message (str): An optional message provided by the submitter to be included in the Git commit message when updating the data in the Git repository (Default : "").
         """
-        required_format = self.cfg_io.get_cfg_setting(Cfg_item.COMPONENT, self.working_component, "format")
+        required_format = self.cfg_io.get_cfg_setting(Cfg_item.COMPONENT, self.working_component, "format").split("|")
         filename = ""
-        if len(file) > 1 and required_format == "zip":
+        if len(file) > 1 and "zip" in required_format:
             fileobj = await FileOperation.make_zip(
                 files=file,
                 required_format=required_format
                 )
             filename = Path(fileobj).name
-        elif len(file) > 1 and required_format != "zip":
+        elif len(file) > 1 and "zip" not in required_format:
             raise SA_InvalidUserQuery(
                 error_log=f"file with invalid extension format uploaded by {submitter_name}",
-                frontend_msg=f"{required_format}形式でご提出ください"
+                frontend_msg=f"{'または'.join(required_format)}形式でご提出ください"
             )
         elif len(file) == 1:
             filename, fileobj= file.popitem()
@@ -55,10 +55,10 @@ class ShellArc_Upload:
         submission_format = Path(filename).suffix.lstrip(".")
 
         try:
-            if submission_format != required_format:
+            if submission_format not in required_format:
                 raise SA_InvalidUserQuery(
                     error_log=f"file with invalid extension format uploaded by {submitter_name}",
-                    frontend_msg=f"{required_format}形式でご提出ください"
+                    frontend_msg=f"{'または'.join(required_format)}形式でご提出ください"
                 )
             collection_name = self.cfg_io.get_cfg_setting(Cfg_item.COLL_NAME)
 
@@ -71,7 +71,7 @@ class ShellArc_Upload:
 
             self.r2_io.upload_file(
                 uploading_file=fileobj,
-                file_path=f"{collection_name}/stage/{file_index_name}.{required_format}"
+                file_path=f"{collection_name}/stage/{file_index_name}.{submission_format}"
             )
         except Exception as e:
             raise
