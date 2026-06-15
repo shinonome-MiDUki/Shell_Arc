@@ -209,8 +209,12 @@ async def lo(ctx):
     message_breakdown = message.content.split(" ")
     if len(message_breakdown) > 2:
         if message_breakdown[1] == "repoint":
-            repoint_target = int(message_breakdown[2])
-        
+            repoint_target_cut = int(message_breakdown[2])
+            await rpt_lo(
+                message=message,
+                cut_num=cut_num,
+                repoint_target_cut=repoint_target_cut
+            )
         return
     file_attachments = message.attachments
     if not file_attachments:
