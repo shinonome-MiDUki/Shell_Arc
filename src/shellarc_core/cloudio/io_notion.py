@@ -18,6 +18,26 @@ class Notion_IO:
         self.notion_db = self.notion.data_sources.query(data_source_id = data_source_id)
         self.cut_num = cut_num
 
+    def get_image_url(self,
+                      attr_name: str="画像"
+                      ) -> str:
+        if self.cut_num > len(self.notion_db["results"]):
+            raise SA_InvalidRequestObj(
+                error_log="Requesting lo of an unexisting cut",
+                frontend_msg=f"カット{self.cut_num}のLOはまだ存在しません"
+            )
+        notion_response_files = self.notion_db["results"][self.cut_num * -1]["properties"][attr_name]["files"][0]
+        if "files" in notion_response_files:
+            image_url = self.notion_db["results"][self.cut_num * -1]["properties"][attr_name]["files"][0]["file"]["url"]
+        elif "external" in notion_response_files:
+            image_url = self.notion_db["results"][self.cut_num * -1]["properties"][attr_name]["files"][0]["external"]["url"]
+        else:
+            raise SA_CommunicationError(
+                error_log="Required key not in notion response",
+                error_code=SA_ErrorCode.SA_3000
+            )
+        return image_url
+
     def get_image_file(self,
                        download_destination: str | Path,
                        attr_name: str="画像"

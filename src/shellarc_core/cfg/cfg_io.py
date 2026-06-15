@@ -18,6 +18,7 @@ class Cfg_item(Enum):
     GIT_LREPO = "git_repo_local"
     LOCAL_BACKUP = "local_backup_dir"
     NOTION_DBID = "notion_dbid"
+    STORYBOARD_URL = "storybaord_url"
 
 
 class Cfg_IO:

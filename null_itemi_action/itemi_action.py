@@ -175,6 +175,28 @@ async def up_lo(message: discord.Message,
         error_moment = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9), 'JST'))
         print(f"!!UNEXPECTED : {error_moment.strftime('%Y%m%d%H%M%S')} -- {tb}")
         return
+    
+
+async def rpt_lo(message: discord.Message,
+                 cut_num: int,
+                 repoint_target_cut: int
+                 ) -> None:
+    try:
+        sa_storyboard = ShellArc_Storyboard(cut_num=cut_num)
+        await sa_storyboard.repoint_storyboard(repoint_taregt_cut=repoint_target_cut)
+        await message.channel.send(f"カット{cut_num}LOがカット{repoint_target_cut}にリポイントされました")
+    except ShellArcException as e:
+        await message.channel.send(content=e.frontend_msg, view=None)
+        return
+    except ShellArcError as e:
+        await message.channel.send(content=e.frontend_msg, view=None)
+        return
+    except Exception as e:
+        await message.channel.send(content=f"UNEXPECTED PYTHON EXCEPTION : {e}", view=None)
+        tb = traceback.format_exc()
+        error_moment = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9), 'JST'))
+        print(f"!!UNEXPECTED : {error_moment.strftime('%Y%m%d%H%M%S')} -- {tb}")
+        return
 
     
 @shell_arc_pmbot.command()
@@ -184,6 +206,12 @@ async def lo(ctx):
         return
     channel_name = message.channel.name
     cut_num = int(process_cut_num(channel_name.split(channel_name_divider)[0]))
+    message_breakdown = message.content.split(" ")
+    if len(message_breakdown) > 2:
+        if message_breakdown[1] == "repoint":
+            repoint_target = int(message_breakdown[2])
+        
+        return
     file_attachments = message.attachments
     if not file_attachments:
         await dl_lo(
