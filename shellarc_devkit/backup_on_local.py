@@ -33,7 +33,7 @@ def backup_on_local() -> None:
     local_backup_dir = backup_config["local_backup_dir"]
     s3_client = R2().s3_client
     cfg_io = Cfg_IO()
-    bucket = cfg_io.get_cfg_setting(Cfg_item.BUCKET_NAME)
+    bucket = cfg_io.get_cfg_setting(Cfg_item.BUCKET_NAME).rstrip("-test")
     collection_name = cfg_io.get_cfg_setting(Cfg_item.COLL_NAME)
     payload = {
         "Bucket": bucket,
@@ -43,17 +43,21 @@ def backup_on_local() -> None:
     for response in s3_client.get_paginator('list_objects_v2').paginate(**payload):
         obj_info_dict = response.get("Contents")
         for obj_info in obj_info_dict:
-            obj_key = obj_info.get("Key")
-            obj_name = obj_key.split("/")[-1]
-            saved_timemark = datetime.datetime.strptime(obj_name.split("_")[-1].split(".")[0], "%Y%m%d%H%M%S")
-            if saved_timemark <= last_backup_time:
+            try:
+                obj_key = obj_info.get("Key")
+                obj_name = obj_key.split("/")[-1]
+                saved_timemark = datetime.datetime.strptime(obj_name.split("_")[-1].split(".")[0], "%Y%m%d%H%M%S")
+                if saved_timemark <= last_backup_time:
+                    continue
+                print(obj_key)
+                s3_client.download_file(
+                    bucket,
+                    obj_key,
+                    f"{local_backup_dir}/{obj_name}"
+                )
+            except Exception as e:
+                print(f"ERROR : {e}")
                 continue
-            print(obj_key)
-            s3_client.download_file(
-                bucket,
-                obj_key,
-                f"{local_backup_dir}/{obj_name}"
-            )
         current_datetime = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
         backup_config["last_backup_time"] = current_datetime
         with open(Path(local_backup_dir) / "backup_config.json", "w", encoding="utf-8") as f:

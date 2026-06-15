@@ -100,7 +100,23 @@ async def deadline(ctx):
     message = ctx.message
     if message.author.bot:
         return
-    
+
+@shell_arc_pmbot.command()
+async def daiben(ctx):
+    message: discord.Message = ctx.message
+    if message.author.bot:
+        return
+    try:
+        message_breakdown = message.content.split(" ")
+        message_to_say = str(message_breakdown[1])
+        target_channel_id = int(message_breakdown[2])
+        target_person_id = int(message_breakdown[3])
+        target_channel = discord.utils.get(message.guild.text_channels, id=target_channel_id)
+        target_person = discord.utils.get(message.guild.members, id=target_person_id)
+        await target_channel.send(f"message_to_say {target_person.mention}")
+    except Exception as e:
+        await message.channel.send(f"無効なコマンドです : {e}")
+        return
     
 async def dl_lo(message: discord.Message,
                 cut_num: int
