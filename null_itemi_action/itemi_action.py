@@ -113,7 +113,7 @@ async def daiben(ctx):
         target_person_id = int(message_breakdown[3])
         target_channel = discord.utils.get(message.guild.text_channels, id=target_channel_id)
         target_person = discord.utils.get(message.guild.members, id=target_person_id)
-        await target_channel.send(f"message_to_say {target_person.mention}")
+        await target_channel.send(f"{message_to_say} {target_person.mention}")
     except Exception as e:
         await message.channel.send(f"無効なコマンドです : {e}")
         return
