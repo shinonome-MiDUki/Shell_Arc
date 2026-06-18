@@ -156,7 +156,7 @@ def init_props():
     scene.shellarc_prop_str_savepath = StringProperty(
         name="保存ディレクトリ",
         description="ファイルを格納するディレクトリを指定してください",
-        default=f"{os.path.expanduser("~")}/Downloads"
+        default=f"{os.path.expanduser('~')}¥Downloads"
     )
     scene.shellarc_prop_enum = EnumProperty(
         name="アセット",

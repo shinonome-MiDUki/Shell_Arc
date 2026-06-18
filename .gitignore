@@ -3,6 +3,7 @@
 !**/site_packages/.gitkeep
 .env
 project_ctx/**
+project_ctx_main/**
 **/.env
 **/.DS_Store
 **/__pycache__/**

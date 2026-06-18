@@ -1,0 +1,13 @@
+schema_version = "1.0.0"
+
+id = "ShellArc2026"
+version = "2026.1.1"
+name = "Shell Arc 2026"
+tagline = "Shell Arc Blender Add-on"
+maintainer = "未定研2026"
+type = "add-on"
+
+blender_version_min = "4.0.0"
+blender_version_max = "5.2.0"
+
+license = ["SPDX:Apache-2.0"]

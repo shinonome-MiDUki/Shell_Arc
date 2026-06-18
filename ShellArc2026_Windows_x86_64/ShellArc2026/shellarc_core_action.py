@@ -107,7 +107,7 @@ class BackendCommunicationLogic:
                 )
             if not download_status:
                 return "DOWNLOAD_ERROR"
-            BlenderOperation.open_file(local_path=f"{saving_dir}/{asset_name}.blend")
+            BlenderOperation.open_file(local_path=f"{saving_dir}¥{asset_name}.blend")
         else:
             BlenderOperation.make_new_file(
                 asset_name=asset_name,
@@ -133,7 +133,7 @@ class BackendCommunicationLogic:
         else:
             return "ERROR"
         
-        saving_dir = Path(current_dir) / f"tmp_{datetime.datetime.now().strftime("%y%m%d%H%M%S")}"
+        saving_dir = Path(current_dir) / f"tmp_{datetime.datetime.now().strftime('%y%m%d%H%M%S')}"
         saving_dir.mkdir(exist_ok=True, parents=True)
         r2_service = R2Service(s3_client=self.sa_common.s3_client)
         download_status = r2_service.download_file(
