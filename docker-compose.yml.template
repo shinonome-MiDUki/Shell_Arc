@@ -1,0 +1,49 @@
+version: '3.8'
+services:
+  bot:
+    build:
+      context: .
+      dockerfile: Dockerfile.dc
+    restart: always
+    tty: true
+    stdin_open: true
+    env_file: project_ctx/.env
+    environment:
+      - SHELLARC_PROJECT_CTX
+      - GIT_AUTHOR_NAME=###
+      - GIT_AUTHOR_EMAIL=###
+      - GIT_COMMITTER_NAME=###
+      - GIT_COMMITTER_EMAIL=###
+    volumes:
+      - ${SHELLARC_PROJECT_CTX}:${SHELLARC_PROJECT_CTX}
+      - version_management_dir_in_code:actual_version_management_dir_in_server
+
+  itemi_action:
+    build:
+      context: .
+      dockerfile: Dockerfile.itemi
+    restart: always
+    tty: true
+    stdin_open: true
+    env_file: project_ctx/.env
+    environment:
+      - SHELLARC_PROJECT_CTX
+    volumes:
+      - ${SHELLARC_PROJECT_CTX}:${SHELLARC_PROJECT_CTX}
+      - version_management_dir_in_code:actual_version_management_dir_in_server
+      - itemi_action_dir_in_code:itemi_action_dir_in_server
+      - .config_dir_in_code:.config_dir_in_server
+
+  ai_chat:
+    build:
+      context: .
+      dockerfile: Dockerfile.nullai
+    restart: always
+    tty: true
+    stdin_open: true
+    env_file: project_ctx/.env
+    environment:
+      - SHELLARC_PROJECT_CTX
+    volumes:
+      - ${SHELLARC_PROJECT_CTX}:${SHELLARC_PROJECT_CTX}
+      - version_management_dir_in_code:actual_version_management_dir_in_server
