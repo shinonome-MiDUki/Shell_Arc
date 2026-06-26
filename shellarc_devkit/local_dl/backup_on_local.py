@@ -1,14 +1,52 @@
 from pathlib import Path
 import json
+import os
 import datetime
 
+from dotenv import load_dotenv
 import boto3
 
-from shellarc_core.auth.access_r2 import Cloudflare_R2_service_Access as R2
-from shellarc_core.cfg.cfg_io import Cfg_IO, Cfg_item
+class Cloudflare_R2_service_Access:
+    def __init__(self):
+        load_dotenv(verbose=True)
+        dotenv_path = Path(__file__).resolve().parent / ".env"
+        if not dotenv_path.exists():
+            print(f"dotenv_path {dotenv_path} not exist")
+            raise Exception
+        load_dotenv(dotenv_path)
+        R2_ACCESS_KEY_ID = os.environ.get("CloudflareR2_access_key_id")
+        R2_SECRET_ACCESS_KEY = os.environ.get("CloudflareR2_secret_access_key")
+        R2_ENDPOINT_URL = os.environ.get("CloudflareR2_jurisdiction_specific_endpoints")
+
+        try:
+            self._s3_client = boto3.client(
+                "s3",
+                endpoint_url=R2_ENDPOINT_URL,
+                aws_access_key_id=R2_ACCESS_KEY_ID,
+                aws_secret_access_key=R2_SECRET_ACCESS_KEY,
+                region_name="auto"
+            )
+        except Exception as e:
+            self._s3_client = None
+            print(f"Auth error in CloudflareR2 [{e}]")
+            raise Exception
+
+    @property
+    def s3_client(self) -> boto3.client:
+        """Get the Cloudflare R2 S3 client instance (Property)
+
+        Returns:
+            _s3_client (boto3.client): The S3 client instance for Cloudflare R2 operations.
+        """
+        return self._s3_client
+        
 
 def validate_paths() -> dict:
-    local_backup_dir = Path(Cfg_IO().get_cfg_setting(Cfg_item.LOCAL_BACKUP))
+    backup_environ = os.environ.get("SHELLARC_LOCAL_BACKUP", None)
+    if backup_environ is None:
+        print("Environment variable not set")
+        raise Exception
+    local_backup_dir = Path(os.environ.get("SHELLARC_LOCAL_BACKUP"))
     if not local_backup_dir.exists():
         print(f"{local_backup_dir} not exist")
         return
@@ -18,7 +56,7 @@ def validate_paths() -> dict:
             backup_config = json.load(f)
     else:
         backup_config = {
-            "last_backup_time" : "0",
+            "last_backup_time" : "19991231235959",
             "local_backup_dir" : str(local_backup_dir)
         }
     return backup_config
@@ -31,10 +69,9 @@ def backup_on_local() -> None:
         return
     last_backup_time = datetime.datetime.strptime(backup_config["last_backup_time"], "%Y%m%d%H%M%S")
     local_backup_dir = backup_config["local_backup_dir"]
-    s3_client = R2().s3_client
-    cfg_io = Cfg_IO()
-    bucket = cfg_io.get_cfg_setting(Cfg_item.BUCKET_NAME).rstrip("-test")
-    collection_name = cfg_io.get_cfg_setting(Cfg_item.COLL_NAME)
+    s3_client = Cloudflare_R2_service_Access().s3_client
+    bucket = "null-portal"
+    collection_name = "null_2026_main"
     payload = {
         "Bucket": bucket,
         "Prefix" : f"{collection_name}/stage/"
@@ -49,11 +86,15 @@ def backup_on_local() -> None:
                 saved_timemark = datetime.datetime.strptime(obj_name.split("_")[-1].split(".")[0], "%Y%m%d%H%M%S")
                 if saved_timemark <= last_backup_time:
                     continue
-                print(obj_key)
+                print(f"Fetching : {obj_key}")
+                cut_num = obj_name.split("_")[0]
+                cut_dir = Path(local_backup_dir) / cut_num
+                if not cut_dir.exists():
+                    cut_dir.mkdir()
                 s3_client.download_file(
                     bucket,
                     obj_key,
-                    f"{local_backup_dir}/{obj_name}"
+                    f"{cut_dir}/{obj_name}"
                 )
             except Exception as e:
                 print(f"ERROR : {e}")

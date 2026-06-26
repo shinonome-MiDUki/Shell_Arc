@@ -38,6 +38,7 @@ with open(discord_config_file_path, mode="r", encoding="utf-8") as config_file:
     discord_config_dict = json.load(config_file)
     config = discord_config_dict
 bot_command = config["bot_command"]
+admin_roles = config["admin_roles"]
 schedule_file_path = config.get("schedule_path", "default")
 mainbot_id = int(config["shellarc_bot_id"])
 cut_extraction_regex = config["notice_message_cut_extraction_regex"]
@@ -162,7 +163,12 @@ async def up_lo(message: discord.Message,
         lo_file_bytes = await lo_file.read()
         sa_storyboard = ShellArc_Storyboard(cut_num=cut_num)
         await sa_storyboard.upload_storyboard(file_obj=lo_file_bytes)
-        await message.channel.send(f"カット{cut_num}LOがアップロードされました")
+        confirm_msg = f"カット{cut_num}レイアウト が提出されました"
+        for keyframe_qc in admin_roles.get("keyframe_qc", []):
+            mentioning_role = discord.utils.get(message.guild.roles, name=keyframe_qc)
+            if mentioning_role is not None:
+                confirm_msg += f" {mentioning_role.mention}"
+        await message.channel.send(confirm_msg)
     except ShellArcException as e:
         await message.channel.send(content=e.frontend_msg, view=None)
         return
