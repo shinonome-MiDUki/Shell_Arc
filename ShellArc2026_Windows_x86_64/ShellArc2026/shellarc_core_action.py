@@ -160,6 +160,13 @@ class BackendCommunicationLogic:
         )
         if not upload_status:
             return "UPLOAD ERROR"
+        upload_status = r2_service.copy_object(
+            CopySource=f"/null-portal/cg/asset/{asset_name}/{asset_name}.blend", 
+            Bucket="null-portal",
+            Key=f"/null-portal/cg/asset/{asset_name}/backup_{datetime.datetime.now().strftime("%y%m%d%H%M%S")}.blend" 
+        )
+        if not upload_status:
+            return "UPLOAD ERROR"
         LocalOperation.delete_snapshot_dir(ctx=ctx)
         return asset_name
     
