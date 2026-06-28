@@ -733,7 +733,7 @@ async def spin(ctx):
     mentioned_role_id = int(regex_search.group(1))
     mentioned_role = message.guild.get_role(mentioned_role_id)
     chosen_member = random.choice(mentioned_role.members)
-    await spin_msg.edit(content=f"{chosen_member}さん です！")
+    await spin_msg.edit(content=f"{chosen_member.display_name}さん です！")
 
 
 @shell_arc_bot.command()
