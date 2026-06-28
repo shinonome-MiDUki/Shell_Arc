@@ -702,8 +702,38 @@ async def sync(ctx):
     message = ctx.message
     if message.author.bot:
         return
-    await ShellArc_Upload.sync_vps_with_remote()
-    await message.channel.send("同期しました")
+    try:
+        await ShellArc_Upload.sync_vps_with_remote()
+        await message.channel.send("同期しました")
+    except ShellArcException as e:
+        await message.channel.send(content=e.frontend_msg, view=None)
+    except ShellArcError as e:
+        await message.channel.send(content=e.frontend_msg, view=None)
+    except Exception as e:
+        await message.channel.send(content=f"UNEXPECTED PYTHON EXCEPTION : {e}", view=None)
+        tb = traceback.format_exc()
+        error_moment = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9), 'JST'))
+        print(f"!!UNEXPECTED : {error_moment.strftime('%Y%m%d%H%M%S')} -- {tb}")
+    
+
+@shell_arc_bot.command()
+async def spin(ctx):
+    message = ctx.message
+    if message.author.bot:
+        return
+    message_txt = message.content
+    regex_search = re.search(r"<@&([0-9]+)>", message_txt)
+    if regex_search is None:
+        await message.channel.send("ロールをメンションしてください")
+        return
+    spin_msg = await message.channel.send("選ばれたのは。。。。。。。")
+    await asyncio.sleep(0.5)
+    await spin_msg.edit(content=f"気になるよね〜〜")
+    await asyncio.sleep(0.5)
+    mentioned_role_id = int(regex_search.group(1))
+    mentioned_role = message.guild.get_role(mentioned_role_id)
+    chosen_member = random.choice(mentioned_role.members)
+    await spin_msg.edit(content=f"{chosen_member}さん です！")
 
 
 @shell_arc_bot.command()
