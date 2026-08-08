@@ -90,7 +90,7 @@ class Notion_IO:
                         }
                     ]
         if self.cut_num > len(self.notion_db["results"]):
-            print(self.notion_db["results"])
+            print(len(self.notion_db["results"]))
             raise SA_InvalidRequestObj(
                 error_log="Requesting lo of an unexisting cut",
                 frontend_msg=f"カット{self.cut_num}のLOはまだ準備されていません"
