@@ -96,9 +96,6 @@ class Notion_IO:
                 frontend_msg=f"カット{self.cut_num}のLOはまだ準備されていません"
             )
         target_page_id = self.notion_db["results"][self.offset_cut_num * -1]["id"]
-        print("******")
-        print(self.notion_db["results"][self.offset_cut_num * -1])
-        print("******")
 
         try:
             self.notion.pages.update(
